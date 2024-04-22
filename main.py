@@ -202,7 +202,10 @@ if __name__ == "__main__":
         else:
             data_loader_dict['valid'] = None
 
-    if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_test":
+    if config.TOOLBOX_MODE == "only_train":
+        data_loader_dict['test'] = None
+
+    elif config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_test":
         # test_loader
         if config.TEST.DATA.DATASET == "UBFC-rPPG":
             test_loader = data_loader.UBFCrPPGLoader.UBFCrPPGLoader
