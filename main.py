@@ -61,7 +61,7 @@ def add_args(parser):
     return parser
 
 
-def train_and_test(config, data_loader_dict):
+def train_and_test(config, data_loader_dict, train=False, test=False):
     """Trains the model."""
     if config.MODEL.NAME == "Physnet":
         model_trainer = trainer.PhysnetTrainer.PhysnetTrainer(config, data_loader_dict)
@@ -79,29 +79,11 @@ def train_and_test(config, data_loader_dict):
         model_trainer = trainer.PhysFormerTrainer.PhysFormerTrainer(config, data_loader_dict)
     else:
         raise ValueError('Your Model is Not Supported  Yet!')
-    model_trainer.train(data_loader_dict)
-    model_trainer.test(data_loader_dict)
+    if train:
+        model_trainer.train(data_loader_dict)
+    if test:
+        model_trainer.test(data_loader_dict)
 
-
-def test(config, data_loader_dict):
-    """Tests the model."""
-    if config.MODEL.NAME == "Physnet":
-        model_trainer = trainer.PhysnetTrainer.PhysnetTrainer(config, data_loader_dict)
-    elif config.MODEL.NAME == "iBVPNet":
-        model_trainer = trainer.iBVPNetTrainer.iBVPNetTrainer(config, data_loader_dict)    
-    elif config.MODEL.NAME == "Tscan":
-        model_trainer = trainer.TscanTrainer.TscanTrainer(config, data_loader_dict)
-    elif config.MODEL.NAME == "EfficientPhys":
-        model_trainer = trainer.EfficientPhysTrainer.EfficientPhysTrainer(config, data_loader_dict)
-    elif config.MODEL.NAME == 'DeepPhys':
-        model_trainer = trainer.DeepPhysTrainer.DeepPhysTrainer(config, data_loader_dict)
-    elif config.MODEL.NAME == 'BigSmall':
-        model_trainer = trainer.BigSmallTrainer.BigSmallTrainer(config, data_loader_dict)
-    elif config.MODEL.NAME == 'PhysFormer':
-        model_trainer = trainer.PhysFormerTrainer.PhysFormerTrainer(config, data_loader_dict)
-    else:
-        raise ValueError('Your Model is Not Supported  Yet!')
-    model_trainer.test(data_loader_dict)
 
 
 def unsupervised_method_inference(config, data_loader):
@@ -138,7 +120,7 @@ if __name__ == "__main__":
     print(config, end='\n\n')
 
     data_loader_dict = dict() # dictionary of data loaders 
-    if config.TOOLBOX_MODE == "train_and_test":
+    if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_train":
         # train_loader
         if config.TRAIN.DATA.DATASET == "UBFC-rPPG":
             train_loader = data_loader.UBFCrPPGLoader.UBFCrPPGLoader
@@ -300,9 +282,11 @@ if __name__ == "__main__":
         raise ValueError("Unsupported toolbox_mode! Currently support train_and_test or only_test or unsupervised_method.")
 
     if config.TOOLBOX_MODE == "train_and_test":
-        train_and_test(config, data_loader_dict)
+        train_and_test(config, data_loader_dict, train=True, test=True)
+    elif config.TOOLBOX_MODE == "only_train":
+        train_and_test(config, data_loader_dict, train=True, test=False)
     elif config.TOOLBOX_MODE == "only_test":
-        test(config, data_loader_dict)
+        train_and_test(config, data_loader_dict, train=False, test=True)
     elif config.TOOLBOX_MODE == "unsupervised_method":
         unsupervised_method_inference(config, data_loader_dict)
     else:

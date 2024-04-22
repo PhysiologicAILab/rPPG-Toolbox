@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 200
   LR: 9e-3
-  MODEL_FILE_NAME: PURE_PURE_IBVP_ibvpnet_raw
+  MODEL_FILE_NAME: PURE_PURE_IBVP_ibvpnet_diffnormalized
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -17,9 +17,9 @@ TRAIN:
     BEGIN: 0.0
     END: 0.8
     PREPROCESS:
-      DATA_TYPE: ['Raw']         #if use ibvpnet, should be Raw
+      DATA_TYPE: ['DiffNormalized']         #if use ibvpnet, should be DiffNormalized
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
-      LABEL_TYPE: Raw
+      LABEL_TYPE: DiffNormalized
       DO_CHUNK: True
       CHUNK_LENGTH: 128                 #only support for factor of 512
       CROP_FACE:
@@ -46,9 +46,9 @@ VALID:
     BEGIN: 0.8
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['Raw']         #if use ibvpnet, should be Raw
+      DATA_TYPE: ['DiffNormalized']         #if use ibvpnet, should be DiffNormalized
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
-      LABEL_TYPE: Raw
+      LABEL_TYPE: DiffNormalized
       DO_CHUNK: True
       CHUNK_LENGTH: 128                 #only support for factor of 512
       CROP_FACE:
@@ -77,8 +77,8 @@ TEST:
     BEGIN: 0.0
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['Raw']         #if use ibvpnet, should be Raw
-      LABEL_TYPE: Raw
+      DATA_TYPE: ['DiffNormalized']         #if use ibvpnet, should be DiffNormalized
+      LABEL_TYPE: DiffNormalized
       DO_CHUNK: True
       CHUNK_LENGTH: 128                 #only support for factor of 512
       CROP_FACE:
@@ -93,7 +93,7 @@ TEST:
       RESIZE:
         H: 72
         W: 72
-DEVICE: cuda:0
+DEVICE: cuda:2
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
@@ -108,4 +108,4 @@ INFERENCE:
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 10        # In seconds
-  MODEL_PATH: "./final_model_release/PURE_iBVPNet_Raw.pth"
+  MODEL_PATH: "./final_model_release/PURE_iBVPNet_DiffNormalized.pth"
