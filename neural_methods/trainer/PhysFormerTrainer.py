@@ -47,7 +47,7 @@ class PhysFormerTrainer(BaseTrainer):
         self.min_valid_loss = None
         self.best_epoch = 0
 
-        if config.TOOLBOX_MODE == "train_and_test":
+        if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_train":
             self.model = ViT_ST_ST_Compact3_TDC_gra_sharp(
                 image_size=(self.chunk_len,config.TRAIN.DATA.PREPROCESS.RESIZE.H,config.TRAIN.DATA.PREPROCESS.RESIZE.W), 
                 patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers, 

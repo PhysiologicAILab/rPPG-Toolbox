@@ -97,7 +97,7 @@ def calculate_metrics(predictions, labels, config):
                 raise ValueError("Inference evaluation method name wrong!")
     
     # Filename ID to be used in any results files (e.g., Bland-Altman plots) that get saved
-    if config.TOOLBOX_MODE == 'train_and_test':
+    if config.TOOLBOX_MODE == 'train_and_test' or config.TOOLBOX_MODE == 'only_train':
         filename_id = config.TRAIN.MODEL_FILE_NAME
     elif config.TOOLBOX_MODE == 'only_test':
         model_file_root = config.INFERENCE.MODEL_PATH.split("/")[-1].split(".pth")[0]

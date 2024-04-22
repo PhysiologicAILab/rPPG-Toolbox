@@ -33,7 +33,7 @@ class BaseTrainer:
             os.makedirs(output_dir, exist_ok=True)
         
         # Filename ID to be used in any output files that get saved
-        if config.TOOLBOX_MODE == 'train_and_test':
+        if config.TOOLBOX_MODE == 'train_and_test' or config.TOOLBOX_MODE == "only_train":
             filename_id = self.model_file_name
         elif config.TOOLBOX_MODE == 'only_test':
             model_file_root = config.INFERENCE.MODEL_PATH.split("/")[-1].split(".pth")[0]
@@ -60,7 +60,7 @@ class BaseTrainer:
             os.makedirs(output_dir, exist_ok=True)
 
         # Filename ID to be used in plots that get saved
-        if config.TOOLBOX_MODE == 'train_and_test':
+        if config.TOOLBOX_MODE == 'train_and_test' or config.TOOLBOX_MODE == 'only_train':
             filename_id = self.model_file_name
         else:
             raise ValueError('Metrics.py evaluation only supports train_and_test and only_test!')

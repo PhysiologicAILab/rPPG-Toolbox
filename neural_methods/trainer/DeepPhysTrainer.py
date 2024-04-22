@@ -29,7 +29,7 @@ class DeepPhysTrainer(BaseTrainer):
         self.min_valid_loss = None
         self.best_epoch = 0
         
-        if config.TOOLBOX_MODE == "train_and_test":
+        if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_train":
             self.model = DeepPhys(img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H).to(self.device)
             self.model = torch.nn.DataParallel(self.model, device_ids=list(range(config.NUM_OF_GPU_TRAIN)))
 
