@@ -1,10 +1,10 @@
 BASE: ['']
 TOOLBOX_MODE: "only_train"  # "train_and_test" or "only_train" or "only_test"
 TRAIN:
-  BATCH_SIZE: 4
+  BATCH_SIZE: 8
   EPOCHS: 200
-  LR: 9e-3
-  MODEL_FILE_NAME: PURE_PURE_IBVP_ibvpnet_raw
+  LR: 1e-3
+  MODEL_FILE_NAME: PURE_PURE_ibvpnet_raw
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30

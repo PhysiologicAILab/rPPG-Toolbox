@@ -19,7 +19,6 @@ class TscanTrainer(BaseTrainer):
     def __init__(self, config, data_loader):
         """Inits parameters from args and the writer for TensorboardX."""
         super().__init__()
-        self.device = torch.device(config.DEVICE)
         self.frame_depth = config.MODEL.TSCAN.FRAME_DEPTH
         self.max_epoch_num = config.TRAIN.EPOCHS
         self.model_dir = config.MODEL.MODEL_DIR
@@ -32,9 +31,20 @@ class TscanTrainer(BaseTrainer):
         self.min_valid_loss = None
         self.best_epoch = 0
 
+        if torch.cuda.is_available() and config.NUM_OF_GPU_TRAIN > 0:
+            dev_list = [int(d) for d in config.DEVICE.replace("cuda:", "").split(",")]
+            self.device = torch.device(dev_list[0])     #currently toolbox only supports 1 GPU
+            self.num_of_gpu = 1     #config.NUM_OF_GPU_TRAIN  # set number of used GPUs
+        else:
+            self.device = torch.device("cpu")  # if no GPUs set device is CPU
+            self.num_of_gpu = 0  # no GPUs used
+
         if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_train":
-            self.model = TSCAN(frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H).to(self.device)
-            self.model = torch.nn.DataParallel(self.model, device_ids=list(range(config.NUM_OF_GPU_TRAIN)))
+            self.model = TSCAN(frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H)
+            if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
+                self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
+            else:
+                self.model = torch.nn.DataParallel(self.model).to(self.device)
 
             self.num_train_batches = len(data_loader["train"])
             self.criterion = torch.nn.MSELoss()
@@ -44,8 +54,11 @@ class TscanTrainer(BaseTrainer):
             self.scheduler = torch.optim.lr_scheduler.OneCycleLR(
                 self.optimizer, max_lr=config.TRAIN.LR, epochs=config.TRAIN.EPOCHS, steps_per_epoch=self.num_train_batches)
         elif config.TOOLBOX_MODE == "only_test":
-            self.model = TSCAN(frame_depth=self.frame_depth, img_size=config.TEST.DATA.PREPROCESS.RESIZE.H).to(self.device)
-            self.model = torch.nn.DataParallel(self.model, device_ids=list(range(config.NUM_OF_GPU_TRAIN)))
+            self.model = TSCAN(frame_depth=self.frame_depth, img_size=config.TEST.DATA.PREPROCESS.RESIZE.H)
+            if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
+                self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
+            else:
+                self.model = torch.nn.DataParallel(self.model).to(self.device)
         else:
             raise ValueError("TS-CAN trainer initialized in incorrect toolbox mode!")
 
