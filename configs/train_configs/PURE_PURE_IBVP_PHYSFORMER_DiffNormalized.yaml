@@ -1,5 +1,5 @@
 BASE: ['']
-TOOLBOX_MODE: "only_train"      # "train_and_test"  or "only_train" or "only_test"
+TOOLBOX_MODE: "only_test"      # "train_and_test"  or "only_train" or "only_test"
 TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 200
@@ -69,7 +69,7 @@ TEST:
   DATA:
     FS: 30
     DATASET: IBVP
-    DO_PREPROCESS: False                  # if first time, should be true
+    DO_PREPROCESS: True                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/home/jitesh/Documents/IBVP_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/prep"    # Processed dataset save path, need to be updated

@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 200
   LR: 9e-3
-  MODEL_FILE_NAME: PURE_PURE_deepphys_DiffSTD
+  MODEL_FILE_NAME: PURE_PURE_deepphys_DiffSTD_B4_9e-3
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -69,7 +69,7 @@ TEST:
   DATA:
     FS: 30
     DATASET: IBVP
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NDCHW
     DATA_PATH: "/home/jitesh/Documents/IBVP_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/prep"    # Processed dataset save path, need to be updated
