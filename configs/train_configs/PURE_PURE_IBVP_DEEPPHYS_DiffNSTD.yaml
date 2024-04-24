@@ -1,10 +1,10 @@
 BASE: ['']
 TOOLBOX_MODE: "only_train"      # "only_train" or "train_and_test"  or "only_test"
 TRAIN:
-  BATCH_SIZE: 8
+  BATCH_SIZE: 4
   EPOCHS: 200
-  LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_deepphys_DiffSTD
+  LR: 9e-3
+  MODEL_FILE_NAME: PURE_PURE_deepphys_DiffSTD_B4_9e-3
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
