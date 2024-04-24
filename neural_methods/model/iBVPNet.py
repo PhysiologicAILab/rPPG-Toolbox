@@ -119,15 +119,15 @@ class iBVPNet(nn.Module):
 
 if __name__ == "__main__":
     import torch
-    from torch.utils.tensorboard import SummaryWriter
+    # from torch.utils.tensorboard import SummaryWriter
 
     # default `log_dir` is "runs" - we'll be more specific here
-    writer = SummaryWriter('runs/iBVPNet')
+    # writer = SummaryWriter('runs/iBVPNet')
 
-    duration = 8
-    fs = 25
-    batch_size = 4
-    frames = duration*fs
+    # duration = 8
+    # fs = 25
+    batch_size = 1
+    frames = 128    #duration*fs
     in_channels = 1
     height = 64
     width = 64
@@ -137,9 +137,9 @@ if __name__ == "__main__":
     # print("-"*100)
     # print(net)
     # print("-"*100)
+
     pred = net(test_data)
+    print("pred.shape", pred.shape)
 
-    print(pred.shape)
-
-    writer.add_graph(net, test_data)
-    writer.close()
+    # writer.add_graph(net, test_data)
+    # writer.close()
