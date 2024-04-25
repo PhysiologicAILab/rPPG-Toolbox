@@ -19,7 +19,7 @@ model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
     "MD_D": nf[1],
-    "MD_R": 8,
+    "MD_R": 64,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
