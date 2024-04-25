@@ -1,5 +1,5 @@
 BASE: ['']
-TOOLBOX_MODE: "only_train"  # "train_and_test" or "only_train" or "only_test"
+TOOLBOX_MODE: "only_test"  # "train_and_test" or "only_train" or "only_test"
 TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 200
@@ -108,4 +108,4 @@ INFERENCE:
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 10        # In seconds
-  MODEL_PATH: "./final_model_release/PURE_iBVPNetMD_DiffNormalized_best.pth"
+  MODEL_PATH: "./final_model_release/PURE_iBVPNetMD_DiffNormalized_Epoch133.pth"
