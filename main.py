@@ -65,7 +65,7 @@ def train_and_test(config, data_loader_dict, train=False, test=False):
     """Trains the model."""
     if config.MODEL.NAME == "Physnet":
         model_trainer = trainer.PhysnetTrainer.PhysnetTrainer(config, data_loader_dict)
-    elif config.MODEL.NAME == "iBVPNet":
+    elif config.MODEL.NAME == "iBVPNet" or config.MODEL.NAME == "iBVPNetMD":
         model_trainer = trainer.iBVPNetTrainer.iBVPNetTrainer(config, data_loader_dict)
     elif config.MODEL.NAME == "Tscan":
         model_trainer = trainer.TscanTrainer.TscanTrainer(config, data_loader_dict)

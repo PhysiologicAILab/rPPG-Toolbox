@@ -8,6 +8,7 @@ import torch.optim as optim
 from evaluation.metrics import calculate_metrics
 from neural_methods.loss.NegPearsonLoss import Neg_Pearson
 from neural_methods.model.iBVPNet import iBVPNet
+from neural_methods.model.iBVPNetMD import iBVPNetMD
 from neural_methods.trainer.BaseTrainer import BaseTrainer
 from torch.autograd import Variable
 from tqdm import tqdm
@@ -36,7 +37,10 @@ class iBVPNetTrainer(BaseTrainer):
             self.device = torch.device("cpu")  # if no GPUs set device is CPU
             self.num_of_gpu = 0  # no GPUs used
 
-        self.model = iBVPNet(frames=config.MODEL.IBVPNET.FRAME_NUM) # [3, T, 128,128]
+        if config.MODEL.NAME == "iBVPNet":
+            self.model = iBVPNet(frames=config.MODEL.IBVPNET.FRAME_NUM) # [3, T, 128,128]
+        else:
+            self.model = iBVPNetMD(frames=config.MODEL.IBVPNET.FRAME_NUM, device=self.device) # [3, T, 128,128]
 
         if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
             self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model

@@ -11,8 +11,8 @@ nf = [8, 16, 24, 40, 64]
 model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
-    "MD_D": nf[2],
-    "MD_R": 48,
+    "MD_D": nf[1],
+    "MD_R": 8,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -27,7 +27,7 @@ class _MatrixDecompositionBase(nn.Module):
 
         self.dim = dim
         self.S = model_config["MD_S"]
-        self.D = model_config["MD_D"]
+        # self.D = model_config["MD_D"]
         self.R = model_config["MD_R"]
 
         self.train_steps = model_config["TRAIN_STEPS"]
@@ -75,6 +75,8 @@ class _MatrixDecompositionBase(nn.Module):
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
             D = C * H * W // self.S
+            # print("C * H * W, D = ", C, H, W, D)
+            # print("self.R", self.R)
             N = T 
             x = x.view(B * self.S, D, N)
         
@@ -138,8 +140,8 @@ class _MatrixDecompositionBase(nn.Module):
 
 
 class NMF(_MatrixDecompositionBase):
-    def __init__(self, device, model_config, dim="3D"):
-        super().__init__(device, model_config, dim=dim)
+    def __init__(self, device, dim="3D"):
+        super().__init__(device, dim=dim)
         self.device = device
         self.inv_t = 1
 
@@ -179,8 +181,8 @@ class NMF(_MatrixDecompositionBase):
 
 
 class VQ(_MatrixDecompositionBase):
-    def __init__(self, device, model_config, dim="3D"):
-        super().__init__(device, model_config, dim=dim)
+    def __init__(self, device, dim="3D"):
+        super().__init__(device, dim=dim)
         self.device = device
 
     def _build_bases(self, B, S, D, R):
@@ -235,14 +237,14 @@ class VQ(_MatrixDecompositionBase):
 class ConvBNReLU(nn.Module):
     @classmethod
     def _same_paddings(cls, kernel_size):
-        if kernel_size == 1:
-            return 0
-        elif kernel_size == 1:
-            return 1
+        if kernel_size == (1, 1, 1):
+            return (0, 0, 0)
+        elif kernel_size == (3, 3, 3):
+            return (1, 1, 1)
 
     def __init__(self, in_c, out_c,
-                 kernel_size=1, stride=1, padding='same',
-                 dilation=1, groups=1, act='relu', apply_bn=True):
+                 kernel_size=(1, 1, 1), stride=(1, 1, 1), padding='same',
+                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=True):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -271,36 +273,33 @@ class ConvBNReLU(nn.Module):
 
 
 class FeatureDistillationModule(nn.Module):
-    def __init__(self, device, in_c):
+    def __init__(self, device, in_c, MD_D):
         super().__init__()
 
         self.device = device
-        # C = model_config["MD_D"]
-        C = nf[2]
-
         md_type = model_config["MD_TYPE"]
 
         if "nmf" in md_type.lower():
-            self.lower_bread = nn.Sequential(
-                nn.Conv3d(in_c, C, 1),
+            self.pre_conv_block = nn.Sequential(
+                nn.Conv3d(in_c, MD_D, (1, 1, 1)),
                 nn.ReLU(inplace=True)
             )
         else:
-            self.lower_bread = nn.Conv3d(in_c, C, 1)
+            self.pre_conv_block = nn.Conv3d(in_c, MD_D, (1, 1, 1))
 
         if "nmf" in md_type.lower():
-            self.ham = NMF(self.device, model_config)
+            self.md_block = NMF(self.device)
         elif "vq" in md_type.lower():
-            self.ham = VQ(self.device, model_config)
+            self.md_block = VQ(self.device)
         else:
             print("Unknown type specified for MD_TYPE:", md_type)
             exit()
 
-        self.cheese = ConvBNReLU(C, C)
-        self.upper_bread = nn.Conv3d(C, in_c, 1, bias=False)
-
+        self.post_conv_block = nn.Sequential(
+            ConvBNReLU(MD_D, MD_D, kernel_size=(1, 1, 1)),
+            nn.Conv3d(MD_D, in_c, (1, 1, 1), bias=False)
+        )
         self.shortcut = nn.Sequential()
-
         self._init_weight()
 
         # print('ham', HAM)
@@ -308,7 +307,7 @@ class FeatureDistillationModule(nn.Module):
     def _init_weight(self):
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
-                N = m.kernel_size[0] * m.out_channels
+                N = m.kernel_size[0] * m.kernel_size[1] * m.kernel_size[2] * m.out_channels
                 m.weight.data.normal_(0, np.sqrt(2. / N))
             elif isinstance(m, _BatchNorm):
                 m.weight.data.fill_(1)
@@ -318,18 +317,17 @@ class FeatureDistillationModule(nn.Module):
     def forward(self, x):
         shortcut = self.shortcut(x)
 
-        x = self.lower_bread(x)
-        x = self.ham(x)
-        x = self.cheese(x)
-        x = self.upper_bread(x)
+        x = self.pre_conv_block(x)
+        x = self.md_block(x)
+        x = self.post_conv_block(x)
 
         x = F.relu(x + shortcut, inplace=True)
 
         return x
 
     def online_update(self, bases):
-        if hasattr(self.ham, 'online_update'):
-            self.ham.online_update(bases)
+        if hasattr(self.md_block, 'online_update'):
+            self.md_block.online_update(bases)
 
 
 
@@ -404,31 +402,31 @@ class encoder_block(nn.Module):
 
 
 class decoder_block(nn.Module):
-    def __init__(self, debug=False):
+    def __init__(self, device, debug=False):
         super(decoder_block, self).__init__()
         self.debug = debug
-        self.decoder_1 = DeConvBlock3D(nf[4], nf[3], nf[2])
+        # self.decoder_1 = DeConvBlock3D(nf[4], nf[3], nf[2])
 
-        C = model_config["MD_D"]
-        self.squeeze = ConvBNReLU(nf[2], C, 3, 1)
-        self.feats_distill = FeatureDistillationModule(self.device, C, model_config)
-
-        self.align = ConvBNReLU(C, nf[1], 1)
+        MD_D = model_config["MD_D"]     #nf[1]
+        self.squeeze = ConvBNReLU(nf[4], nf[2], (3, 3, 3), (1, 1, 1))
+        self.feats_distill = FeatureDistillationModule(device, nf[2], MD_D)
+        self.align = ConvBNReLU(nf[2], nf[1], (1, 1, 1))
 
         self.decoder_2 = DeConvBlock3D(nf[1], nf[1], nf[0])
-
 
 
 
     def forward(self, x):
         if self.debug:
             print("Decoder")
-        x = self.decoder_1(x)
+        # x = self.decoder_1(x)
         
-        if self.debug:
-            print("decoder_1_x.shape", x.shape)
+        # if self.debug:
+        #     print("decoder_1_x.shape", x.shape)
         
+        x = self.squeeze(x)
         x = self.feats_distill(x)
+        x = self.align(x)
 
         if self.debug:
             print("feats_distill_x.shape", x.shape)
@@ -443,12 +441,12 @@ class decoder_block(nn.Module):
 
 
 class iBVPNetMD(nn.Module):
-    def __init__(self, frames, in_channels=3, debug=False):
+    def __init__(self, frames, device, in_channels=3, debug=False):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
         self.model = nn.Sequential(
             encoder_block(in_channels, debug),
-            decoder_block(debug),
+            decoder_block(device, debug),
             # spatial adaptive pooling
             nn.AdaptiveAvgPool3d((frames, 1, 1)),
             nn.Conv3d(nf[0], 1, [1, 1, 1], stride=1, padding=0)
@@ -466,7 +464,6 @@ class iBVPNetMD(nn.Module):
     
 
 if __name__ == "__main__":
-    import torch
     # from torch.utils.tensorboard import SummaryWriter
 
     # default `log_dir` is "runs" - we'll be more specific here
@@ -479,9 +476,14 @@ if __name__ == "__main__":
     in_channels = 1
     height = 64
     width = 64
-    test_data = torch.rand(batch_size, in_channels, frames, height, width)
 
-    net = iBVPNetMD(in_channels=in_channels, frames=frames, debug=True)
+    if torch.cuda.is_available():
+        device = torch.device(0)
+    else:
+        device = torch.device("cpu")
+
+    test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
+    net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=True)
     # print("-"*100)
     # print(net)
     # print("-"*100)
