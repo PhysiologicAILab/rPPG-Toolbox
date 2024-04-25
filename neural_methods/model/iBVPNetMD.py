@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 
 
-class _MatrixDecomposition3DBase(nn.Module):
+class _MatrixDecompositionBase(nn.Module):
     def __init__(self, device, model_config, dim="3D"):
         super().__init__()
 
@@ -21,7 +21,7 @@ class _MatrixDecomposition3DBase(nn.Module):
         self.rand_init = model_config["model_params"]["RAND_INIT"]
         self.device = device
 
-        # print('spatial', self.dim)
+        # print('Dimension:', self.dim)
         # print('S', self.S)
         # print('D', self.D)
         # print('R', self.R)
@@ -55,9 +55,9 @@ class _MatrixDecomposition3DBase(nn.Module):
     def forward(self, x, return_bases=False):
         
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
-            B, C, H, W = x.shape
+            B, C, T, H, W = x.shape
             D = C // self.S
-            N = H * W
+            N = T * H * W
             x = x.view(B * self.S, D, N)
         
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
@@ -90,7 +90,10 @@ class _MatrixDecomposition3DBase(nn.Module):
         # (B * S, D, R) @ (B * S, N, R)^T -> (B * S, D, N)
         x = torch.bmm(bases, coef.transpose(1, 2))
 
-        if self.dim:
+        if self.dim == "3D":
+            # (B * S, D, N) -> (B, C, H, W)
+            x = x.view(B, C, T, H, W)
+        elif self.dim == "2D":
             # (B * S, D, N) -> (B, C, H, W)
             x = x.view(B, C, H, W)
         else:
@@ -114,6 +117,162 @@ class _MatrixDecomposition3DBase(nn.Module):
         update = bases.mean(dim=0)
         self.bases += self.eta * (update - self.bases)
         self.bases = F.normalize(self.bases, dim=1)
+
+
+class NMF(_MatrixDecompositionBase):
+    def __init__(self, device, model_config, dim="3D"):
+        super().__init__(device, model_config, dim=dim)
+        self.device = device
+        self.inv_t = 1
+
+    def _build_bases(self, B, S, D, R):
+        bases = torch.rand((B * S, D, R)).to(self.device)
+        bases = F.normalize(bases, dim=1)
+
+        return bases
+
+    @torch.no_grad()
+    def local_step(self, x, bases, coef):
+        # (B * S, D, N)^T @ (B * S, D, R) -> (B * S, N, R)
+        numerator = torch.bmm(x.transpose(1, 2), bases)
+        # (B * S, N, R) @ [(B * S, D, R)^T @ (B * S, D, R)] -> (B * S, N, R)
+        denominator = coef.bmm(bases.transpose(1, 2).bmm(bases))
+        # Multiplicative Update
+        coef = coef * numerator / (denominator + 1e-6)
+
+        # (B * S, D, N) @ (B * S, N, R) -> (B * S, D, R)
+        numerator = torch.bmm(x, coef)
+        # (B * S, D, R) @ [(B * S, N, R)^T @ (B * S, N, R)] -> (B * S, D, R)
+        denominator = bases.bmm(coef.transpose(1, 2).bmm(coef))
+        # Multiplicative Update
+        bases = bases * numerator / (denominator + 1e-6)
+
+        return bases, coef
+
+    def compute_coef(self, x, bases, coef):
+        # (B * S, D, N)^T @ (B * S, D, R) -> (B * S, N, R)
+        numerator = torch.bmm(x.transpose(1, 2), bases)
+        # (B * S, N, R) @ (B * S, D, R)^T @ (B * S, D, R) -> (B * S, N, R)
+        denominator = coef.bmm(bases.transpose(1, 2).bmm(bases))
+        # multiplication update
+        coef = coef * numerator / (denominator + 1e-6)
+
+        return coef
+
+
+class VQ(_MatrixDecompositionBase):
+    def __init__(self, device, model_config, dim="3D"):
+        super().__init__(device, model_config, dim=dim)
+        self.device = device
+
+    def _build_bases(self, B, S, D, R):
+        bases = torch.randn((B * S, D, R)).to(self.device)
+        bases = F.normalize(bases, dim=1)
+
+        return bases
+
+    @torch.no_grad()
+    def local_step(self, x, bases, _):
+        # (B * S, D, N), normalize x along D (for cosine similarity)
+        std_x = F.normalize(x, dim=1)
+
+        # (B * S, D, R), normalize bases along D (for cosine similarity)
+        std_bases = F.normalize(bases, dim=1, eps=1e-6)
+
+        # (B * S, D, N)^T @ (B * S, D, R) -> (B * S, N, R)
+        coef = torch.bmm(std_x.transpose(1, 2), std_bases)
+
+        # softmax along R
+        coef = F.softmax(self.inv_t * coef, dim=-1)
+
+        # normalize along N
+        coef = coef / (1e-6 + coef.sum(dim=1, keepdim=True))
+
+        # (B * S, D, N) @ (B * S, N, R) -> (B * S, D, R)
+        bases = torch.bmm(x, coef)
+
+        return bases, coef
+
+
+    def compute_coef(self, x, bases, _):
+        with torch.no_grad():
+            # (B * S, D, N) -> (B * S, 1, N)
+            x_norm = x.norm(dim=1, keepdim=True)
+
+        # (B * S, D, N) / (B * S, 1, N) -> (B * S, D, N)
+        std_x = x / (1e-6 + x_norm)
+
+        # (B * S, D, R), normalize bases along D (for cosine similarity)
+        std_bases = F.normalize(bases, dim=1, eps=1e-6)
+
+        # (B * S, N, D)^T @ (B * S, D, R) -> (B * S, N, R)
+        coef = torch.bmm(std_x.transpose(1, 2), std_bases)
+
+        # softmax along R
+        coef = F.softmax(self.inv_t * coef, dim=-1)
+
+        return coef
+
+
+class HamburgerV2(nn.Module):
+    def __init__(self, device, in_c, model_config):
+        super().__init__()
+
+        self.device = device
+        C = model_config["model_params"]["MD_D"]
+
+        ham_type = model_config["model_params"]["HAM_TYPE"]
+
+        if "nmf" in ham_type.lower():
+            self.lower_bread = nn.Sequential(
+                nn.Conv3d(in_c, C, (1,1,1)),
+                nn.ReLU(inplace=True)
+            )
+        else:
+            self.lower_bread = nn.Conv1d(in_c, C, 1)
+
+        if "nmf" in ham_type.lower():
+            self.ham = NMF(self.device, model_config)
+        elif "vq" in ham_type.lower():
+            self.ham = VQ(self.device, model_config)
+        else:
+            print("Unknown type specified for HAM_TYPE:", ham_type)
+            exit()
+
+        self.cheese = ConvBNReLU(C, C)
+        self.upper_bread = nn.Conv1d(C, in_c, 1, bias=False)
+
+        self.shortcut = nn.Sequential()
+
+        self._init_weight()
+
+        # print('ham', HAM)
+
+    def _init_weight(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv1d):
+                N = m.kernel_size[0] * m.out_channels
+                m.weight.data.normal_(0, np.sqrt(2. / N))
+            elif isinstance(m, _BatchNorm):
+                m.weight.data.fill_(1)
+                if m.bias is not None:
+                    m.bias.data.zero_()
+
+    def forward(self, x):
+        shortcut = self.shortcut(x)
+
+        x = self.lower_bread(x)
+        x = self.ham(x)
+        x = self.cheese(x)
+        x = self.upper_bread(x)
+
+        x = F.relu(x + shortcut, inplace=True)
+
+        return x
+
+    def online_update(self, bases):
+        if hasattr(self.ham, 'online_update'):
+            self.ham.online_update(bases)
 
 
 
