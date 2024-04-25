@@ -1,3 +1,10 @@
+"""iBVPNetMD - 3D Convolutional Network with Matrix Decomposition based Feature Distillation.
+
+iBVPNet Model - proposed along with the IBVP Dataset, see https://doi.org/10.3390/electronics13071334
+
+Joshi, Jitesh, and Youngjun Cho. 2024. "iBVP Dataset: RGB-Thermal rPPG Dataset with High Resolution Signal Quality Labels" Electronics 13, no. 7: 1334.
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
