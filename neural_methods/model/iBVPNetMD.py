@@ -1,24 +1,41 @@
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.modules.batchnorm import _BatchNorm
 
+import numpy as np
 
+# num_filters
+nf = [8, 16, 24, 40, 64]
+
+model_config = {
+    "INPUT_CHANNELS": 1,
+    "MD_S": 1,
+    "MD_D": nf[2],
+    "MD_R": 48,
+    "TRAIN_STEPS": 6,
+    "EVAL_STEPS": 6,
+    "INV_T": 1,
+    "ETA": 0.9,
+    "RAND_INIT": True,
+    "MD_TYPE": "NMF"
+}
 
 class _MatrixDecompositionBase(nn.Module):
-    def __init__(self, device, model_config, dim="3D"):
+    def __init__(self, device, dim="3D"):
         super().__init__()
 
         self.dim = dim
-        self.S = model_config["model_params"]["MD_S"]
-        self.D = model_config["model_params"]["MD_D"]
-        self.R = model_config["model_params"]["MD_R"]
+        self.S = model_config["MD_S"]
+        self.D = model_config["MD_D"]
+        self.R = model_config["MD_R"]
 
-        self.train_steps = model_config["model_params"]["TRAIN_STEPS"]
-        self.eval_steps = model_config["model_params"]["EVAL_STEPS"]
+        self.train_steps = model_config["TRAIN_STEPS"]
+        self.eval_steps = model_config["EVAL_STEPS"]
 
-        self.inv_t = model_config["model_params"]["INV_T"]
-        self.eta = model_config["model_params"]["ETA"]
+        self.inv_t = model_config["INV_T"]
+        self.eta = model_config["ETA"]
 
-        self.rand_init = model_config["model_params"]["RAND_INIT"]
+        self.rand_init = model_config["RAND_INIT"]
         self.device = device
 
         # print('Dimension:', self.dim)
@@ -56,8 +73,8 @@ class _MatrixDecompositionBase(nn.Module):
         
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
-            D = C // self.S
-            N = T * H * W
+            D = C * H * W // self.S
+            N = T 
             x = x.view(B * self.S, D, N)
         
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
@@ -214,33 +231,72 @@ class VQ(_MatrixDecompositionBase):
         return coef
 
 
-class HamburgerV2(nn.Module):
-    def __init__(self, device, in_c, model_config):
+class ConvBNReLU(nn.Module):
+    @classmethod
+    def _same_paddings(cls, kernel_size):
+        if kernel_size == 1:
+            return 0
+        elif kernel_size == 1:
+            return 1
+
+    def __init__(self, in_c, out_c,
+                 kernel_size=1, stride=1, padding='same',
+                 dilation=1, groups=1, act='relu', apply_bn=True):
+        super().__init__()
+
+        self.apply_bn = apply_bn
+        if padding == 'same':
+            padding = self._same_paddings(kernel_size)
+
+        self.conv = nn.Conv3d(in_c, out_c,
+                              kernel_size=kernel_size, stride=stride,
+                              padding=padding, dilation=dilation,
+                              groups=groups,
+                              bias=False)
+        if self.apply_bn:
+            self.bn = nn.BatchNorm3d(out_c)
+        if act == "sigmoid":
+            self.act = nn.Sigmoid()
+        else:
+            self.act = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        x = self.conv(x)
+        if self.apply_bn:
+            x = self.bn(x)
+        x = self.act(x)
+
+        return x
+
+
+class FeatureDistillationModule(nn.Module):
+    def __init__(self, device, in_c):
         super().__init__()
 
         self.device = device
-        C = model_config["model_params"]["MD_D"]
+        # C = model_config["MD_D"]
+        C = nf[2]
 
-        ham_type = model_config["model_params"]["HAM_TYPE"]
+        md_type = model_config["MD_TYPE"]
 
-        if "nmf" in ham_type.lower():
+        if "nmf" in md_type.lower():
             self.lower_bread = nn.Sequential(
-                nn.Conv3d(in_c, C, (1,1,1)),
+                nn.Conv3d(in_c, C, 1),
                 nn.ReLU(inplace=True)
             )
         else:
-            self.lower_bread = nn.Conv1d(in_c, C, 1)
+            self.lower_bread = nn.Conv3d(in_c, C, 1)
 
-        if "nmf" in ham_type.lower():
+        if "nmf" in md_type.lower():
             self.ham = NMF(self.device, model_config)
-        elif "vq" in ham_type.lower():
+        elif "vq" in md_type.lower():
             self.ham = VQ(self.device, model_config)
         else:
-            print("Unknown type specified for HAM_TYPE:", ham_type)
+            print("Unknown type specified for MD_TYPE:", md_type)
             exit()
 
         self.cheese = ConvBNReLU(C, C)
-        self.upper_bread = nn.Conv1d(C, in_c, 1, bias=False)
+        self.upper_bread = nn.Conv3d(C, in_c, 1, bias=False)
 
         self.shortcut = nn.Sequential()
 
@@ -250,7 +306,7 @@ class HamburgerV2(nn.Module):
 
     def _init_weight(self):
         for m in self.modules():
-            if isinstance(m, nn.Conv1d):
+            if isinstance(m, nn.Conv3d):
                 N = m.kernel_size[0] * m.out_channels
                 m.weight.data.normal_(0, np.sqrt(2. / N))
             elif isinstance(m, _BatchNorm):
@@ -303,8 +359,7 @@ class DeConvBlock3D(nn.Module):
     def forward(self, x):
         return self.deconv_block_3d(x)
 
-# num_filters
-nf = [8, 16, 24, 40, 64]
+
 
 class encoder_block(nn.Module):
     def __init__(self, in_channel, debug=False):
@@ -352,17 +407,36 @@ class decoder_block(nn.Module):
         super(decoder_block, self).__init__()
         self.debug = debug
         self.decoder_1 = DeConvBlock3D(nf[4], nf[3], nf[2])
-        self.decoder_2 = DeConvBlock3D(nf[2], nf[1], nf[0])
+
+        C = model_config["MD_D"]
+        self.squeeze = ConvBNReLU(nf[2], C, 3, 1)
+        self.feats_distill = FeatureDistillationModule(self.device, C, model_config)
+
+        self.align = ConvBNReLU(C, nf[1], 1)
+
+        self.decoder_2 = DeConvBlock3D(nf[1], nf[1], nf[0])
+
+
+
 
     def forward(self, x):
         if self.debug:
             print("Decoder")
         x = self.decoder_1(x)
+        
         if self.debug:
             print("decoder_1_x.shape", x.shape)
+        
+        x = self.feats_distill(x)
+
+        if self.debug:
+            print("feats_distill_x.shape", x.shape)
+
         x = self.decoder_2(x)
+        
         if self.debug:
             print("decoder_2_x.shape", x.shape)
+        
         return x
 
 
