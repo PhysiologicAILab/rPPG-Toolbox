@@ -19,7 +19,7 @@ model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
     "MD_D": nf[1],
-    "MD_R": 64,
+    "MD_R": 32,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -82,8 +82,9 @@ class _MatrixDecompositionBase(nn.Module):
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
             D = C * H * W // self.S
-            # print("C * H * W, D = ", C, H, W, D)
-            # print("self.R", self.R)
+            print("C * H * W, D = ", C, H, W, D)
+            print("self.R", self.R)
+            print("N=T=", T)
             N = T 
             x = x.view(B * self.S, D, N)
         
@@ -355,93 +356,87 @@ class DeConvBlock3D(nn.Module):
     def __init__(self, in_channel, mid_channel, out_channel):
         super(DeConvBlock3D, self).__init__()
 
-        self.deconv_block_3d = nn.Sequential(
+        self.deconv_block = nn.Sequential(
             nn.ConvTranspose3d(in_channel, mid_channel, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
-            nn.Conv3d(mid_channel, out_channel, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
+            nn.BatchNorm3d(mid_channel),
+            nn.ELU(),
+            nn.Conv3d(mid_channel, mid_channel, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
+            nn.BatchNorm3d(mid_channel),
+            nn.ELU(),
+            nn.ConvTranspose3d(mid_channel, out_channel, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.BatchNorm3d(out_channel),
+            nn.ELU(),
+            nn.Conv3d(out_channel, out_channel, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
             nn.BatchNorm3d(out_channel),
             nn.ELU()
         )
 
     def forward(self, x):
-        return self.deconv_block_3d(x)
+        return self.deconv_block(x)
 
 
 
 class encoder_block(nn.Module):
-    def __init__(self, in_channel, debug=False):
+    def __init__(self, inCh, debug=False):
         super(encoder_block, self).__init__()
-        # in_channel, out_channel, kernel_size, stride, padding
+        # inCh, out_channel, kernel_size, stride, padding
 
         self.debug = debug
-        self.spatio_temporal_encoder = nn.Sequential(
-            ConvBlock3D(in_channel, nf[0], [1, 3, 3], [1, 1, 1], [0, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+        self.encoder = nn.Sequential(
+            ConvBlock3D(inCh, inCh, [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
 
-            ConvBlock3D(nf[1], nf[2], [1, 3, 3], [1, 1, 1], [0, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[0], nf[0], [7, 3, 3], [1, 1, 1], [3, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [7, 3, 3], [1, 2, 2], [3, 1, 1]),
 
-            ConvBlock3D(nf[3], nf[4], [1, 3, 3], [1, 1, 1], [0, 1, 1]),
+            ConvBlock3D(nf[1], nf[1], [7, 3, 3], [1, 1, 1], [3, 1, 1]),
+            ConvBlock3D(nf[1], nf[2], [7, 3, 3], [2, 2, 2], [3, 1, 1]),
+
+            ConvBlock3D(nf[2], nf[2], [7, 3, 3], [1, 1, 1], [3, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [7, 3, 3], [1, 2, 2], [3, 1, 1]),
+
+            ConvBlock3D(nf[3], nf[3], [7, 3, 3], [1, 1, 1], [3, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [7, 3, 3], [2, 2, 2], [3, 1, 1]),
+
+            ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
         )
 
-        self.temporal_encoder = nn.Sequential(
-            ConvBlock3D(nf[4], nf[4], [11, 1, 1], [1, 1, 1], [5, 0, 0]),
-            ConvBlock3D(nf[4], nf[4], [11, 3, 3], [2, 2, 2], [5, 1, 1]),
-
-            ConvBlock3D(nf[4], nf[4], [11, 1, 1], [1, 1, 1], [5, 0, 0]),
-            ConvBlock3D(nf[4], nf[4], [11, 3, 3], [2, 1, 1], [5, 1, 1]),
-
-            ConvBlock3D(nf[4], nf[4], [7, 1, 1], [1, 1, 1], [3, 0, 0]),
-            ConvBlock3D(nf[4], nf[4], [7, 3, 3], [1, 1, 1], [3, 1, 1])
-        )
-
     def forward(self, x):
+        x = self.encoder(x)
         if self.debug:
             print("Encoder")
-            print("x.shape", x.shape)
-        st_x = self.spatio_temporal_encoder(x)
-        if self.debug:
-            print("st_x.shape", st_x.shape)
-        t_x = self.temporal_encoder(st_x)
-        if self.debug:
-            print("t_x.shape", t_x.shape)
-        return t_x
+            print("     x.shape", x.shape)
+        return x
 
 
 class decoder_block(nn.Module):
     def __init__(self, device, debug=False):
         super(decoder_block, self).__init__()
         self.debug = debug
-        # self.decoder_1 = DeConvBlock3D(nf[4], nf[3], nf[2])
-
         MD_D = model_config["MD_D"]     #nf[1]
+        
         self.squeeze = ConvBNReLU(nf[4], nf[2], (3, 3, 3), (1, 1, 1))
         self.feats_distill = FeatureDistillationModule(device, nf[2], MD_D)
-        self.align = ConvBNReLU(nf[2], nf[1], (1, 1, 1))
+        self.align = ConvBNReLU(nf[2], nf[4], (1, 1, 1))
+        
+        self.conv_decoder = DeConvBlock3D(2*nf[4], nf[2], nf[0])
 
-        self.decoder_2 = DeConvBlock3D(nf[1], nf[1], nf[0])
 
+    def forward(self, x):        
+        
+        distilled_x = self.squeeze(x)
+        distilled_x = self.feats_distill(distilled_x)
+        distilled_x = self.align(distilled_x)
 
-
-    def forward(self, x):
         if self.debug:
             print("Decoder")
-        # x = self.decoder_1(x)
-        
-        # if self.debug:
-        #     print("decoder_1_x.shape", x.shape)
-        
-        x = self.squeeze(x)
-        x = self.feats_distill(x)
-        x = self.align(x)
+            print("     feats_distill_x.shape", x.shape)
 
-        if self.debug:
-            print("feats_distill_x.shape", x.shape)
-
-        x = self.decoder_2(x)
+        x = self.conv_decoder(torch.concat([x, distilled_x], dim=1))
         
         if self.debug:
-            print("decoder_2_x.shape", x.shape)
+            print("     conv_decoder_x.shape", x.shape)
         
         return x
 
@@ -463,10 +458,14 @@ class iBVPNetMD(nn.Module):
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
         [batch, channel, length, width, height] = x.shape
+        if self.debug:
+            print("Input.shape", x.shape)
+
         feats = self.model(x)
         if self.debug:
             print("feats.shape", feats.shape)
         rPPG = feats.view(-1, length)
+        
         return rPPG
     
 
@@ -479,10 +478,10 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 1
-    frames = 128    #duration*fs
-    in_channels = 1
-    height = 64
-    width = 64
+    frames = 240    #duration*fs
+    in_channels = 3
+    height = 128
+    width = 128
 
     if torch.cuda.is_available():
         device = torch.device(0)
