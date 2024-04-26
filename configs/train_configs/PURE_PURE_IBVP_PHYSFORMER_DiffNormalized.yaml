@@ -69,7 +69,7 @@ TEST:
   DATA:
     FS: 30
     DATASET: IBVP
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/home/jitesh/Documents/IBVP_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/IBVP_Dataset/prep"    # Processed dataset save path, need to be updated
@@ -112,5 +112,5 @@ INFERENCE:
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
-    WINDOW_SIZE: 30        # In seconds
+    WINDOW_SIZE: 10        # In seconds
   MODEL_PATH:   "./final_model_release/PURE_PhysFormer_DiffNormalized_Epoch30.pth"
