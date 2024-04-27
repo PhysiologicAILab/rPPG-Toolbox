@@ -19,7 +19,7 @@ model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
     "MD_D": nf[1],
-    "MD_R": 32,
+    "MD_R": 2,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -81,13 +81,18 @@ class _MatrixDecompositionBase(nn.Module):
         
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
-            D = C * H * W // self.S
-            print("C * H * W, D = ", C, H, W, D)
-            print("self.R", self.R)
-            print("N=T=", T)
-            N = T 
+            # D = C * H * W // self.S
+            # N = T
+            D = C // self.S
+            N = T * H * W
             x = x.view(B * self.S, D, N)
-        
+
+            # print("C, T, H, W", C, T, H, W)
+            # print("D", D)
+            # print("R", self.R)
+            # print("N", N)
+            # print("x.shape", x.shape)
+
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             B, C, H, W = x.shape
             D = C // self.S
@@ -280,7 +285,7 @@ class ConvBNReLU(nn.Module):
         return x
 
 
-class FeatureDistillationModule(nn.Module):
+class FeaturesFactorizationModule(nn.Module):
     def __init__(self, device, in_c, MD_D):
         super().__init__()
 
@@ -417,7 +422,7 @@ class decoder_block(nn.Module):
         MD_D = model_config["MD_D"]     #nf[1]
         
         self.squeeze = ConvBNReLU(nf[4], nf[2], (3, 3, 3), (1, 1, 1))
-        self.feats_distill = FeatureDistillationModule(device, nf[2], MD_D)
+        self.feats_distill = FeaturesFactorizationModule(device, nf[2], MD_D)
         self.align = ConvBNReLU(nf[2], nf[4], (1, 1, 1))
         
         self.conv_decoder = DeConvBlock3D(2*nf[4], nf[2], nf[0])
@@ -478,7 +483,7 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 1
-    frames = 240    #duration*fs
+    frames = 256    #duration*fs
     in_channels = 3
     height = 128
     width = 128

@@ -311,3 +311,41 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
         rPPG = rPPG.squeeze(1)
         
         return rPPG, Score1, Score2, Score3
+
+'''
+if __name__ == "__main__":
+
+    # duration = 8
+    # fs = 25
+    batch_size = 1
+    frames = 240  # duration*fs
+    in_channels = 3
+    height = 128
+    width = 128
+
+    if torch.cuda.is_available():
+        device = torch.device(0)
+    else:
+        device = torch.device("cpu")
+
+    test_data = torch.rand(batch_size, in_channels,
+                           frames, height, width).to(device)
+    
+    net = ViT_ST_ST_Compact3_TDC_gra_sharp(frames=240, config.TRAIN.DATA.PREPROCESS.RESIZE.H,
+                    config.TRAIN.DATA.PREPROCESS.RESIZE.W),
+    patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers,
+    dropout_rate=self.dropout_rate, theta=self.theta)
+
+
+    (frames=frames, device=device,
+                    in_channels=in_channels, debug=True)
+    # print("-"*100)
+    # print(net)
+    # print("-"*100)
+
+    pred = net(test_data)
+    print("pred.shape", pred.shape)
+
+    # writer.add_graph(net, test_data)
+    # writer.close()
+'''
