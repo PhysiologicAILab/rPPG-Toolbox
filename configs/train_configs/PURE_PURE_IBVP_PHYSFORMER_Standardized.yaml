@@ -3,7 +3,7 @@ TOOLBOX_MODE: "train_and_test"      # "train_and_test"  or "only_train" or "only
 TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 200
-  LR: 9e-3
+  LR: 1e-4
   MODEL_FILE_NAME: PURE_PURE_PhysFormer_Standardized
   PLOT_LOSSES_AND_LR: True
   DATA:
