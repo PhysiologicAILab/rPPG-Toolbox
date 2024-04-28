@@ -2,7 +2,7 @@ BASE: ['']
 TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test"
 TRAIN:
   BATCH_SIZE: 8
-  EPOCHS: 200
+  EPOCHS: 100
   LR: 9e-3
   MODEL_FILE_NAME: iBVP_iBVP_iBVPNetMD_N-CHW_Standardized
   PLOT_LOSSES_AND_LR: True
