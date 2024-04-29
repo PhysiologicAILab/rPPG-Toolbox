@@ -1,4 +1,4 @@
-"""iBVPNet Trainer."""
+"""Trainer for iBVPNet."""
 import os
 from collections import OrderedDict
 

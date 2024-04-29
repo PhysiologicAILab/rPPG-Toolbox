@@ -1,5 +1,5 @@
 """iBVPNet - 3D Convolutional Network.
-Proposed along with the IBVP Dataset, see https://doi.org/10.3390/electronics13071334
+Proposed along with the iBVP Dataset, see https://doi.org/10.3390/electronics13071334
 
 Joshi, Jitesh, and Youngjun Cho. 2024. "iBVP Dataset: RGB-Thermal rPPG Dataset with High Resolution Signal Quality Labels" Electronics 13, no. 7: 1334.
 """
