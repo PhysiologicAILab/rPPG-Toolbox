@@ -23,13 +23,11 @@ from neural_methods.trainer.BaseTrainer import BaseTrainer
 from tqdm import tqdm
 from scipy.signal import welch
 
-
 class PhysFormerTrainer(BaseTrainer):
 
     def __init__(self, config, data_loader):
         """Inits parameters from args and the writer for TensorboardX."""
         super().__init__()
-        self.device = torch.device(config.DEVICE)
         self.max_epoch_num = config.TRAIN.EPOCHS
         self.model_dir = config.MODEL.MODEL_DIR
         self.dropout_rate = config.MODEL.DROP_RATE
@@ -44,42 +42,52 @@ class PhysFormerTrainer(BaseTrainer):
         self.num_of_gpu = config.NUM_OF_GPU_TRAIN
         self.chunk_len = config.TRAIN.DATA.PREPROCESS.CHUNK_LENGTH
         self.frame_rate = config.TRAIN.DATA.FS
-        self.config = config
+        self.config = config 
         self.min_valid_loss = None
         self.best_epoch = 0
+        if torch.cuda.is_available() and config.NUM_OF_GPU_TRAIN > 0:
+            dev_list = [int(d) for d in config.DEVICE.replace("cuda:", "").split(",")]
+            self.device = torch.device(dev_list[0])     #currently toolbox only supports 1 GPU
+            self.num_of_gpu = 1     #config.NUM_OF_GPU_TRAIN  # set number of used GPUs
+        else:
+            self.device = torch.device("cpu")  # if no GPUs set device is CPU
+            self.num_of_gpu = 0  # no GPUs used
 
-        if config.TOOLBOX_MODE == "train_and_test":
+        if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_train":
             self.model = ViT_ST_ST_Compact3_TDC_gra_sharp(
-                image_size=(self.chunk_len, config.TRAIN.DATA.PREPROCESS.RESIZE.H,
-                            config.TRAIN.DATA.PREPROCESS.RESIZE.W),
-                patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers,
-                dropout_rate=self.dropout_rate, theta=self.theta).to(self.device)
-            self.model = torch.nn.DataParallel(
-                self.model, device_ids=list(range(config.NUM_OF_GPU_TRAIN)))
+                image_size=(self.chunk_len,config.TRAIN.DATA.PREPROCESS.RESIZE.H,config.TRAIN.DATA.PREPROCESS.RESIZE.W), 
+                patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers, 
+                dropout_rate=self.dropout_rate, theta=self.theta)
+
+            if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
+                self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
+            else:
+                self.model = torch.nn.DataParallel(self.model).to(self.device)
 
             self.num_train_batches = len(data_loader["train"])
             self.criterion_reg = torch.nn.MSELoss()
             self.criterion_L1loss = torch.nn.L1Loss()
             self.criterion_class = torch.nn.CrossEntropyLoss()
             self.criterion_Pearson = Neg_Pearson()
-            self.optimizer = optim.Adam(
-                self.model.parameters(), lr=config.TRAIN.LR, weight_decay=0.00005)
-            # TODO: In both the PhysFormer repo's training example and other implementations of a PhysFormer trainer,
+            self.optimizer = optim.Adam(self.model.parameters(), lr=config.TRAIN.LR, weight_decay=0.00005)
+            # TODO: In both the PhysFormer repo's training example and other implementations of a PhysFormer trainer, 
             # a step_size that doesn't end up changing the LR always seems to be used. This seems to defeat the point
             # of using StepLR in the first place. Consider investigating and using another approach (e.g., OneCycleLR).
-            self.scheduler = optim.lr_scheduler.StepLR(
-                self.optimizer, step_size=50, gamma=0.5)
+            self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=50, gamma=0.5)
         elif config.TOOLBOX_MODE == "only_test":
             self.model = ViT_ST_ST_Compact3_TDC_gra_sharp(
-                image_size=(self.chunk_len, config.TRAIN.DATA.PREPROCESS.RESIZE.H,
-                            config.TRAIN.DATA.PREPROCESS.RESIZE.W),
-                patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers,
-                dropout_rate=self.dropout_rate, theta=self.theta).to(self.device)
-            self.model = torch.nn.DataParallel(
-                self.model, device_ids=list(range(config.NUM_OF_GPU_TRAIN)))
+                image_size=(self.chunk_len,config.TRAIN.DATA.PREPROCESS.RESIZE.H,config.TRAIN.DATA.PREPROCESS.RESIZE.W), 
+                patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers, 
+                dropout_rate=self.dropout_rate, theta=self.theta)
+
+            if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
+                self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
+            else:
+                self.model = torch.nn.DataParallel(self.model).to(self.device)
+
         else:
-            raise ValueError(
-                "Physformer trainer initialized in incorrect toolbox mode!")
+            raise ValueError("Physformer trainer initialized in incorrect toolbox mode!")
+
 
     def train(self, data_loader):
         """Training routine for model"""
@@ -108,17 +116,14 @@ class PhysFormerTrainer(BaseTrainer):
             self.model.train()
             tbar = tqdm(data_loader["train"], ncols=80)
             for idx, batch in enumerate(tbar):
-                hr = torch.tensor([self.get_hr(i)
-                                  for i in batch[1]]).float().to(self.device)
-                data, label = batch[0].float().to(
-                    self.device), batch[1].float().to(self.device)
+                hr = torch.tensor([self.get_hr(i) for i in batch[1]]).float().to(self.device)
+                data, label = batch[0].float().to(self.device), batch[1].float().to(self.device)
 
                 self.optimizer.zero_grad()
 
                 gra_sharp = 2.0
                 rPPG, _, _, _ = self.model(data, gra_sharp)
-                rPPG = (rPPG-torch.mean(rPPG, axis=-1).view(-1, 1)) / \
-                    torch.std(rPPG, axis=-1).view(-1, 1)    # normalize
+                rPPG = (rPPG-torch.mean(rPPG, axis=-1).view(-1, 1))/torch.std(rPPG, axis=-1).view(-1, 1)    # normalize
                 loss_rPPG = self.criterion_Pearson(rPPG, label)
 
                 fre_loss = 0.0
@@ -126,13 +131,14 @@ class PhysFormerTrainer(BaseTrainer):
                 train_mae = 0.0
                 for bb in range(data.shape[0]):
                     loss_distribution_kl, \
-                        fre_loss_temp, \
-                        train_mae_temp = TorchLossComputer.cross_entropy_power_spectrum_DLDL_softmax2(
-                            rPPG[bb],
-                            hr[bb],
-                            self.frame_rate,
-                            std=1.0
-                        )
+                    fre_loss_temp, \
+                    train_mae_temp = TorchLossComputer.cross_entropy_power_spectrum_DLDL_softmax2(
+                        rPPG[bb],
+                        hr[bb],
+                        self.frame_rate,
+                        std=1.0,
+                        compute_dev=self.device
+                    )
                     fre_loss = fre_loss+fre_loss_temp
                     kl_loss = kl_loss+loss_distribution_kl
                     train_mae = train_mae+train_mae_temp
@@ -140,7 +146,7 @@ class PhysFormerTrainer(BaseTrainer):
                 kl_loss /= data.shape[0]
                 train_mae /= data.shape[0]
 
-                if epoch > 10:
+                if epoch>10:
                     a = 0.05
                     b = 5.0
                 else:
@@ -159,10 +165,10 @@ class PhysFormerTrainer(BaseTrainer):
                 loss_hr_mae.append(float(train_mae))
                 if idx % 100 == 99:  # print every 100 mini-batches
                     print(f'\nepoch:{epoch}, batch:{idx + 1}, total:{len(data_loader["train"]) // self.batch_size}, '
-                          f'lr:0.0001, sharp:{gra_sharp:.3f}, a:{a:.3f}, NegPearson:{np.mean(loss_rPPG_avg[-2000:]):.4f}, '
-                          f'\nb:{b:.3f}, kl:{np.mean(loss_kl_avg_test[-2000:]):.3f}, fre_CEloss:{np.mean(loss_peak_avg[-2000:]):.3f}, '
-                          f'hr_mae:{np.mean(loss_hr_mae[-2000:]):.3f}')
-
+                        f'lr:0.0001, sharp:{gra_sharp:.3f}, a:{a:.3f}, NegPearson:{np.mean(loss_rPPG_avg[-2000:]):.4f}, '
+                        f'\nb:{b:.3f}, kl:{np.mean(loss_kl_avg_test[-2000:]):.3f}, fre_CEloss:{np.mean(loss_peak_avg[-2000:]):.3f}, '
+                        f'hr_mae:{np.mean(loss_hr_mae[-2000:]):.3f}')
+                    
             # Append the current learning rate to the list
             lrs.append(self.scheduler.get_last_lr())
             # Append the mean training loss for the epoch
@@ -171,26 +177,23 @@ class PhysFormerTrainer(BaseTrainer):
             self.scheduler.step()
             self.model.eval()
 
-            if not self.config.TEST.USE_LAST_EPOCH:
+            if not self.config.TEST.USE_LAST_EPOCH: 
                 valid_loss = self.valid(data_loader)
                 mean_valid_losses.append(valid_loss)
                 print(f'Validation RMSE:{valid_loss:.3f}, batch:{idx+1}')
                 if self.min_valid_loss is None:
                     self.min_valid_loss = valid_loss
                     self.best_epoch = epoch
-                    print("Update best model! Best epoch: {}".format(
-                        self.best_epoch))
+                    print("Update best model! Best epoch: {}".format(self.best_epoch))
                 elif (valid_loss < self.min_valid_loss):
                     self.min_valid_loss = valid_loss
                     self.best_epoch = epoch
-                    print("Update best model! Best epoch: {}".format(
-                        self.best_epoch))
-        if not self.config.TEST.USE_LAST_EPOCH:
+                    print("Update best model! Best epoch: {}".format(self.best_epoch))
+        if not self.config.TEST.USE_LAST_EPOCH: 
             print("best trained epoch: {}, min_val_loss: {}".format(
                 self.best_epoch, self.min_valid_loss))
         if self.config.TRAIN.PLOT_LOSSES_AND_LR:
-            self.plot_losses_and_lrs(
-                mean_training_losses, mean_valid_losses, lrs, self.config)
+            self.plot_losses_and_lrs(mean_training_losses, mean_valid_losses, lrs, self.config)
 
     def valid(self, data_loader):
         """ Runs the model on valid sets."""
@@ -204,15 +207,12 @@ class PhysFormerTrainer(BaseTrainer):
             hrs = []
             vbar = tqdm(data_loader["valid"], ncols=80)
             for val_idx, val_batch in enumerate(vbar):
-                data, label = val_batch[0].float().to(
-                    self.device), val_batch[1].float().to(self.device)
+                data, label = val_batch[0].float().to(self.device), val_batch[1].float().to(self.device)
                 gra_sharp = 2.0
                 rPPG, _, _, _ = self.model(data, gra_sharp)
-                rPPG = (rPPG-torch.mean(rPPG, axis=-1).view(-1, 1)) / \
-                    torch.std(rPPG).view(-1, 1)
+                rPPG = (rPPG-torch.mean(rPPG, axis=-1).view(-1, 1))/torch.std(rPPG).view(-1, 1)
                 for _1, _2 in zip(rPPG, label):
-                    hrs.append((self.get_hr(_1.cpu().detach().numpy()),
-                               self.get_hr(_2.cpu().detach().numpy())))
+                    hrs.append((self.get_hr(_1.cpu().detach().numpy()), self.get_hr(_2.cpu().detach().numpy())))
             RMSE = np.mean([(i-j)**2 for i, j in hrs])**0.5
         return RMSE
 
@@ -220,7 +220,7 @@ class PhysFormerTrainer(BaseTrainer):
         """ Runs the model on test sets."""
         if data_loader["test"] is None:
             raise ValueError("No data for test")
-
+        
         print('')
         print("===Testing===")
         predictions = dict()
@@ -228,24 +228,21 @@ class PhysFormerTrainer(BaseTrainer):
 
         if self.config.TOOLBOX_MODE == "only_test":
             if not os.path.exists(self.config.INFERENCE.MODEL_PATH):
-                raise ValueError(
-                    "Inference model path error! Please check INFERENCE.MODEL_PATH in your yaml.")
-            self.model.load_state_dict(torch.load(
-                self.config.INFERENCE.MODEL_PATH))
+                raise ValueError("Inference model path error! Please check INFERENCE.MODEL_PATH in your yaml.")
+            self.model.load_state_dict(torch.load(self.config.INFERENCE.MODEL_PATH))
             print("Testing uses pretrained model!")
             print(self.config.INFERENCE.MODEL_PATH)
         else:
             if self.config.TEST.USE_LAST_EPOCH:
                 last_epoch_model_path = os.path.join(
-                    self.model_dir, self.model_file_name + '_Epoch' + str(self.max_epoch_num - 1) + '.pth')
+                self.model_dir, self.model_file_name + '_Epoch' + str(self.max_epoch_num - 1) + '.pth')
                 print("Testing uses last epoch as non-pretrained model!")
                 print(last_epoch_model_path)
                 self.model.load_state_dict(torch.load(last_epoch_model_path))
             else:
                 best_model_path = os.path.join(
                     self.model_dir, self.model_file_name + '_Epoch' + str(self.best_epoch) + '.pth')
-                print(
-                    "Testing uses best epoch selected using model selection as non-pretrained model!")
+                print("Testing uses best epoch selected using model selection as non-pretrained model!")
                 print(best_model_path)
                 self.model.load_state_dict(torch.load(best_model_path))
 
@@ -270,7 +267,7 @@ class PhysFormerTrainer(BaseTrainer):
 
         print('')
         calculate_metrics(predictions, labels, self.config)
-        if self.config.TEST.OUTPUT_SAVE_DIR:  # saving test outputs
+        if self.config.TEST.OUTPUT_SAVE_DIR: # saving test outputs
             self.save_test_outputs(predictions, labels, self.config)
 
     def save_model(self, index):
@@ -284,4 +281,4 @@ class PhysFormerTrainer(BaseTrainer):
     # HR calculation based on ground truth label
     def get_hr(self, y, sr=30, min=30, max=180):
         p, q = welch(y, sr, nfft=1e5/sr, nperseg=np.min((len(y)-1, 256)))
-        return p[(p >min/60)&(p<max/60)][np.argmax(q[(p>min/60)&(p<max/60)])]*60
+        return p[(p>min/60)&(p<max/60)][np.argmax(q[(p>min/60)&(p<max/60)])]*60

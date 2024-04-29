@@ -4,12 +4,12 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 200
   LR: 1e-4
-  MODEL_FILE_NAME: PURE_PURE_PhysFormer_Standardized
+  MODEL_FILE_NAME: PURE_PURE_PhysFormer_DiffNormalized
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
     DATASET: PURE
-    DO_PREPROCESS: False            # if first time, should be true
+    DO_PREPROCESS: True            # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/prep"    # Processed dataset save path, need to be updated
@@ -17,9 +17,9 @@ TRAIN:
     BEGIN: 0.0
     END: 0.8
     PREPROCESS:
-      DATA_TYPE: ['Standardized']         #if use PhysFormer, should be Standardized
+      DATA_TYPE: ['DiffNormalized']         #if use PhysFormer, should be DiffNormalized
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
-      LABEL_TYPE: Standardized
+      LABEL_TYPE: DiffNormalized
       DO_CHUNK: True
       CHUNK_LENGTH: 160
       CROP_FACE:
@@ -38,7 +38,7 @@ VALID:
   DATA:
     FS: 30
     DATASET: PURE
-    DO_PREPROCESS: False                # if first time, should be true
+    DO_PREPROCESS: True                # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/prep"    # Processed dataset save path, need to be updated
@@ -46,9 +46,9 @@ VALID:
     BEGIN: 0.8
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['Standardized']         #if use PhysFormer, should be Standardized
+      DATA_TYPE: ['DiffNormalized']         #if use PhysFormer, should be DiffNormalized
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
-      LABEL_TYPE: Standardized
+      LABEL_TYPE: DiffNormalized
       DO_CHUNK: True
       CHUNK_LENGTH: 160
       CROP_FACE:
@@ -69,7 +69,7 @@ TEST:
   DATA:
     FS: 30
     DATASET: IBVP
-    DO_PREPROCESS: False                  # if first time, should be true
+    DO_PREPROCESS: True                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/home/jitesh/Documents/IBVP_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/IBVP_Dataset/prep"    # Processed dataset save path, need to be updated
@@ -77,8 +77,8 @@ TEST:
     BEGIN: 0.0
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['Standardized']         #if use PhysFormer, should be Standardized
-      LABEL_TYPE: Standardized
+      DATA_TYPE: ['DiffNormalized']         #if use PhysFormer, should be DiffNormalized
+      LABEL_TYPE: DiffNormalized
       DO_CHUNK: True
       CHUNK_LENGTH: 160
       CROP_FACE:
@@ -113,4 +113,4 @@ INFERENCE:
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
-  MODEL_PATH: "./final_model_release/PURE_PhysFormer_Standardized.pth"
+  MODEL_PATH: "./final_model_release/PURE_PhysFormer_DiffNormalized.pth"
