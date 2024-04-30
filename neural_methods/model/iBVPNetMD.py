@@ -19,7 +19,7 @@ model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
     "MD_D": nf[3],
-    "MD_R": 8,
+    "MD_R": 16,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -390,7 +390,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[3], nf[4], [7, 3, 3], [2, 2, 2], [3, 1, 1]),
 
             ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[4], nf[5], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[4], nf[5], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
         )
 
     def forward(self, x):
@@ -409,7 +409,7 @@ class DeConvBlock3D(nn.Module):
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m1Ch),
             nn.ELU(),
-            nn.Conv3d(m1Ch, m2Ch, (7, 3, 3), (1, 1, 1), (3, 1, 1)),
+            nn.Conv3d(m1Ch, m2Ch, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
             nn.BatchNorm3d(m2Ch),
             nn.ELU(),
             nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
