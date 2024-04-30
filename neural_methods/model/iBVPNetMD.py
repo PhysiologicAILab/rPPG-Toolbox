@@ -19,7 +19,7 @@ model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
     "MD_D": nf[1],
-    "MD_R": 16,
+    "MD_R": 8,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -97,8 +97,8 @@ class _MatrixDecompositionBase(nn.Module):
             # D = C * H // self.S
             # N = T * W
 
-            D = T * W // self.S
-            N = C * H
+            D = T * C // self.S
+            N = H * W
 
             x = x.view(B * self.S, D, N)
 
