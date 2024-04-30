@@ -13,12 +13,12 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 40, 64]
+nf = [8, 16, 24, 32, 64]
 
 model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
-    "MD_D": nf[1],
+    "MD_D": nf[4],
     "MD_R": 8,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
@@ -85,8 +85,10 @@ class _MatrixDecompositionBase(nn.Module):
             # N = T
             # D = C // self.S
             # N = T * H * W
-            D = T // self.S
-            N = C * H * W
+            # D = T // self.S
+            # N = C * H * W
+            D = T * H * W // self.S
+            N = C
             x = x.view(B * self.S, D, N)
 
             # print("C, T, H, W", C, T, H, W)
@@ -314,7 +316,7 @@ class FeaturesFactorizationModule(nn.Module):
             ConvBNReLU(MD_D, MD_D, kernel_size=(1, 1, 1)),
             nn.Conv3d(MD_D, in_c, (1, 1, 1), bias=False)
         )
-        self.shortcut = nn.Sequential()
+        # self.shortcut = nn.Sequential()
         self._init_weight()
 
         # print('ham', HAM)
@@ -330,13 +332,13 @@ class FeaturesFactorizationModule(nn.Module):
                     m.bias.data.zero_()
 
     def forward(self, x):
-        shortcut = self.shortcut(x)
+        # shortcut = self.shortcut(x)
 
         x = self.pre_conv_block(x)
         x = self.md_block(x)
         x = self.post_conv_block(x)
 
-        x = F.relu(x + shortcut, inplace=True)
+        # x = F.relu(x + shortcut, inplace=True)
 
         return x
 
@@ -423,18 +425,22 @@ class decoder_block(nn.Module):
         self.debug = debug
         MD_D = model_config["MD_D"]     #nf[1]
         
-        self.squeeze = ConvBNReLU(nf[4], nf[2], (3, 3, 3), (1, 1, 1))
-        self.feats_distill = FeaturesFactorizationModule(device, nf[2], MD_D)
-        self.align = ConvBNReLU(nf[2], nf[4], (1, 1, 1))
+        # self.squeeze = ConvBNReLU(nf[4], nf[2], (3, 3, 3), (1, 1, 1))
+        # self.feats_distill = FeaturesFactorizationModule(device, nf[2], MD_D)
+        # self.align = ConvBNReLU(nf[2], nf[4], (1, 1, 1))
+        
+        self.feats_distill = FeaturesFactorizationModule(device, nf[4], MD_D)
         
         self.conv_decoder = DeConvBlock3D(2*nf[4], nf[2], nf[0])
 
 
     def forward(self, x):        
         
-        distilled_x = self.squeeze(x)
-        distilled_x = self.feats_distill(distilled_x)
-        distilled_x = self.align(distilled_x)
+        # distilled_x = self.squeeze(x)
+        # distilled_x = self.feats_distill(distilled_x)
+        # distilled_x = self.align(distilled_x)
+
+        distilled_x = self.feats_distill(x)
 
         if self.debug:
             print("Decoder")
