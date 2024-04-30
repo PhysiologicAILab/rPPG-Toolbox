@@ -99,11 +99,11 @@ class _MatrixDecompositionBase(nn.Module):
 
             x = x.view(B * self.S, D, N)
 
-            print("C, T, H, W", C, T, H, W)
-            print("D", D)
-            print("R", self.R)
-            print("N", N)
-            print("x.shape", x.shape)
+            # print("C, T, H, W", C, T, H, W)
+            # print("D", D)
+            # print("R", self.R)
+            # print("N", N)
+            # print("x.shape", x.shape)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             B, C, H, W = x.shape
