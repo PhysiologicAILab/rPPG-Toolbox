@@ -451,7 +451,7 @@ class decoder_block(nn.Module):
         #     nn.ELU()
         # )
 
-        self.decomposed_feats = FeaturesFactorizationModule(device, nf[5], nf[5])
+        self.decomposed_feats = FeaturesFactorizationModule(device, nf[5], nf[3])
         
         self.conv_decoder = DeConvBlock3D(nf[5], nf[4], nf[3], nf[2], nf[1], nf[0], 1)    #note: nf[5] = 2 * nf[3]
 
