@@ -18,8 +18,8 @@ nf = [8, 16, 24, 32, 48, 64]
 model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
-    "MD_D": nf[3],
-    "MD_R": 32,
+    "MD_D": nf[1],
+    "MD_R": 16,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -94,8 +94,11 @@ class _MatrixDecompositionBase(nn.Module):
             # D = T * H * W // self.S
             # N = C
 
-            D = C * H // self.S
-            N = T * W
+            # D = C * H // self.S
+            # N = T * W
+
+            D = T * W // self.S
+            N = C * H
 
             x = x.view(B * self.S, D, N)
 
@@ -362,7 +365,7 @@ class ConvBlock3D(nn.Module):
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
             nn.BatchNorm3d(out_channel),
-            nn.ELU(inplace=True)
+            nn.ReLU(inplace=True)
         )
 
     def forward(self, x):
@@ -405,26 +408,20 @@ class encoder_block(nn.Module):
 
 
 class DeConvBlock3D(nn.Module):
-    def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, m5Ch, outCh):
+    def __init__(self, inCh, m1Ch, m2Ch, m3Ch, outCh):
         super(DeConvBlock3D, self).__init__()
 
         self.deconv_block = nn.Sequential(
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.Conv3d(m1Ch, m1Ch, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
             nn.BatchNorm3d(m1Ch),
-            nn.ELU(),
-            nn.Conv3d(m1Ch, m2Ch, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
+            nn.ConvTranspose3d(m1Ch, m2Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.Conv3d(m2Ch, m2Ch, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
             nn.BatchNorm3d(m2Ch),
-            nn.ELU(),
-            nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.Conv3d(m2Ch, m3Ch, (7, 2, 2), (1, 1, 1), (3, 0, 0)),
             nn.BatchNorm3d(m3Ch),
             nn.ELU(),
-            nn.Conv3d(m3Ch, m4Ch, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
-            nn.BatchNorm3d(m4Ch),
-            nn.ELU(),
-            nn.Conv3d(m4Ch, m5Ch, (7, 2, 2), (1, 1, 1), (3, 0, 0)),
-            nn.BatchNorm3d(m5Ch),
-            nn.ELU(),
-            nn.Conv3d(m5Ch, outCh, (7, 1, 1), (1, 1, 1), (3, 0, 0)),
+            nn.Conv3d(m3Ch, outCh, (7, 1, 1), (1, 1, 1), (3, 0, 0)),
         )
 
     def forward(self, x):
@@ -435,49 +432,27 @@ class decoder_block(nn.Module):
     def __init__(self, device, debug=False):
         super(decoder_block, self).__init__()
         self.debug = debug
-        
-        # self.squeeze = ConvBNReLU(nf[5], nf[3], (3, 3, 3), (1, 1, 1))
-        # self.decomposed_feats = FeaturesFactorizationModule(device, nf[2], MD_D)
-        # self.align = ConvBNReLU(nf[3], nf[5], (1, 1, 1))
-
-        # self.shortcut = nn.Sequential()
-
-        # self.align = nn.Sequential(
-        #     nn.Conv3d(nf[5], nf[4], (1, 1, 1), (1, 1, 1), (0, 0, 0)),
-        #     nn.BatchNorm3d(nf[4]),
-        #     nn.ELU(),
-        #     nn.Conv3d(nf[4], nf[3], (1, 1, 1), (1, 1, 1), (0, 0, 0)),
-        #     nn.BatchNorm3d(nf[3]),
-        #     nn.ELU()
-        # )
-
-        self.decomposed_feats = FeaturesFactorizationModule(device, nf[5], nf[3])
-        
-        self.conv_decoder = DeConvBlock3D(nf[5], nf[4], nf[3], nf[2], nf[1], nf[0], 1)    #note: nf[5] = 2 * nf[3]
-
+        MD_D = nf[1]
+        self.squeeze = ConvBNReLU(nf[5], nf[2], (3, 3, 3), (1, 1, 1))
+        self.decomposed_feats = FeaturesFactorizationModule(device, nf[2], MD_D)
+        self.align = ConvBNReLU(nf[2], nf[2], (1, 1, 1))
+        self.conv_decoder = DeConvBlock3D(2*nf[2], nf[2], nf[1], nf[0], 1)    #note: nf[5] = 2 * nf[3]
 
     def forward(self, x):        
-        
-        # short_x = self.shortcut(x)
-        # squeezed_x = self.squeeze(x)
-        # factorized_x = self.decomposed_feats(factorized_x)
-        # factorized_x = self.align(factorized_x)
-
-        # aligned_x = self.align(x)
-
-        factorized_x = self.decomposed_feats(x) #factorized_x = attention weights
 
         if self.debug:
             print("Decoder")
             print("     x.shape", x.shape)
-            # print("     aligned_x.shape", aligned_x.shape)
-            print("     factorized_x.shape", factorized_x.shape)
 
-        # x = self.conv_decoder(short_x + torch.concat([aligned_x, factorized_x], dim=1))
-        # x = self.conv_decoder(torch.concat([aligned_x, factorized_x], dim=1))
-        # x = self.conv_decoder(torch.concat([x, factorized_x], dim=1))
-        # x = self.conv_decoder(short_x + factorized_x)
-        x = self.conv_decoder(factorized_x)
+        short_x = self.squeeze(x)
+        x = self.decomposed_feats(short_x)
+        x = self.align(x)
+
+        if self.debug:
+            print("     aligned x.shape", x.shape)
+
+        x = self.conv_decoder(torch.concat([short_x, x], dim=1))
+        # x = self.conv_decoder(x)
         
         if self.debug:
             print("     conv_decoder_x.shape", x.shape)
