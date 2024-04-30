@@ -346,7 +346,7 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.md_block(x)
         x = self.post_conv_block(x)
 
-        x = F.relu(x * shortcut, inplace=True)
+        x = F.relu(x + shortcut, inplace=True)
 
         return x
 
@@ -440,7 +440,7 @@ class decoder_block(nn.Module):
         # self.decomposed_feats = FeaturesFactorizationModule(device, nf[2], MD_D)
         # self.align = ConvBNReLU(nf[3], nf[5], (1, 1, 1))
 
-        self.shortcut = nn.Sequential()
+        # self.shortcut = nn.Sequential()
 
         # self.align = nn.Sequential(
         #     nn.Conv3d(nf[5], nf[4], (1, 1, 1), (1, 1, 1), (0, 0, 0)),
@@ -458,7 +458,7 @@ class decoder_block(nn.Module):
 
     def forward(self, x):        
         
-        short_x = self.shortcut(x)
+        # short_x = self.shortcut(x)
         # squeezed_x = self.squeeze(x)
         # factorized_x = self.decomposed_feats(factorized_x)
         # factorized_x = self.align(factorized_x)
@@ -476,8 +476,8 @@ class decoder_block(nn.Module):
         # x = self.conv_decoder(short_x + torch.concat([aligned_x, factorized_x], dim=1))
         # x = self.conv_decoder(torch.concat([aligned_x, factorized_x], dim=1))
         # x = self.conv_decoder(torch.concat([x, factorized_x], dim=1))
-        x = self.conv_decoder(short_x + factorized_x)
-        # x = self.conv_decoder(factorized_x)
+        # x = self.conv_decoder(short_x + factorized_x)
+        x = self.conv_decoder(factorized_x)
         
         if self.debug:
             print("     conv_decoder_x.shape", x.shape)
