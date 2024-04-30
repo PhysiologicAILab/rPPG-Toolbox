@@ -13,12 +13,12 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32, 64]
+nf = [8, 16, 24, 32, 48, 64]
 
 model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
-    "MD_D": nf[4],
+    "MD_D": nf[3],
     "MD_R": 8,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
@@ -81,14 +81,19 @@ class _MatrixDecompositionBase(nn.Module):
         
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
-            # D = C * H * W // self.S
-            # N = T
+
+            D = C * H * W // self.S
+            N = T
+
             # D = C // self.S
             # N = T * H * W
+
             # D = T // self.S
             # N = C * H * W
-            D = T * H * W // self.S
-            N = C
+
+            # D = T * H * W // self.S
+            # N = C
+
             x = x.view(B * self.S, D, N)
 
             # print("C, T, H, W", C, T, H, W)
@@ -314,7 +319,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.post_conv_block = nn.Sequential(
             ConvBNReLU(MD_D, MD_D, kernel_size=(1, 1, 1)),
-            nn.Conv3d(MD_D, in_c, (1, 1, 1), bias=False)
+            nn.Conv3d(MD_D, MD_D, (1, 1, 1), bias=False)
         )
         # self.shortcut = nn.Sequential()
         self._init_weight()
@@ -361,29 +366,6 @@ class ConvBlock3D(nn.Module):
         return self.conv_block_3d(x)
 
 
-class DeConvBlock3D(nn.Module):
-    def __init__(self, in_channel, mid_channel, out_channel):
-        super(DeConvBlock3D, self).__init__()
-
-        self.deconv_block = nn.Sequential(
-            nn.ConvTranspose3d(in_channel, mid_channel, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
-            nn.BatchNorm3d(mid_channel),
-            nn.ELU(),
-            nn.Conv3d(mid_channel, mid_channel, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
-            nn.BatchNorm3d(mid_channel),
-            nn.ELU(),
-            nn.ConvTranspose3d(mid_channel, out_channel, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
-            nn.BatchNorm3d(out_channel),
-            nn.ELU(),
-            nn.Conv3d(out_channel, out_channel, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
-            nn.BatchNorm3d(out_channel),
-            nn.ELU()
-        )
-
-    def forward(self, x):
-        return self.deconv_block(x)
-
-
 
 class encoder_block(nn.Module):
     def __init__(self, inCh, debug=False):
@@ -408,7 +390,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[3], nf[4], [7, 3, 3], [2, 2, 2], [3, 1, 1]),
 
             ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[4], nf[5], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
         )
 
     def forward(self, x):
@@ -419,34 +401,73 @@ class encoder_block(nn.Module):
         return x
 
 
+class DeConvBlock3D(nn.Module):
+    def __init__(self, inCh, m1Ch, m2Ch, m3Ch, outCh):
+        super(DeConvBlock3D, self).__init__()
+
+        self.deconv_block = nn.Sequential(
+            nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.BatchNorm3d(m1Ch),
+            nn.ELU(),
+            nn.Conv3d(m1Ch, m2Ch, (7, 3, 3), (1, 1, 1), (3, 1, 1)),
+            nn.BatchNorm3d(m2Ch),
+            nn.ELU(),
+            nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.BatchNorm3d(m3Ch),
+            nn.ELU(),
+            nn.Conv3d(m3Ch, outCh, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
+            nn.BatchNorm3d(outCh),
+            nn.ELU()
+        )
+
+    def forward(self, x):
+        return self.deconv_block(x)
+
+
 class decoder_block(nn.Module):
     def __init__(self, device, debug=False):
         super(decoder_block, self).__init__()
         self.debug = debug
-        MD_D = model_config["MD_D"]     #nf[1]
         
         # self.squeeze = ConvBNReLU(nf[4], nf[2], (3, 3, 3), (1, 1, 1))
         # self.feats_distill = FeaturesFactorizationModule(device, nf[2], MD_D)
         # self.align = ConvBNReLU(nf[2], nf[4], (1, 1, 1))
+
+        # self.shortcut = nn.Sequential()
+
+        self.align = nn.Sequential(
+            nn.Conv3d(nf[5], nf[4], (1, 1, 1), (1, 1, 1), (0, 0, 0)),
+            nn.BatchNorm3d(nf[4]),
+            nn.ELU(),
+            nn.Conv3d(nf[4], nf[3], (1, 1, 1), (1, 1, 1), (0, 0, 0)),
+            nn.BatchNorm3d(nf[3]),
+            nn.ELU()
+        )
+
+        self.feats_distill = FeaturesFactorizationModule(device, nf[5], nf[3])
         
-        self.feats_distill = FeaturesFactorizationModule(device, nf[4], MD_D)
-        
-        self.conv_decoder = DeConvBlock3D(2*nf[4], nf[2], nf[0])
+        self.conv_decoder = DeConvBlock3D(nf[5], nf[3], nf[2], nf[1], nf[0])    #note: nf[5] = 2 * nf[3]
 
 
     def forward(self, x):        
         
+        # short_x = self.shortcut(x)
         # distilled_x = self.squeeze(x)
         # distilled_x = self.feats_distill(distilled_x)
         # distilled_x = self.align(distilled_x)
+
+        aligned_x = self.align(x)
 
         distilled_x = self.feats_distill(x)
 
         if self.debug:
             print("Decoder")
-            print("     feats_distill_x.shape", x.shape)
+            print("     x.shape", x.shape)
+            print("     aligned_x.shape", aligned_x.shape)
+            print("     distilled_x.shape", distilled_x.shape)
 
-        x = self.conv_decoder(torch.concat([x, distilled_x], dim=1))
+        # x = self.conv_decoder(short_x + torch.concat([aligned_x, distilled_x], dim=1))
+        x = self.conv_decoder(torch.concat([aligned_x, distilled_x], dim=1))
         
         if self.debug:
             print("     conv_decoder_x.shape", x.shape)
@@ -463,8 +484,9 @@ class iBVPNetMD(nn.Module):
             encoder_block(in_channels, debug),
             decoder_block(device, debug),
             # spatial adaptive pooling
-            nn.AdaptiveAvgPool3d((frames, 1, 1)),
-            nn.Conv3d(nf[0], 1, [1, 1, 1], stride=1, padding=0)
+            # nn.AdaptiveAvgPool3d((frames, 1, 1)),
+            nn.Conv3d(nf[0], 1, (1, 2, 2), stride=(1, 1, 1), padding=(0, 0, 0))
+            # nn.Conv3d(nf[0], 1, (1, 2, 2), stride=(1, 1, 1), padding=(0, 0, 0))
         )
 
         
