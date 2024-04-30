@@ -319,9 +319,9 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.post_conv_block = nn.Sequential(
             ConvBNReLU(MD_D, MD_D, kernel_size=(1, 1, 1)),
-            nn.Conv3d(MD_D, MD_D, (1, 1, 1), bias=False)
+            nn.Conv3d(MD_D, in_c, (1, 1, 1), bias=False)
         )
-        # self.shortcut = nn.Sequential()
+        self.shortcut = nn.Sequential()
         self._init_weight()
 
         # print('ham', HAM)
@@ -337,13 +337,13 @@ class FeaturesFactorizationModule(nn.Module):
                     m.bias.data.zero_()
 
     def forward(self, x):
-        # shortcut = self.shortcut(x)
+        shortcut = self.shortcut(x)
 
         x = self.pre_conv_block(x)
         x = self.md_block(x)
         x = self.post_conv_block(x)
 
-        # x = F.relu(x + shortcut, inplace=True)
+        x = F.relu(x + shortcut, inplace=True)
 
         return x
 
@@ -429,22 +429,22 @@ class decoder_block(nn.Module):
         super(decoder_block, self).__init__()
         self.debug = debug
         
-        # self.squeeze = ConvBNReLU(nf[4], nf[2], (3, 3, 3), (1, 1, 1))
-        # self.feats_distill = FeaturesFactorizationModule(device, nf[2], MD_D)
-        # self.align = ConvBNReLU(nf[2], nf[4], (1, 1, 1))
+        # self.squeeze = ConvBNReLU(nf[5], nf[3], (3, 3, 3), (1, 1, 1))
+        # self.decomposed_feats = FeaturesFactorizationModule(device, nf[2], MD_D)
+        # self.align = ConvBNReLU(nf[3], nf[5], (1, 1, 1))
 
         # self.shortcut = nn.Sequential()
 
-        self.align = nn.Sequential(
-            nn.Conv3d(nf[5], nf[4], (1, 1, 1), (1, 1, 1), (0, 0, 0)),
-            nn.BatchNorm3d(nf[4]),
-            nn.ELU(),
-            nn.Conv3d(nf[4], nf[3], (1, 1, 1), (1, 1, 1), (0, 0, 0)),
-            nn.BatchNorm3d(nf[3]),
-            nn.ELU()
-        )
+        # self.align = nn.Sequential(
+        #     nn.Conv3d(nf[5], nf[4], (1, 1, 1), (1, 1, 1), (0, 0, 0)),
+        #     nn.BatchNorm3d(nf[4]),
+        #     nn.ELU(),
+        #     nn.Conv3d(nf[4], nf[3], (1, 1, 1), (1, 1, 1), (0, 0, 0)),
+        #     nn.BatchNorm3d(nf[3]),
+        #     nn.ELU()
+        # )
 
-        self.feats_distill = FeaturesFactorizationModule(device, nf[5], nf[3])
+        self.decomposed_feats = FeaturesFactorizationModule(device, nf[5], nf[3])
         
         self.conv_decoder = DeConvBlock3D(nf[5], nf[3], nf[2], nf[1], nf[0])    #note: nf[5] = 2 * nf[3]
 
@@ -452,22 +452,25 @@ class decoder_block(nn.Module):
     def forward(self, x):        
         
         # short_x = self.shortcut(x)
-        # distilled_x = self.squeeze(x)
-        # distilled_x = self.feats_distill(distilled_x)
-        # distilled_x = self.align(distilled_x)
+        # squeezed_x = self.squeeze(x)
+        # factorized_x = self.decomposed_feats(factorized_x)
+        # factorized_x = self.align(factorized_x)
 
-        aligned_x = self.align(x)
+        # aligned_x = self.align(x)
 
-        distilled_x = self.feats_distill(x)
+        factorized_x = self.decomposed_feats(x)
 
         if self.debug:
             print("Decoder")
             print("     x.shape", x.shape)
-            print("     aligned_x.shape", aligned_x.shape)
-            print("     distilled_x.shape", distilled_x.shape)
+            # print("     aligned_x.shape", aligned_x.shape)
+            print("     factorized_x.shape", factorized_x.shape)
 
-        # x = self.conv_decoder(short_x + torch.concat([aligned_x, distilled_x], dim=1))
-        x = self.conv_decoder(torch.concat([aligned_x, distilled_x], dim=1))
+        # x = self.conv_decoder(short_x + torch.concat([aligned_x, factorized_x], dim=1))
+        # x = self.conv_decoder(torch.concat([aligned_x, factorized_x], dim=1))
+        # x = self.conv_decoder(torch.concat([x, factorized_x], dim=1))
+        # x = self.conv_decoder(short_x + factorized_x)
+        x = self.conv_decoder(factorized_x)
         
         if self.debug:
             print("     conv_decoder_x.shape", x.shape)
