@@ -402,7 +402,7 @@ class encoder_block(nn.Module):
 
 
 class DeConvBlock3D(nn.Module):
-    def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, outCh):
+    def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, m5Ch, outCh):
         super(DeConvBlock3D, self).__init__()
 
         self.deconv_block = nn.Sequential(
@@ -418,9 +418,10 @@ class DeConvBlock3D(nn.Module):
             nn.Conv3d(m3Ch, m4Ch, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
             nn.BatchNorm3d(m4Ch),
             nn.ELU(),
-            nn.Conv3d(m4Ch, outCh, (7, 2, 2), (1, 1, 1), (3, 0, 0)),
-            nn.BatchNorm3d(outCh),
-            nn.ELU()
+            nn.Conv3d(m4Ch, m5Ch, (7, 2, 2), (1, 1, 1), (3, 0, 0)),
+            nn.BatchNorm3d(m5Ch),
+            nn.ELU(),
+            nn.Conv3d(m5Ch, outCh, (7, 1, 1), (1, 1, 1), (3, 0, 0)),
         )
 
     def forward(self, x):
@@ -449,7 +450,7 @@ class decoder_block(nn.Module):
 
         self.decomposed_feats = FeaturesFactorizationModule(device, nf[5], nf[3])
         
-        self.conv_decoder = DeConvBlock3D(nf[5], nf[4], nf[3], nf[2], nf[1], nf[0])    #note: nf[5] = 2 * nf[3]
+        self.conv_decoder = DeConvBlock3D(nf[5], nf[4], nf[3], nf[2], nf[1], nf[0], 1)    #note: nf[5] = 2 * nf[3]
 
 
     def forward(self, x):        
@@ -494,8 +495,6 @@ class iBVPNetMD(nn.Module):
             # nn.Conv3d(nf[0], 1, (1, 2, 2), stride=(1, 1, 1), padding=(0, 0, 0))
             # nn.Conv3d(nf[0], 1, (1, 2, 2), stride=(1, 1, 1), padding=(0, 0, 0))
         )
-
-        self.final_layer = nn.Conv1d(nf[0], 1, kernel_size=7, stride=1, padding=3)
         
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
@@ -506,8 +505,8 @@ class iBVPNetMD(nn.Module):
         feats = self.model(x)
         if self.debug:
             print("feats.shape", feats.shape)
-        feats = feats.view(-1, length)
-        rPPG = self.final_layer(feats)
+        rPPG = feats.view(-1, length)
+
         if self.debug:
             print("rPPG.shape", rPPG.shape)
 
