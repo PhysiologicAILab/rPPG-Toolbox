@@ -471,7 +471,7 @@ class iBVPNetMD(nn.Module):
     def __init__(self, frames, device, in_channels=3, debug=False):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
-        self.model = nn.Sequential(
+        self.iBVPNetMD_model = nn.Sequential(
             encoder_block(in_channels, debug),
             decoder_block(device, debug)
             # spatial adaptive pooling
@@ -486,7 +486,7 @@ class iBVPNetMD(nn.Module):
         if self.debug:
             print("Input.shape", x.shape)
 
-        feats = self.model(x)
+        feats = self.iBVPNetMD_model(x)
         if self.debug:
             print("feats.shape", feats.shape)
         rPPG = feats.view(-1, length)

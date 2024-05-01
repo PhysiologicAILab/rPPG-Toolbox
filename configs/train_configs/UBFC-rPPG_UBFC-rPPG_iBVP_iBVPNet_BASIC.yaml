@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 200
   LR: 9e-3
-  MODEL_FILE_NAME: UBFC_UBFC_iBVP_ibvpnet_diffnormalized
+  MODEL_FILE_NAME: UBFC_UBFC_iBVP_iBVPNet_diffnormalized
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -18,7 +18,7 @@ TRAIN:
     BEGIN: 0.0
     END: 0.8
     PREPROCESS:
-      DATA_TYPE: ['DiffNormalized']         #if use ibvpnet, should be DiffNormalized
+      DATA_TYPE: ['DiffNormalized']         #if use iBVPNet, should be DiffNormalized
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: DiffNormalized
       DO_CHUNK: True
@@ -48,7 +48,7 @@ VALID:
     BEGIN: 0.8
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['DiffNormalized']         #if use ibvpnet, should be DiffNormalized
+      DATA_TYPE: ['DiffNormalized']         #if use iBVPNet, should be DiffNormalized
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: DiffNormalized
       DO_CHUNK: True
@@ -79,7 +79,7 @@ TEST:
     BEGIN: 0.0
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['DiffNormalized']         #if use ibvpnet, should be DiffNormalized
+      DATA_TYPE: ['DiffNormalized']         #if use iBVPNet, should be DiffNormalized
       LABEL_TYPE: DiffNormalized
       DO_CHUNK: True
       CHUNK_LENGTH: 128                 #only support for factor of 512

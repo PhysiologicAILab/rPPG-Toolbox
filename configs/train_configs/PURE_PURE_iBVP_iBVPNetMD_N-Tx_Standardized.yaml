@@ -17,7 +17,7 @@ TRAIN:
     BEGIN: 0.0
     END: 0.8
     PREPROCESS:
-      DATA_TYPE: ['Standardized']         #if use ibvpnet, should be Standardized
+      DATA_TYPE: ['Standardized']         #if use iBVPNetMD, should be Standardized
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Standardized
       DO_CHUNK: True
@@ -46,7 +46,7 @@ VALID:
     BEGIN: 0.8
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['Standardized']         #if use ibvpnet, should be Standardized
+      DATA_TYPE: ['Standardized']         #if use iBVPNetMD, should be Standardized
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Standardized
       DO_CHUNK: True
@@ -77,7 +77,7 @@ TEST:
     BEGIN: 0.0
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['Standardized']         #if use ibvpnet, should be Standardized
+      DATA_TYPE: ['Standardized']         #if use iBVPNetMD, should be Standardized
       LABEL_TYPE: Standardized
       DO_CHUNK: True
       CHUNK_LENGTH: 256                 #only support for factor of 512

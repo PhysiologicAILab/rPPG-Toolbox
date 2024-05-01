@@ -104,7 +104,7 @@ class iBVPNet(nn.Module):
     def __init__(self, frames, in_channels=3, debug=False):
         super(iBVPNet, self).__init__()
         self.debug = debug
-        self.ibvpnet = nn.Sequential(
+        self.iBVPNet = nn.Sequential(
             encoder_block(in_channels, debug),
             decoder_block(debug),
             # spatial adaptive pooling
@@ -116,7 +116,7 @@ class iBVPNet(nn.Module):
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
         [batch, channel, length, width, height] = x.shape
-        feats = self.ibvpnet(x)
+        feats = self.iBVPNet(x)
         if self.debug:
             print("feats.shape", feats.shape)
         rPPG = feats.view(-1, length)
