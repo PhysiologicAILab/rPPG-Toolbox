@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 100
   LR: 9e-3
-  MODEL_FILE_NAME: iBVP_iBVP_iBVPNetMD_N-CHW_Standardized
+  MODEL_FILE_NAME: iBVP_iBVP_iBVPNetMD_Standardized
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -18,6 +18,7 @@ TRAIN:
     END: 0.8
     PREPROCESS:
       DATA_TYPE: ['Standardized']         #if use iBVPNetMD, should be Standardized
+      DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Standardized
       DO_CHUNK: True
       CHUNK_LENGTH: 256                 #only support for factor of 512
@@ -46,6 +47,7 @@ VALID:
     END: 1.0
     PREPROCESS:
       DATA_TYPE: ['Standardized']         #if use iBVPNetMD, should be Standardized
+      DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Standardized
       DO_CHUNK: True
       CHUNK_LENGTH: 256                 #only support for factor of 512
@@ -76,7 +78,6 @@ TEST:
     END: 1.0
     PREPROCESS:
       DATA_TYPE: ['Standardized']         #if use iBVPNetMD, should be Standardized
-      DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Standardized
       DO_CHUNK: True
       CHUNK_LENGTH: 256                 #only support for factor of 512
@@ -92,9 +93,7 @@ TEST:
       RESIZE:
         H: 128
         W: 128
-
-
-DEVICE: cuda:2
+DEVICE: cuda:0
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
@@ -109,4 +108,4 @@ INFERENCE:
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
-  MODEL_PATH: "./final_model_release/iBVP_iBVPNetMD_N-CHW_Standardized.pth"
+  MODEL_PATH: "./final_model_release/iBVP_iBVPNetMD_Standardized.pth"
