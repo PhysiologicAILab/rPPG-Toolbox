@@ -15,7 +15,7 @@ TRAIN:
     CACHED_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/prep"    # Processed dataset save path, need to be updated
     EXP_DATA_NAME: "iBVP_STD_256_128x128"
     BEGIN: 0.0
-    END: 0.65
+    END: 0.6
     PREPROCESS:
       DATA_TYPE: ['Standardized']         #if use iBVPNetMD, should be Standardized
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
@@ -43,8 +43,8 @@ VALID:
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/prep"    # Processed dataset save path, need to be updated
     EXP_DATA_NAME: "iBVP_STD_256_128x128"
-    BEGIN: 0.65
-    END: 0.83
+    BEGIN: 0.6
+    END: 0.8
     PREPROCESS:
       DATA_TYPE: ['Standardized']         #if use iBVPNetMD, should be Standardized
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
@@ -74,8 +74,8 @@ TEST:
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/prep"    # Processed dataset save path, need to be updated
     EXP_DATA_NAME: "iBVP_STD_256_128x128"
-    BEGIN: 0.83
-    END: 1.00
+    BEGIN: 0.8
+    END: 1.0
     PREPROCESS:
       DATA_TYPE: ['Standardized']         #if use iBVPNetMD, should be Standardized
       LABEL_TYPE: Standardized
