@@ -26,7 +26,7 @@ model_config2 = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
     "MD_D": 32,
-    "MD_R": 60,
+    "MD_R": 90,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -118,8 +118,9 @@ class _MatrixDecompositionBase(nn.Module):
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             BN, C, H, W = x.shape
             B = BN // self.frame_depth
-            D = H * W // self.S
-            N = C * self.frame_depth
+            D = C * H * W // self.S
+            N = BN #C * self.frame_depth
+            B = 1
             x = x.view(B * self.S, D, N)
 
             # print("C, H, W", C, H, W)
@@ -157,7 +158,8 @@ class _MatrixDecompositionBase(nn.Module):
             x = x.view(B, C, T, H, W)
         elif self.dim == "2D":
             # (B * S, D, N) -> (B, C, H, W)
-            x = x.view(B*self.frame_depth, C, H, W)
+            # x = x.view(B*self.frame_depth, C, H, W)
+            x = x.view(BN, C, H, W)
 
         else:
             # (B * S, D, N) -> (B, C, L)
@@ -459,7 +461,7 @@ if __name__ == "__main__":
     # default `log_dir` is "runs" - we'll be more specific here
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
-    batch_size = 2
+    batch_size = 8
     frames = 90    #duration*fs
     in_channels = 3
     height = 72
