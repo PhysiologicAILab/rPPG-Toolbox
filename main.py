@@ -69,7 +69,7 @@ def train_and_test(config, data_loader_dict, train=False, test=False):
         model_trainer = trainer.iBVPNetTrainer.iBVPNetTrainer(config, data_loader_dict)
     elif config.MODEL.NAME == "Tscan":
         model_trainer = trainer.TscanTrainer.TscanTrainer(config, data_loader_dict)
-    elif config.MODEL.NAME == "EfficientPhys":
+    elif config.MODEL.NAME == "EfficientPhys" or config.MODEL.NAME == "EfficientPhysFM":
         model_trainer = trainer.EfficientPhysTrainer.EfficientPhysTrainer(config, data_loader_dict)
     elif config.MODEL.NAME == 'DeepPhys':
         model_trainer = trainer.DeepPhysTrainer.DeepPhysTrainer(config, data_loader_dict)

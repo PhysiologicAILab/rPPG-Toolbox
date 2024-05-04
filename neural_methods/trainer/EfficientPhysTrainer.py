@@ -10,6 +10,7 @@ import torch.optim as optim
 from evaluation.metrics import calculate_metrics
 from neural_methods.loss.NegPearsonLoss import Neg_Pearson
 from neural_methods.model.EfficientPhys import EfficientPhys
+from neural_methods.model.EfficientPhysFM import EfficientPhysFM
 from neural_methods.trainer.BaseTrainer import BaseTrainer
 from tqdm import tqdm
 
@@ -39,7 +40,14 @@ class EfficientPhysTrainer(BaseTrainer):
             self.num_of_gpu = 0  # no GPUs used
 
         if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_train":
-            self.model = EfficientPhys(frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H, device=self.device)
+
+            if config.MODEL.NAME == "EfficientPhys":
+                self.model = EfficientPhys(
+                    frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H, device=self.device)
+            else:
+                self.model = EfficientPhysFM(
+                    frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H, device=self.device)
+
             if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
                 self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
             else:
