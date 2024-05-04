@@ -77,10 +77,8 @@ class iBVPNetTrainer(BaseTrainer):
             tbar = tqdm(data_loader["train"], ncols=80)
             for idx, batch in enumerate(tbar):
                 tbar.set_description("Train epoch %s" % epoch)
-                rPPG = self.model(
-                    batch[0].to(torch.float32).to(self.device))
-                BVP_label = batch[1].to(
-                    torch.float32).to(self.device)
+                rPPG = self.model(batch[0].to(torch.float32).to(self.device))
+                BVP_label = batch[1].to(torch.float32).to(self.device)
                 rPPG = (rPPG - torch.mean(rPPG)) / torch.std(rPPG)  # normalize
                 BVP_label = (BVP_label - torch.mean(BVP_label)) / \
                             torch.std(BVP_label)  # normalize

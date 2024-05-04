@@ -18,8 +18,6 @@ nf = [8, 16, 24, 32, 48, 64]
 model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
-    "MD_D": nf[3],
-    "MD_R": 8,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -29,13 +27,12 @@ model_config = {
 }
 
 class _MatrixDecompositionBase(nn.Module):
-    def __init__(self, device, dim="3D"):
+    def __init__(self, device, MD_R, dim="3D"):
         super().__init__()
 
         self.dim = dim
         self.S = model_config["MD_S"]
-        # self.D = model_config["MD_D"]
-        self.R = model_config["MD_R"]
+        self.R = MD_R
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -168,8 +165,8 @@ class _MatrixDecompositionBase(nn.Module):
 
 
 class NMF(_MatrixDecompositionBase):
-    def __init__(self, device, dim="3D"):
-        super().__init__(device, dim=dim)
+    def __init__(self, device, MD_R, dim="3D"):
+        super().__init__(device, MD_R, dim=dim)
         self.device = device
         self.inv_t = 1
 
@@ -301,22 +298,24 @@ class ConvBNReLU(nn.Module):
 
 
 class FeaturesFactorizationModule(nn.Module):
-    def __init__(self, device, in_c, MD_D):
+    def __init__(self, device, in_c, frames):
         super().__init__()
 
         self.device = device
         md_type = model_config["MD_TYPE"]
+        mid_C = in_c // 4
+        MD_R = frames // 16
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
-                nn.Conv3d(in_c, MD_D, (1, 1, 1)),
+                nn.Conv3d(in_c, mid_C, (1, 1, 1)),
                 nn.ReLU(inplace=True)
             )
         else:
-            self.pre_conv_block = nn.Conv3d(in_c, MD_D, (1, 1, 1))
+            self.pre_conv_block = nn.Conv3d(in_c, mid_C, (1, 1, 1))
 
         if "nmf" in md_type.lower():
-            self.md_block = NMF(self.device)
+            self.md_block = NMF(self.device, MD_R)
         elif "vq" in md_type.lower():
             self.md_block = VQ(self.device)
         else:
@@ -324,8 +323,8 @@ class FeaturesFactorizationModule(nn.Module):
             exit()
 
         self.post_conv_block = nn.Sequential(
-            ConvBNReLU(MD_D, MD_D, kernel_size=(1, 1, 1)),
-            nn.Conv3d(MD_D, in_c, (1, 1, 1), bias=False)
+            ConvBNReLU(mid_C, mid_C, kernel_size=(1, 1, 1)),
+            nn.Conv3d(mid_C, in_c, (1, 1, 1), bias=False)
         )
         self.shortcut = nn.Sequential()
         self._init_weight()
@@ -395,7 +394,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[3], nf[4], [7, 3, 3], [2, 2, 2], [3, 1, 1]),
 
             ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[4], nf[5], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[4], nf[5], [3, 2, 2], [1, 1, 1], [1, 0, 0]),
         )
 
     def forward(self, x):
@@ -434,13 +433,12 @@ class DeConvBlock3D(nn.Module):
 
 
 class decoder_block(nn.Module):
-    def __init__(self, device, debug=False):
+    def __init__(self, device, frames, debug=False):
         super(decoder_block, self).__init__()
         self.debug = debug
         # MD_D = nf[1]
         # self.squeeze = ConvBNReLU(nf[5], nf[2], (3, 3, 3), (1, 1, 1))
-        self.feature_factorizer = FeaturesFactorizationModule(
-            device, nf[5], model_config["MD_D"])
+        self.feature_factorizer = FeaturesFactorizationModule(device, nf[5], frames)
         # self.align = ConvBNReLU(nf[2], nf[2], (1, 1, 1))
         self.conv_decoder = DeConvBlock3D(
             nf[5], nf[4], nf[3], nf[2], nf[1], nf[0], 1)  # note: nf[5] = 2 * nf[3]
@@ -472,7 +470,7 @@ class iBVPNetMD(nn.Module):
         self.debug = debug
         self.iBVPNetMD_model = nn.Sequential(
             encoder_block(in_channels, debug),
-            decoder_block(device, debug)
+            decoder_block(device, frames, debug)
             # spatial adaptive pooling
             # nn.AdaptiveAvgPool3d((frames, 1, 1)),
             # nn.Conv3d(nf[0], 1, (1, 2, 2), stride=(1, 1, 1), padding=(0, 0, 0))
@@ -505,16 +503,17 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 1
-    frames = 128    #duration*fs
+    frames = 160    #duration*fs
     in_channels = 3
-    height = 128
-    width = 128
+    height = 72
+    width = 72
 
     if torch.cuda.is_available():
         device = torch.device(0)
     else:
         device = torch.device("cpu")
 
+    # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
     test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
     net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=True)
     # print("-"*100)

@@ -411,7 +411,7 @@ if __name__ == "__main__":
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
     batch_size = 2
-    frames = 90    #duration*fs
+    frames = 160    #duration*fs
     in_channels = 3
     height = 72
     width = 72
@@ -423,9 +423,10 @@ if __name__ == "__main__":
     else:
         device = torch.device("cpu")
 
-    test_data = torch.rand(batch_size, frames, in_channels, height, width).to(device)
+    # test_data = torch.rand(batch_size, frames, in_channels, height, width).to(device)
+    test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
     # print("Before: test_data.shape", test_data.shape)
-    N, D, C, H, W = test_data.shape
+    N, C, D, H, W = test_data.shape
     test_data = test_data.view(N * D, C, H, W)
 
     test_data = test_data[:(N * D) // base_len * base_len]
