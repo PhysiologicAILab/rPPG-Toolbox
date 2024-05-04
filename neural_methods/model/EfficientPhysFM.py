@@ -9,24 +9,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.batchnorm import _BatchNorm
 
-
-model_config1 = {
+model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
-    "MD_D": 16,
-    "MD_R": 45,
-    "TRAIN_STEPS": 6,
-    "EVAL_STEPS": 6,
-    "INV_T": 1,
-    "ETA": 0.9,
-    "RAND_INIT": True
-}
-
-model_config2 = {
-    "INPUT_CHANNELS": 1,
-    "MD_S": 1,
-    "MD_D": 16,
-    "MD_R": 8,
+    "MD_R": 12,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -35,14 +21,14 @@ model_config2 = {
 }
 
 class _MatrixDecompositionBase(nn.Module):
-    def __init__(self, device, frame_depth, model_config, dim="2D"):
+    def __init__(self, device, frame_depth, dim="2D"):
         super().__init__()
 
         self.frame_depth = frame_depth
         self.dim = dim
         self.S = model_config["MD_S"]
         # self.D = model_config["MD_D"]
-        self.R = model_config["MD_R"]
+        self.R = (frame_depth // 8) if (frame_depth // 8) % 2 == 0 else (frame_depth // 8) + 1
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -185,8 +171,8 @@ class _MatrixDecompositionBase(nn.Module):
 
 
 class NMF(_MatrixDecompositionBase):
-    def __init__(self, device, frame_depth, model_config, dim="2D"):
-        super().__init__(device, frame_depth, model_config, dim=dim)
+    def __init__(self, device, frame_depth, dim="2D"):
+        super().__init__(device, frame_depth, dim=dim)
         self.device = device
         self.inv_t = 1
 
@@ -264,22 +250,22 @@ class ConvBNReLU(nn.Module):
 
 
 class FeaturesFactorizationModule(nn.Module):
-    def __init__(self, device, frame_depth, in_c, model_config):
+    def __init__(self, device, frame_depth, in_c):
         super().__init__()
 
         self.device = device
-        MD_D = model_config["MD_D"]
+        mid_c = in_c // 4
 
         self.pre_conv_block = nn.Sequential(
-            nn.Conv2d(in_c, MD_D, (1, 1)),
+            nn.Conv2d(in_c, mid_c, (1, 1)),
             nn.ReLU(inplace=True)
         )
 
-        self.md_block = NMF(self.device, frame_depth, model_config)
+        self.md_block = NMF(self.device, frame_depth)
 
         self.post_conv_block = nn.Sequential(
-            ConvBNReLU(MD_D, MD_D, kernel_size=(1, 1)),
-            nn.Conv2d(MD_D, in_c, (1, 1), bias=False)
+            ConvBNReLU(mid_c, mid_c, kernel_size=(1, 1)),
+            nn.Conv2d(mid_c, in_c, (1, 1), bias=False)
         )
         self.shortcut = nn.Sequential()
         self._init_weight()
@@ -310,23 +296,6 @@ class FeaturesFactorizationModule(nn.Module):
         if hasattr(self.md_block, 'online_update'):
             self.md_block.online_update(bases)
 
-
-
-
-class Attention_mask(nn.Module):
-    def __init__(self):
-        super(Attention_mask, self).__init__()
-
-    def forward(self, x):
-        xsum = torch.sum(x, dim=2, keepdim=True)
-        xsum = torch.sum(xsum, dim=3, keepdim=True)
-        xshape = tuple(x.size())
-        return x / xsum * xshape[2] * xshape[3] * 0.5
-
-    def get_config(self):
-        """May be generated manually. """
-        config = super(Attention_mask, self).get_config()
-        return config
 
 
 class TSM(nn.Module):
@@ -379,14 +348,8 @@ class EfficientPhysFM(nn.Module):
         self.motion_conv3 = nn.Conv2d(self.nb_filters1, self.nb_filters2, kernel_size=self.kernel_size, padding=(1, 1),
                                   bias=True)
         self.motion_conv4 = nn.Conv2d(self.nb_filters2, self.nb_filters2, kernel_size=self.kernel_size, bias=True)
-        # Attention layers
-        # self.apperance_att_conv1 = nn.Conv2d(self.nb_filters1, 1, kernel_size=1, padding=(0, 0), bias=True)
-        # self.attn_mask_1 = Attention_mask()
-        # self.apperance_att_conv2 = nn.Conv2d(self.nb_filters2, 1, kernel_size=1, padding=(0, 0), bias=True)
-        # self.attn_mask_2 = Attention_mask()
 
-        # self.feature_factorizer1 = FeaturesFactorizationModule(self.device, frame_depth, self.nb_filters1, model_config1)
-        self.feature_factorizer2 = FeaturesFactorizationModule(self.device, frame_depth, self.nb_filters2, model_config2)
+        self.feature_factorizer = FeaturesFactorizationModule(self.device, frame_depth, self.nb_filters2)
 
         # Avg pooling
         self.avg_pooling_1 = nn.AvgPool2d(self.pool_size)
@@ -411,7 +374,7 @@ class EfficientPhysFM(nn.Module):
         self.channel = channel
 
     def forward(self, inputs, params=None):
-        inputs = torch.diff(inputs, dim=0)
+        # inputs = torch.diff(inputs, dim=0)
         inputs = self.batch_norm(inputs)
 
         network_input = self.TSM_1(inputs)
@@ -419,14 +382,6 @@ class EfficientPhysFM(nn.Module):
         d1 = self.TSM_2(d1)
         d2 = torch.tanh(self.motion_conv2(d1))
 
-        # print("d2.shape", d2.shape)
-        # g1 = torch.sigmoid(self.apperance_att_conv1(d2))
-        # g1 = self.attn_mask_1(g1)
-        # gated1 = d2 * g1
-        # gated1 = self.feature_factorizer1(d2)
-        # print("gated1.shape", gated1.shape)
-
-        # d3 = self.avg_pooling_1(gated1)
         d3 = self.avg_pooling_1(d2)
         d4 = self.dropout_1(d3)
 
@@ -435,29 +390,12 @@ class EfficientPhysFM(nn.Module):
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
 
-        # print("d6.shape", d6.shape)
-        # g2 = torch.sigmoid(self.apperance_att_conv2(d6))
-        # g2 = self.attn_mask_2(g2)
-        # gated2 = d6 * g2
-        # print("g2.shape", g2.shape)
-        # gated2 = self.feature_factorizer2(d6)
-        # print("gated2.shape", gated2.shape)
-
-        # exit()
-
-        # d7 = self.avg_pooling_3(gated2)
         d7 = self.avg_pooling_3(d6)
-
-        # print("d7.shape", d7.shape)
-
         d8 = self.dropout_3(d7)
 
-        d8 = self.feature_factorizer2(d8)
+        d8 = self.feature_factorizer(d8)
 
         d9 = d8.view(d8.size(0), -1)
-        # print("d8.shape", d8.shape)
-        # print("d9.shape", d9.shape)
-        # exit()
 
         d10 = torch.tanh(self.final_dense_1(d9))
         d11 = self.dropout_4(d10)
@@ -492,8 +430,8 @@ if __name__ == "__main__":
 
     test_data = test_data[:(N * D) // base_len * base_len]
     # Add one more frame for EfficientPhysFM since it does torch.diff for the input
-    last_frame = torch.unsqueeze(test_data[-1, :, :, :], 0).repeat(num_of_gpu, 1, 1, 1)
-    test_data = torch.cat((test_data, last_frame), 0)
+    # last_frame = torch.unsqueeze(test_data[-1, :, :, :], 0).repeat(num_of_gpu, 1, 1, 1)
+    # test_data = torch.cat((test_data, last_frame), 0)
 
     # print("After: test_data.shape", test_data.shape)
     # exit()

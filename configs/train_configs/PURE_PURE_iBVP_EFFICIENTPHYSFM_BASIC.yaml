@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 200
   LR: 9e-3
-  MODEL_FILE_NAME: PURE_PURE_EfficientPhysFM_Raw_FD90_R8
+  MODEL_FILE_NAME: PURE_PURE_EfficientPhysFM_Raw_FD180_NegPea_R12
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -13,13 +13,13 @@ TRAIN:
     DATA_FORMAT: NDCHW
     DATA_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/prep"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "PURE_Raw_DN_180_72x72"
+    EXP_DATA_NAME: "PURE_Raw_180_72x72"
     BEGIN: 0.0
     END: 0.8
     PREPROCESS:
-      DATA_TYPE: ['Raw']         #if use EfficientPhys, Data_Type should be Raw and Label_Type should be DiffNormalized
+      DATA_TYPE: ['Raw']         #if use EfficientPhys, Data_Type should be Raw and Label_Type should be Raw
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
-      LABEL_TYPE: DiffNormalized
+      LABEL_TYPE: Raw
       DO_CHUNK: True
       CHUNK_LENGTH: 180                 #only support for factor of 512
       CROP_FACE:
@@ -42,13 +42,13 @@ VALID:
     DATA_FORMAT: NDCHW
     DATA_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/prep"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "PURE_Raw_DN_180_72x72"
+    EXP_DATA_NAME: "PURE_Raw_180_72x72"
     BEGIN: 0.8
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['Raw']         #if use EfficientPhys, Data_Type should be Raw and Label_Type should be DiffNormalized
+      DATA_TYPE: ['Raw']         #if use EfficientPhys, Data_Type should be Raw and Label_Type should be Raw
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
-      LABEL_TYPE: DiffNormalized
+      LABEL_TYPE: Raw
       DO_CHUNK: True
       CHUNK_LENGTH: 180                 #only support for factor of 512
       CROP_FACE:
@@ -73,12 +73,12 @@ TEST:
     DATA_FORMAT: NDCHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/prep"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "iBVP_Raw_DN_180_72x72"
+    EXP_DATA_NAME: "iBVP_Raw_180_72x72"
     BEGIN: 0.0
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['Raw']         #if use EfficientPhys, Data_Type should be Raw and Label_Type should be DiffNormalized
-      LABEL_TYPE: DiffNormalized
+      DATA_TYPE: ['Raw']         #if use EfficientPhys, Data_Type should be Raw and Label_Type should be Raw
+      LABEL_TYPE: Raw
       DO_CHUNK: True
       CHUNK_LENGTH: 180                 #only support for factor of 512
       CROP_FACE:
@@ -101,11 +101,11 @@ MODEL:
   DROP_RATE: 0.2
   NAME: EfficientPhysFM
   EFFICIENTPHYS:
-    FRAME_DEPTH: 90
+    FRAME_DEPTH: 180
 INFERENCE:
   BATCH_SIZE: 8
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
-  MODEL_PATH: "./final_model_release/PURE_EfficientPhysFM_Raw_FD90_R8.pth"
+  MODEL_PATH: "./final_model_release/PURE_EfficientPhysFM_Raw_FD180_NegPea_R12.pth"

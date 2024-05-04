@@ -54,7 +54,8 @@ class EfficientPhysTrainer(BaseTrainer):
                 self.model = torch.nn.DataParallel(self.model).to(self.device)
 
             self.num_train_batches = len(data_loader["train"])
-            self.criterion = torch.nn.MSELoss()
+            # self.criterion = torch.nn.MSELoss()
+            self.criterion = Neg_Pearson()
             self.optimizer = optim.AdamW(
                 self.model.parameters(), lr=config.TRAIN.LR, weight_decay=0)
             # See more details on the OneCycleLR scheduler here: https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.OneCycleLR.html
@@ -87,19 +88,26 @@ class EfficientPhysTrainer(BaseTrainer):
             tbar = tqdm(data_loader["train"], ncols=80)
             for idx, batch in enumerate(tbar):
                 tbar.set_description("Train epoch %s" % epoch)
-                data, labels = batch[0].to(
-                    self.device), batch[1].to(self.device)
+                data, labels = batch[0].to(self.device), batch[1].to(self.device)
                 N, D, C, H, W = data.shape
                 data = data.view(N * D, C, H, W)
                 labels = labels.view(-1, 1)
                 data = data[:(N * D) // self.base_len * self.base_len]
+                print(data.shape)
                 # Add one more frame for EfficientPhys since it does torch.diff for the input
                 last_frame = torch.unsqueeze(data[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
                 data = torch.cat((data, last_frame), 0)
+                print(data.shape)
+                exit()
                 labels = labels[:(N * D) // self.base_len * self.base_len]
                 self.optimizer.zero_grad()
                 pred_ppg = self.model(data)
+
+                # pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
+                # labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
+
                 loss = self.criterion(pred_ppg, labels)
+
                 loss.backward()
 
                 # Append the current learning rate to the list
