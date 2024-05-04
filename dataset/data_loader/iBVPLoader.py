@@ -48,6 +48,7 @@ class iBVPLoader(BaseLoader):
                 config_data(CfgNode): data settings(ref:config.py).
         """
         super().__init__(name, data_path, config_data)
+        self.dataset_mode = name
 
     def get_raw_data(self, data_path):
         """Returns data directories under the path(For iBVP dataset)."""

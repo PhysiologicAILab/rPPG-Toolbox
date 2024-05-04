@@ -25,8 +25,8 @@ model_config1 = {
 model_config2 = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
-    "MD_D": 32,
-    "MD_R": 90,
+    "MD_D": 16,
+    "MD_R": 8,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -118,8 +118,8 @@ class _MatrixDecompositionBase(nn.Module):
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             BN, C, H, W = x.shape
             B = BN // self.frame_depth
-            D = H * W // self.S
-            N = C * self.frame_depth
+            D = C * H * W // self.S
+            N = self.frame_depth
             # B = 1
             x = x.view(B * self.S, D, N)
 
@@ -158,8 +158,8 @@ class _MatrixDecompositionBase(nn.Module):
             x = x.view(B, C, T, H, W)
         elif self.dim == "2D":
             # (B * S, D, N) -> (B, C, H, W)
-            x = x.view(B*self.frame_depth, C, H, W)
-            # x = x.view(BN, C, H, W)
+            # x = x.view(B*self.frame_depth, C, H, W)
+            x = x.view(BN, C, H, W)
 
         else:
             # (B * S, D, N) -> (B, C, L)
@@ -385,7 +385,7 @@ class EfficientPhysFM(nn.Module):
         # self.apperance_att_conv2 = nn.Conv2d(self.nb_filters2, 1, kernel_size=1, padding=(0, 0), bias=True)
         # self.attn_mask_2 = Attention_mask()
 
-        self.feature_factorizer1 = FeaturesFactorizationModule(self.device, frame_depth, self.nb_filters1, model_config1)
+        # self.feature_factorizer1 = FeaturesFactorizationModule(self.device, frame_depth, self.nb_filters1, model_config1)
         self.feature_factorizer2 = FeaturesFactorizationModule(self.device, frame_depth, self.nb_filters2, model_config2)
 
         # Avg pooling
@@ -423,10 +423,11 @@ class EfficientPhysFM(nn.Module):
         # g1 = torch.sigmoid(self.apperance_att_conv1(d2))
         # g1 = self.attn_mask_1(g1)
         # gated1 = d2 * g1
-        gated1 = self.feature_factorizer1(d2)
+        # gated1 = self.feature_factorizer1(d2)
         # print("gated1.shape", gated1.shape)
 
-        d3 = self.avg_pooling_1(gated1)
+        # d3 = self.avg_pooling_1(gated1)
+        d3 = self.avg_pooling_1(d2)
         d4 = self.dropout_1(d3)
 
         d4 = self.TSM_3(d4)
@@ -439,15 +440,25 @@ class EfficientPhysFM(nn.Module):
         # g2 = self.attn_mask_2(g2)
         # gated2 = d6 * g2
         # print("g2.shape", g2.shape)
-        gated2 = self.feature_factorizer2(d6)
+        # gated2 = self.feature_factorizer2(d6)
         # print("gated2.shape", gated2.shape)
 
         # exit()
 
+        # d7 = self.avg_pooling_3(gated2)
+        d7 = self.avg_pooling_3(d6)
 
-        d7 = self.avg_pooling_3(gated2)
+        # print("d7.shape", d7.shape)
+
         d8 = self.dropout_3(d7)
+
+        d8 = self.feature_factorizer2(d8)
+
         d9 = d8.view(d8.size(0), -1)
+        # print("d8.shape", d8.shape)
+        # print("d9.shape", d9.shape)
+        # exit()
+
         d10 = torch.tanh(self.final_dense_1(d9))
         d11 = self.dropout_4(d10)
         out = self.final_dense_2(d11)
