@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 100
   LR: 9e-3
-  MODEL_FILE_NAME: iBVP_iBVP_EfficientPhys_Raw
+  MODEL_FILE_NAME: iBVP_iBVP_EfficientPhys_Raw_FD90
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -101,11 +101,11 @@ MODEL:
   DROP_RATE: 0.2
   NAME: EfficientPhys
   EFFICIENTPHYS:
-    FRAME_DEPTH: 10
+    FRAME_DEPTH: 90
 INFERENCE:
   BATCH_SIZE: 8
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
-  MODEL_PATH: "./final_model_release/iBVP_EfficientPhys_Raw.pth"
+  MODEL_PATH: "./final_model_release/iBVP_EfficientPhys_Raw_FD90.pth"

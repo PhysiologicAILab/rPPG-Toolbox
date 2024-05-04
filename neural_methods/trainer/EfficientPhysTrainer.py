@@ -39,7 +39,7 @@ class EfficientPhysTrainer(BaseTrainer):
             self.num_of_gpu = 0  # no GPUs used
 
         if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_train":
-            self.model = EfficientPhys(frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H)
+            self.model = EfficientPhys(frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H, device=self.device)
             if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
                 self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
             else:
@@ -53,7 +53,7 @@ class EfficientPhysTrainer(BaseTrainer):
             self.scheduler = torch.optim.lr_scheduler.OneCycleLR(
                 self.optimizer, max_lr=config.TRAIN.LR, epochs=config.TRAIN.EPOCHS, steps_per_epoch=self.num_train_batches)
         elif config.TOOLBOX_MODE == "only_test":
-            self.model = EfficientPhys(frame_depth=self.frame_depth, img_size=config.TEST.DATA.PREPROCESS.RESIZE.H)
+            self.model = EfficientPhys(frame_depth=self.frame_depth, img_size=config.TEST.DATA.PREPROCESS.RESIZE.H, device=self.device)
             if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
                 self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
             else:

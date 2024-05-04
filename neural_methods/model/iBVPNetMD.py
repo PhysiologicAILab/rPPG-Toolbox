@@ -330,7 +330,6 @@ class FeaturesFactorizationModule(nn.Module):
         self.shortcut = nn.Sequential()
         self._init_weight()
 
-        # print('ham', HAM)
 
     def _init_weight(self):
         for m in self.modules():
@@ -440,7 +439,7 @@ class decoder_block(nn.Module):
         self.debug = debug
         # MD_D = nf[1]
         # self.squeeze = ConvBNReLU(nf[5], nf[2], (3, 3, 3), (1, 1, 1))
-        self.decomposed_feats = FeaturesFactorizationModule(
+        self.feature_factorizer = FeaturesFactorizationModule(
             device, nf[5], model_config["MD_D"])
         # self.align = ConvBNReLU(nf[2], nf[2], (1, 1, 1))
         self.conv_decoder = DeConvBlock3D(
@@ -449,7 +448,7 @@ class decoder_block(nn.Module):
     def forward(self, x):        
 
         # short_x = self.squeeze(x)
-        factorized_x = self.decomposed_feats(x)
+        factorized_x = self.feature_factorizer(x)
         # x = self.align(x)
 
         if self.debug:
@@ -506,7 +505,7 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 1
-    frames = 256    #duration*fs
+    frames = 128    #duration*fs
     in_channels = 3
     height = 128
     width = 128
