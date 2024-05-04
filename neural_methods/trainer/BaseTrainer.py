@@ -65,6 +65,18 @@ class BaseTrainer:
         else:
             raise ValueError('Metrics.py evaluation only supports train_and_test and only_test!')
         
+        log_filepath = os.path.join(output_dir, filename_id + '_log.pickle')
+
+        data = dict()
+        data['lrs'] = lrs
+        data['train_loss'] = train_loss
+        data['valid_loss'] = valid_loss
+
+        with open(log_filepath, 'wb') as handle:  # save out training dict pickle file
+            pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        print('Saving training log to:', log_filepath)
+
         # Create a single plot for training and validation losses
         plt.figure(figsize=(10, 6))
         epochs = range(0, len(train_loss))  # Integer values for x-axis
