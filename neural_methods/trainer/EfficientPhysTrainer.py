@@ -167,6 +167,10 @@ class EfficientPhysTrainer(BaseTrainer):
                 data_valid = torch.cat((data_valid, last_frame), 0)
                 labels_valid = labels_valid[:(N * D) // self.base_len * self.base_len]
                 pred_ppg_valid = self.model(data_valid)
+
+                pred_ppg_valid = (pred_ppg_valid - torch.mean(pred_ppg_valid)) / torch.std(pred_ppg_valid)  # normalize
+                labels_valid = (labels_valid - torch.mean(labels_valid)) / torch.std(labels_valid)  # normalize
+
                 loss = self.criterion(pred_ppg_valid, labels_valid)
                 valid_loss.append(loss.item())
                 valid_step += 1
@@ -220,6 +224,11 @@ class EfficientPhysTrainer(BaseTrainer):
                 data_test = torch.cat((data_test, last_frame), 0)
                 labels_test = labels_test[:(N * D) // self.base_len * self.base_len]
                 pred_ppg_test = self.model(data_test)
+
+                pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)
+                                  ) / torch.std(pred_ppg_test)  # normalize
+                labels_test = (labels_test - torch.mean(labels_test)
+                                ) / torch.std(labels_test)  # normalize
 
                 if self.config.TEST.OUTPUT_SAVE_DIR:
                     labels_test = labels_test.cpu()
