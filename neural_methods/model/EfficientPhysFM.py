@@ -109,8 +109,8 @@ class _MatrixDecompositionBase(nn.Module):
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             BN, C, H, W = x.shape
             B = BN // self.frame_depth
-            D = C * H * W // self.S
-            N = self.frame_depth
+            D = self.frame_depth  # C * H * W // self.S
+            N = C * H * W // self.S  # self.frame_depth
             # B = 1
             x = x.view(B * self.S, D, N)
 
