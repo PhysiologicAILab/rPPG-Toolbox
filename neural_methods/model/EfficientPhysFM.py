@@ -412,7 +412,7 @@ if __name__ == "__main__":
     # default `log_dir` is "runs" - we'll be more specific here
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
-    batch_size = 8
+    batch_size = 2
     frames = 160    #duration*fs
     in_channels = 3
     height = 72
@@ -453,7 +453,9 @@ if __name__ == "__main__":
     print("s3 labels.shape", labels.shape)
     labels = torch.diff(labels, dim=0)
     print("s4 labels.shape", labels.shape)
-    labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
+    labels = labels / torch.std(labels)  # normalize
+    labels[torch.isnan(labels)] = 0
+    print("s5 labels.shape", labels.shape)
 
     # print("After: test_data.shape", test_data.shape)
     # exit()
