@@ -79,14 +79,14 @@ class _MatrixDecompositionBase(nn.Module):
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
 
-            # D = C * H * W // self.S
-            # N = T
+            D = C * H * W // self.S
+            N = T
 
             # D = C // self.S
             # N = T * H * W
 
-            D = T 
-            N = C * H * W // self.S
+            # D = T 
+            # N = C * H * W // self.S
 
             # D = T * H * W // self.S
             # N = C
