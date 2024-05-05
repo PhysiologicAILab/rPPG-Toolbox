@@ -32,7 +32,8 @@ class _MatrixDecompositionBase(nn.Module):
         BN = frame_depth
         factor = 8
         # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
-        self.R = frame_depth
+        # self.R = 2 * frame_depth
+        self.R = 80
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -258,7 +259,7 @@ class FeaturesFactorizationModule(nn.Module):
         super().__init__()
 
         self.device = device
-        mid_c = in_c // 4
+        mid_c = in_c // 2
 
         self.pre_conv_block = nn.Sequential(
             nn.Conv2d(in_c, mid_c, (1, 1)),
