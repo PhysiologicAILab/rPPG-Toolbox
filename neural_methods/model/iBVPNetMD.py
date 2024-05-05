@@ -79,14 +79,14 @@ class _MatrixDecompositionBase(nn.Module):
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
 
-            D = C * H * W // self.S
-            N = T
+            # D = C * H * W // self.S
+            # N = T
 
             # D = C // self.S
             # N = T * H * W
 
-            # D = T // self.S
-            # N = C * H * W
+            D = T 
+            N = C * H * W // self.S
 
             # D = T * H * W // self.S
             # N = C
@@ -304,7 +304,7 @@ class FeaturesFactorizationModule(nn.Module):
         self.device = device
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
-        MD_R = frames // 16
+        MD_R = frames // 16     #// 4 done by encoder, and //4 for NMF
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -378,8 +378,8 @@ class encoder_block(nn.Module):
 
         self.debug = debug
         self.encoder = nn.Sequential(
-            ConvBlock3D(inCh, inCh, [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
 
             ConvBlock3D(nf[0], nf[0], [7, 3, 3], [1, 1, 1], [3, 1, 1]),
             ConvBlock3D(nf[0], nf[1], [7, 3, 3], [1, 2, 2], [3, 1, 1]),
@@ -468,6 +468,7 @@ class iBVPNetMD(nn.Module):
     def __init__(self, frames, device, in_channels=3, debug=False):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
+        self.norm = nn.InstanceNorm3d(in_channels)
         self.iBVPNetMD_model = nn.Sequential(
             encoder_block(in_channels, debug),
             decoder_block(device, frames, debug)
@@ -480,6 +481,7 @@ class iBVPNetMD(nn.Module):
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
         [batch, channel, length, width, height] = x.shape
+        x = self.norm(x)
         if self.debug:
             print("Input.shape", x.shape)
 
@@ -502,7 +504,7 @@ if __name__ == "__main__":
 
     # duration = 8
     # fs = 25
-    batch_size = 1
+    batch_size = 2
     frames = 160    #duration*fs
     in_channels = 3
     height = 72
