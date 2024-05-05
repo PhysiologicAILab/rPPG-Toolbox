@@ -100,11 +100,11 @@ class EfficientPhysTrainer(BaseTrainer):
 
                 labels = labels[:(N * D) // self.base_len * self.base_len]
 
-                last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
-                labels = torch.cat((labels, last_sample), 0)
-                labels = torch.diff(labels, dim=0)
-                labels = labels/ torch.std(labels)  # normalize
-                labels[torch.isnan(labels)] = 0
+                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # labels = torch.cat((labels, last_sample), 0)
+                # labels = torch.diff(labels, dim=0)
+                # labels = labels/ torch.std(labels)  # normalize
+                # labels[torch.isnan(labels)] = 0
 
                 self.optimizer.zero_grad()
                 pred_ppg = self.model(data)
@@ -176,11 +176,11 @@ class EfficientPhysTrainer(BaseTrainer):
                 labels_valid = labels_valid[:(N * D) // self.base_len * self.base_len]
                 pred_ppg_valid = self.model(data_valid)
 
-                last_sample = torch.unsqueeze(labels_valid[-1, :], 0).repeat(self.num_of_gpu, 1)
-                labels_valid = torch.cat((labels_valid, last_sample), 0)
-                labels_valid = torch.diff(labels_valid, dim=0)
-                labels_valid = labels_valid / torch.std(labels_valid)  # normalize
-                labels_valid[torch.isnan(labels_valid)] = 0
+                # last_sample = torch.unsqueeze(labels_valid[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # labels_valid = torch.cat((labels_valid, last_sample), 0)
+                # labels_valid = torch.diff(labels_valid, dim=0)
+                # labels_valid = labels_valid / torch.std(labels_valid)  # normalize
+                # labels_valid[torch.isnan(labels_valid)] = 0
                 
                 # Not to be done for MSE loss
                 # pred_ppg_valid = (pred_ppg_valid - torch.mean(pred_ppg_valid)) / torch.std(pred_ppg_valid)  # normalize                
@@ -239,11 +239,11 @@ class EfficientPhysTrainer(BaseTrainer):
                 labels_test = labels_test[:(N * D) // self.base_len * self.base_len]
                 pred_ppg_test = self.model(data_test)
 
-                last_sample = torch.unsqueeze(labels_test[-1, :], 0).repeat(self.num_of_gpu, 1)
-                labels_test = torch.cat((labels_test, last_sample), 0)
-                labels_test = torch.diff(labels_test, dim=0)
-                labels_test = labels_test / torch.std(labels_test)  # normalize
-                labels_test[torch.isnan(labels_test)] = 0
+                # last_sample = torch.unsqueeze(labels_test[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # labels_test = torch.cat((labels_test, last_sample), 0)
+                # labels_test = torch.diff(labels_test, dim=0)
+                # labels_test = labels_test / torch.std(labels_test)  # normalize
+                # labels_test[torch.isnan(labels_test)] = 0
 
                 # Not to be done for MSE loss
                 # pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
