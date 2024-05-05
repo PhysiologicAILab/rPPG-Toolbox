@@ -374,7 +374,7 @@ class EfficientPhysFM(nn.Module):
         self.channel = channel
 
     def forward(self, inputs, params=None):
-        # inputs = torch.diff(inputs, dim=0)
+        inputs = torch.diff(inputs, dim=0)
         inputs = self.batch_norm(inputs)
 
         network_input = self.TSM_1(inputs)
@@ -431,8 +431,8 @@ if __name__ == "__main__":
 
     test_data = test_data[:(N * D) // base_len * base_len]
     # Add one more frame for EfficientPhysFM since it does torch.diff for the input
-    # last_frame = torch.unsqueeze(test_data[-1, :, :, :], 0).repeat(num_of_gpu, 1, 1, 1)
-    # test_data = torch.cat((test_data, last_frame), 0)
+    last_frame = torch.unsqueeze(test_data[-1, :, :, :], 0).repeat(num_of_gpu, 1, 1, 1)
+    test_data = torch.cat((test_data, last_frame), 0)
 
     # print("After: test_data.shape", test_data.shape)
     # exit()

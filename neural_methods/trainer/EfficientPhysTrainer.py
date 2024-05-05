@@ -94,8 +94,8 @@ class EfficientPhysTrainer(BaseTrainer):
                 labels = labels.view(-1, 1)
                 data = data[:(N * D) // self.base_len * self.base_len]
                 # Add one more frame for EfficientPhys since it does torch.diff for the input
-                # last_frame = torch.unsqueeze(data[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
-                # data = torch.cat((data, last_frame), 0)
+                last_frame = torch.unsqueeze(data[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
+                data = torch.cat((data, last_frame), 0)
 
                 labels = labels[:(N * D) // self.base_len * self.base_len]
                 self.optimizer.zero_grad()
@@ -163,8 +163,8 @@ class EfficientPhysTrainer(BaseTrainer):
                 labels_valid = labels_valid.view(-1, 1)
                 data_valid = data_valid[:(N * D) // self.base_len * self.base_len]
                 # Add one more frame for EfficientPhys since it does torch.diff for the input
-                # last_frame = torch.unsqueeze(data_valid[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
-                # data_valid = torch.cat((data_valid, last_frame), 0)
+                last_frame = torch.unsqueeze(data_valid[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
+                data_valid = torch.cat((data_valid, last_frame), 0)
                 labels_valid = labels_valid[:(N * D) // self.base_len * self.base_len]
                 pred_ppg_valid = self.model(data_valid)
                 loss = self.criterion(pred_ppg_valid, labels_valid)
@@ -216,8 +216,8 @@ class EfficientPhysTrainer(BaseTrainer):
                 labels_test = labels_test.view(-1, 1)
                 data_test = data_test[:(N * D) // self.base_len * self.base_len]
                 # Add one more frame for EfficientPhys since it does torch.diff for the input
-                # last_frame = torch.unsqueeze(data_test[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
-                # data_test = torch.cat((data_test, last_frame), 0)
+                last_frame = torch.unsqueeze(data_test[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
+                data_test = torch.cat((data_test, last_frame), 0)
                 labels_test = labels_test[:(N * D) // self.base_len * self.base_len]
                 pred_ppg_test = self.model(data_test)
 
