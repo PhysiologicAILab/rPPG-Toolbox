@@ -103,12 +103,13 @@ class EfficientPhysTrainer(BaseTrainer):
                 last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
                 labels = torch.cat((labels, last_sample), 0)
                 labels = torch.diff(labels, dim=0)
+                labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
 
                 self.optimizer.zero_grad()
                 pred_ppg = self.model(data)
 
-                pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
-                labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
+                # Not to be done for MSE loss
+                # pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
 
                 loss = self.criterion(pred_ppg, labels)
 
@@ -177,9 +178,10 @@ class EfficientPhysTrainer(BaseTrainer):
                 last_sample = torch.unsqueeze(labels_valid[-1, :], 0).repeat(self.num_of_gpu, 1)
                 labels_valid = torch.cat((labels_valid, last_sample), 0)
                 labels_valid = torch.diff(labels_valid, dim=0)
-
-                pred_ppg_valid = (pred_ppg_valid - torch.mean(pred_ppg_valid)) / torch.std(pred_ppg_valid)  # normalize
                 labels_valid = (labels_valid - torch.mean(labels_valid)) / torch.std(labels_valid)  # normalize
+                
+                # Not to be done for MSE loss
+                # pred_ppg_valid = (pred_ppg_valid - torch.mean(pred_ppg_valid)) / torch.std(pred_ppg_valid)  # normalize                
 
                 loss = self.criterion(pred_ppg_valid, labels_valid)
                 valid_loss.append(loss.item())
@@ -238,12 +240,11 @@ class EfficientPhysTrainer(BaseTrainer):
                 last_sample = torch.unsqueeze(labels_test[-1, :], 0).repeat(self.num_of_gpu, 1)
                 labels_test = torch.cat((labels_test, last_sample), 0)
                 labels_test = torch.diff(labels_test, dim=0)
+                labels_test = (labels_test - torch.mean(labels_test)) / torch.std(labels_test)  # normalize
 
-                pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)
-                                  ) / torch.std(pred_ppg_test)  # normalize
-                labels_test = (labels_test - torch.mean(labels_test)
-                                ) / torch.std(labels_test)  # normalize
-
+                # Not to be done for MSE loss
+                # pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
+                
                 if self.config.TEST.OUTPUT_SAVE_DIR:
                     labels_test = labels_test.cpu()
                     pred_ppg_test = pred_ppg_test.cpu()

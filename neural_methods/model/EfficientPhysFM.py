@@ -434,6 +434,7 @@ if __name__ == "__main__":
 
     N, C, D, H, W = test_data.shape
     print(test_data.shape)
+
     test_data = test_data.view(N * D, C, H, W)
 
     test_data = test_data[:(N * D) // base_len * base_len]
