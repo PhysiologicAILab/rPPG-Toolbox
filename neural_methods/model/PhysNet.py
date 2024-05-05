@@ -122,3 +122,43 @@ class PhysNet_padding_Encoder_Decoder_MAX(nn.Module):
         rPPG = x.view(-1, length)
 
         return rPPG, x_visual, x_visual3232, x_visual1616
+
+
+if __name__ == "__main__":
+    # from torch.utils.tensorboard import SummaryWriter
+
+    # default `log_dir` is "runs" - we'll be more specific here
+    # writer = SummaryWriter('runs/iBVPNetMD')
+
+    # duration = 8
+    # fs = 25
+    batch_size = 2
+    frames = 160    #duration*fs
+    in_channels = 3
+    height = 72
+    width = 72
+
+    if torch.cuda.is_available():
+        device = torch.device(0)
+    else:
+        device = torch.device("cpu")
+
+    # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
+    test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
+    net = PhysNet_padding_Encoder_Decoder_MAX(frames=frames)
+
+    # print("-"*100)
+    # print(net)
+    # print("-"*100)
+
+    pred, _, _, _ = net(test_data)
+    print("pred.shape", pred.shape)
+
+    pytorch_total_params = sum(p.numel() for p in net.parameters())
+    print("Total parameters = ", pytorch_total_params)
+
+    pytorch_trainable_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
+    print("Trainable parameters = ", pytorch_trainable_params)
+
+    # writer.add_graph(net, test_data)
+    # writer.close()

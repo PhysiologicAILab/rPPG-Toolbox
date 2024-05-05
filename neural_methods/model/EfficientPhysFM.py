@@ -476,5 +476,11 @@ if __name__ == "__main__":
     pred = net(test_data)
     print("pred.shape", pred.shape)
 
+    pytorch_total_params = sum(p.numel() for p in net.parameters())
+    print("Total parameters = ", pytorch_total_params)
+
+    pytorch_trainable_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
+    print("Trainable parameters = ", pytorch_trainable_params)
+
     # writer.add_graph(net, test_data)
     # writer.close()
