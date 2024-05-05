@@ -369,7 +369,8 @@ class EfficientPhysFM(nn.Module):
         if img_size == 36:
             self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
         elif img_size == 72:
-            self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
+            # self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
+            self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
         elif img_size == 96:
             self.final_dense_1 = nn.Linear(30976, self.nb_dense, bias=True)
         else:
@@ -392,13 +393,17 @@ class EfficientPhysFM(nn.Module):
 
         d4 = self.TSM_3(d4)
         d5 = torch.tanh(self.motion_conv3(d4))
+
+        d5 = self.avg_pooling_2(d5)
+        d5 = self.dropout_1(d5)
+
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
 
-        d6 = self.feature_factorizer(d6)
-
         d7 = self.avg_pooling_3(d6)
         d8 = self.dropout_3(d7)
+
+        d8 = self.feature_factorizer(d8)
 
         d9 = d8.view(d8.size(0), -1)
 
