@@ -63,7 +63,7 @@ class BaseTrainer:
         if config.TOOLBOX_MODE == 'train_and_test' or config.TOOLBOX_MODE == 'only_train':
             filename_id = self.model_file_name
         else:
-            raise ValueError('Metrics.py evaluation only supports train_and_test and only_test!')
+            raise ValueError('Trainer only supports train_and_test and only_train!')
         
         log_filepath = os.path.join(output_dir, filename_id + '_log.pickle')
 
