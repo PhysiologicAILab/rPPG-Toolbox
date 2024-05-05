@@ -90,7 +90,7 @@ class EfficientPhysTrainer(BaseTrainer):
             for idx, batch in enumerate(tbar):
                 tbar.set_description("Train epoch %s" % epoch)
                 data, labels = batch[0].to(self.device), batch[1].to(self.device)
-                N, C, D, H, W = data.shape
+                N, D, C, H, W = data.shape
                 data = data.view(N * D, C, H, W)
                 labels = labels.view(-1, 1)
                 data = data[:(N * D) // self.base_len * self.base_len]
@@ -166,7 +166,7 @@ class EfficientPhysTrainer(BaseTrainer):
                 vbar.set_description("Validation")
                 data_valid, labels_valid = valid_batch[0].to(
                     self.device), valid_batch[1].to(self.device)
-                N, C, D, H, W = data_valid.shape
+                N, D, C, H, W = data_valid.shape
                 data_valid = data_valid.view(N * D, C, H, W)
                 labels_valid = labels_valid.view(-1, 1)
                 data_valid = data_valid[:(N * D) // self.base_len * self.base_len]
@@ -229,7 +229,7 @@ class EfficientPhysTrainer(BaseTrainer):
                 batch_size = test_batch[0].shape[0]
                 data_test, labels_test = test_batch[0].to(
                     self.config.DEVICE), test_batch[1].to(self.config.DEVICE)
-                N, C, D, H, W = data_test.shape
+                N, D, C, H, W = data_test.shape
                 data_test = data_test.view(N * D, C, H, W)
                 labels_test = labels_test.view(-1, 1)
                 data_test = data_test[:(N * D) // self.base_len * self.base_len]
