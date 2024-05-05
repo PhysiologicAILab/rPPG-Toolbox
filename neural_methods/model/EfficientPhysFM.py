@@ -21,14 +21,16 @@ model_config = {
 }
 
 class _MatrixDecompositionBase(nn.Module):
-    def __init__(self, device, frame_depth, dim="2D"):
+    def __init__(self, device, frame_depth, batch_size, dim="2D"):
         super().__init__()
 
         self.frame_depth = frame_depth
         self.dim = dim
         self.S = model_config["MD_S"]
         # self.D = model_config["MD_D"]
-        self.R = (frame_depth // 8) if (frame_depth // 8) % 2 == 0 else (frame_depth // 8) + 1
+        BN = batch_size * frame_depth
+        factor = 16
+        self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -105,8 +107,8 @@ class _MatrixDecompositionBase(nn.Module):
             BN, C, H, W = x.shape
             B = BN // self.frame_depth
             D = C * H * W // self.S
-            N = self.frame_depth
-            # B = 1
+            N = BN #self.frame_depth
+            B = 1
             x = x.view(B * self.S, D, N)
 
             # print("C, H, W", C, H, W)
@@ -171,8 +173,8 @@ class _MatrixDecompositionBase(nn.Module):
 
 
 class NMF(_MatrixDecompositionBase):
-    def __init__(self, device, frame_depth, dim="2D"):
-        super().__init__(device, frame_depth, dim=dim)
+    def __init__(self, device, frame_depth, batch_size, dim="2D"):
+        super().__init__(device, frame_depth, batch_size, dim=dim)
         self.device = device
         self.inv_t = 1
 
@@ -250,7 +252,7 @@ class ConvBNReLU(nn.Module):
 
 
 class FeaturesFactorizationModule(nn.Module):
-    def __init__(self, device, frame_depth, in_c):
+    def __init__(self, device, frame_depth, batch_size, in_c):
         super().__init__()
 
         self.device = device
@@ -261,7 +263,7 @@ class FeaturesFactorizationModule(nn.Module):
             nn.ReLU(inplace=True)
         )
 
-        self.md_block = NMF(self.device, frame_depth)
+        self.md_block = NMF(self.device, frame_depth, batch_size)
 
         self.post_conv_block = nn.Sequential(
             ConvBNReLU(mid_c, mid_c, kernel_size=(1, 1)),
@@ -319,7 +321,7 @@ class TSM(nn.Module):
 class EfficientPhysFM(nn.Module):
 
     def __init__(self, in_channels=3, nb_filters1=32, nb_filters2=64, kernel_size=3, dropout_rate1=0.25,
-                 dropout_rate2=0.5, pool_size=(2, 2), nb_dense=128, frame_depth=20, img_size=36, channel='raw', device=None):
+                 dropout_rate2=0.5, pool_size=(2, 2), nb_dense=128, frame_depth=20, batch_size=1, img_size=36, channel='raw', device=None):
         super(EfficientPhysFM, self).__init__()
         if device != None:
             self.device = device
@@ -349,7 +351,7 @@ class EfficientPhysFM(nn.Module):
                                   bias=True)
         self.motion_conv4 = nn.Conv2d(self.nb_filters2, self.nb_filters2, kernel_size=self.kernel_size, bias=True)
 
-        self.feature_factorizer = FeaturesFactorizationModule(self.device, frame_depth, self.nb_filters2)
+        self.feature_factorizer = FeaturesFactorizationModule(self.device, frame_depth, batch_size, self.nb_filters2)
 
         # Avg pooling
         self.avg_pooling_1 = nn.AvgPool2d(self.pool_size)
@@ -410,7 +412,7 @@ if __name__ == "__main__":
     # default `log_dir` is "runs" - we'll be more specific here
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
-    batch_size = 2
+    batch_size = 8
     frames = 160    #duration*fs
     in_channels = 3
     height = 72
@@ -456,7 +458,7 @@ if __name__ == "__main__":
     # print("After: test_data.shape", test_data.shape)
     # exit()
 
-    net = EfficientPhysFM(frame_depth=frames, img_size=height, )
+    net = EfficientPhysFM(frame_depth=frames, img_size=height, batch_size=batch_size)
     # print("-"*100)
     # print(net)
     # print("-"*100)

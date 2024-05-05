@@ -44,10 +44,10 @@ class EfficientPhysTrainer(BaseTrainer):
 
             if config.MODEL.NAME == "EfficientPhys":
                 self.model = EfficientPhys(
-                    frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H, device=self.device)
+                    frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H, batch_size=self.batch_size, device=self.device)
             else:
                 self.model = EfficientPhysFM(
-                    frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H, device=self.device)
+                    frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H, batch_size=self.batch_size, device=self.device)
 
             if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
                 self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
