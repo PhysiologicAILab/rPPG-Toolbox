@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 import torch.optim as optim
 from evaluation.metrics import calculate_metrics
 from neural_methods.loss.NegPearsonLoss import Neg_Pearson
@@ -54,8 +55,8 @@ class EfficientPhysTrainer(BaseTrainer):
                 self.model = torch.nn.DataParallel(self.model).to(self.device)
 
             self.num_train_batches = len(data_loader["train"])
-            # self.criterion = torch.nn.MSELoss()
-            self.criterion = Neg_Pearson()
+            self.criterion = torch.nn.MSELoss()
+            # self.criterion = Neg_Pearson()
             self.optimizer = optim.AdamW(
                 self.model.parameters(), lr=config.TRAIN.LR, weight_decay=0)
             # See more details on the OneCycleLR scheduler here: https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.OneCycleLR.html
@@ -90,6 +91,7 @@ class EfficientPhysTrainer(BaseTrainer):
                 tbar.set_description("Train epoch %s" % epoch)
                 data, labels = batch[0].to(self.device), batch[1].to(self.device)
                 N, C, D, H, W = data.shape
+                data = data.transpose(0, 2, 1, 3, 4)
                 data = data.view(N * D, C, H, W)
                 labels = labels.view(-1, 1)
                 data = data[:(N * D) // self.base_len * self.base_len]
@@ -98,6 +100,11 @@ class EfficientPhysTrainer(BaseTrainer):
                 data = torch.cat((data, last_frame), 0)
 
                 labels = labels[:(N * D) // self.base_len * self.base_len]
+
+                last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
+                labels = torch.cat((labels, last_sample), 0)
+                labels = torch.diff(labels, dim=0)
+
                 self.optimizer.zero_grad()
                 pred_ppg = self.model(data)
 
@@ -168,6 +175,10 @@ class EfficientPhysTrainer(BaseTrainer):
                 labels_valid = labels_valid[:(N * D) // self.base_len * self.base_len]
                 pred_ppg_valid = self.model(data_valid)
 
+                last_sample = torch.unsqueeze(labels_valid[-1, :], 0).repeat(self.num_of_gpu, 1)
+                labels_valid = torch.cat((labels_valid, last_sample), 0)
+                labels_valid = torch.diff(labels_valid, dim=0)
+
                 pred_ppg_valid = (pred_ppg_valid - torch.mean(pred_ppg_valid)) / torch.std(pred_ppg_valid)  # normalize
                 labels_valid = (labels_valid - torch.mean(labels_valid)) / torch.std(labels_valid)  # normalize
 
@@ -224,6 +235,10 @@ class EfficientPhysTrainer(BaseTrainer):
                 data_test = torch.cat((data_test, last_frame), 0)
                 labels_test = labels_test[:(N * D) // self.base_len * self.base_len]
                 pred_ppg_test = self.model(data_test)
+
+                last_sample = torch.unsqueeze(labels_test[-1, :], 0).repeat(self.num_of_gpu, 1)
+                labels_test = torch.cat((labels_test, last_sample), 0)
+                labels_test = torch.diff(labels_test, dim=0)
 
                 pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)
                                   ) / torch.std(pred_ppg_test)  # normalize

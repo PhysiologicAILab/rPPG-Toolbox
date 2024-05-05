@@ -418,6 +418,7 @@ if __name__ == "__main__":
     num_of_gpu = 1
     base_len = num_of_gpu * frames
 
+
     if torch.cuda.is_available():
         device = torch.device(0)
     else:
@@ -425,14 +426,31 @@ if __name__ == "__main__":
 
     # test_data = torch.rand(batch_size, frames, in_channels, height, width).to(device)
     test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
-    # print("Before: test_data.shape", test_data.shape)
+    print("Before: test_data.shape", test_data.shape)
+    labels = torch.rand(batch_size, frames)
+    print("org labels.shape", labels.shape)
+    labels = labels.view(-1, 1)
+    print("view labels.shape", labels.shape)
+
     N, C, D, H, W = test_data.shape
+    print(test_data.shape)
     test_data = test_data.view(N * D, C, H, W)
 
     test_data = test_data[:(N * D) // base_len * base_len]
     # Add one more frame for EfficientPhysFM since it does torch.diff for the input
     last_frame = torch.unsqueeze(test_data[-1, :, :, :], 0).repeat(num_of_gpu, 1, 1, 1)
     test_data = torch.cat((test_data, last_frame), 0)
+
+    labels = labels[:(N * D) // base_len * base_len]
+    print("s1 labels.shape", labels.shape)
+    last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(num_of_gpu, 1)
+    print("s2 labels.shape", labels.shape)
+
+    labels = torch.cat((labels, last_sample), 0)
+    print("s3 labels.shape", labels.shape)
+    labels = torch.diff(labels, dim=0)
+    print("s4 labels.shape", labels.shape)
+    labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
 
     # print("After: test_data.shape", test_data.shape)
     # exit()
