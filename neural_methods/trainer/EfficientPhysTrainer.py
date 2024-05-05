@@ -91,7 +91,6 @@ class EfficientPhysTrainer(BaseTrainer):
                 tbar.set_description("Train epoch %s" % epoch)
                 data, labels = batch[0].to(self.device), batch[1].to(self.device)
                 N, C, D, H, W = data.shape
-                data = data.transpose(0, 2, 1, 3, 4)
                 data = data.view(N * D, C, H, W)
                 labels = labels.view(-1, 1)
                 data = data[:(N * D) // self.base_len * self.base_len]
