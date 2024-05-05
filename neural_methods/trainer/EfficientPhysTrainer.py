@@ -55,8 +55,8 @@ class EfficientPhysTrainer(BaseTrainer):
                 self.model = torch.nn.DataParallel(self.model).to(self.device)
 
             self.num_train_batches = len(data_loader["train"])
-            self.criterion = torch.nn.MSELoss()
-            # self.criterion = Neg_Pearson()
+            # self.criterion = torch.nn.MSELoss()
+            self.criterion = Neg_Pearson()
             self.optimizer = optim.AdamW(
                 self.model.parameters(), lr=config.TRAIN.LR, weight_decay=0)
             # See more details on the OneCycleLR scheduler here: https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.OneCycleLR.html
@@ -110,7 +110,7 @@ class EfficientPhysTrainer(BaseTrainer):
                 pred_ppg = self.model(data)
 
                 # Not to be done for MSE loss
-                # pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
+                pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
 
                 loss = self.criterion(pred_ppg, labels)
 
@@ -183,7 +183,7 @@ class EfficientPhysTrainer(BaseTrainer):
                 labels_valid[torch.isnan(labels_valid)] = 0
                 
                 # Not to be done for MSE loss
-                # pred_ppg_valid = (pred_ppg_valid - torch.mean(pred_ppg_valid)) / torch.std(pred_ppg_valid)  # normalize                
+                pred_ppg_valid = (pred_ppg_valid - torch.mean(pred_ppg_valid)) / torch.std(pred_ppg_valid)  # normalize                
 
                 loss = self.criterion(pred_ppg_valid, labels_valid)
                 valid_loss.append(loss.item())
@@ -246,7 +246,7 @@ class EfficientPhysTrainer(BaseTrainer):
                 labels_test[torch.isnan(labels_test)] = 0
 
                 # Not to be done for MSE loss
-                # pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
+                pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
                 
                 if self.config.TEST.OUTPUT_SAVE_DIR:
                     labels_test = labels_test.cpu()
