@@ -3,7 +3,7 @@ TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test
 TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 200
-  LR: 1e-3
+  LR: 9e-3
   MODEL_FILE_NAME: PURE_PURE_EfficientPhysFM_Raw_FD160_NegPea_R20
   PLOT_LOSSES_AND_LR: True
   DATA:
