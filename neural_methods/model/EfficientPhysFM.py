@@ -28,9 +28,11 @@ class _MatrixDecompositionBase(nn.Module):
         self.dim = dim
         self.S = model_config["MD_S"]
         # self.D = model_config["MD_D"]
-        BN = batch_size * frame_depth
-        factor = 16
-        self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
+        # BN = batch_size * frame_depth
+        BN = frame_depth
+        factor = 8
+        # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
+        self.R = frame_depth
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -106,9 +108,9 @@ class _MatrixDecompositionBase(nn.Module):
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             BN, C, H, W = x.shape
             B = BN // self.frame_depth
-            D = C * H * W // self.S
-            N = BN #self.frame_depth
-            B = 1
+            D = H * W // self.S
+            N = C * self.frame_depth
+            # B = 1
             x = x.view(B * self.S, D, N)
 
             # print("C, H, W", C, H, W)
