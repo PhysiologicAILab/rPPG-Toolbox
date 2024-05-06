@@ -6,7 +6,7 @@ UNSUPERVISED:
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: True               # if first time, should be true
+    DO_PREPROCESS: False               # if first time, should be true
     DATA_FORMAT: NDHWC
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
