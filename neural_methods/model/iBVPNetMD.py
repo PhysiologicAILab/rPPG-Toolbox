@@ -376,22 +376,24 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
+        k_t = 3     #7
+        pad_t = 1    #3
         self.debug = debug
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
 
-            ConvBlock3D(nf[0], nf[0], [7, 3, 3], [1, 1, 1], [3, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [7, 3, 3], [1, 2, 2], [3, 1, 1]),
+            ConvBlock3D(nf[0], nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
 
-            ConvBlock3D(nf[1], nf[1], [7, 3, 3], [1, 1, 1], [3, 1, 1]),
-            ConvBlock3D(nf[1], nf[2], [7, 3, 3], [2, 2, 2], [3, 1, 1]),
+            ConvBlock3D(nf[1], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
 
-            ConvBlock3D(nf[2], nf[2], [7, 3, 3], [1, 1, 1], [3, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [7, 3, 3], [1, 2, 2], [3, 1, 1]),
+            ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
 
-            ConvBlock3D(nf[3], nf[3], [7, 3, 3], [1, 1, 1], [3, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [7, 3, 3], [2, 2, 2], [3, 1, 1]),
+            ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
 
             ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[4], nf[5], [3, 2, 2], [1, 1, 1], [1, 0, 0]),
@@ -408,24 +410,25 @@ class encoder_block(nn.Module):
 class DeConvBlock3D(nn.Module):
     def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, m5Ch, outCh):
         super(DeConvBlock3D, self).__init__()
-
+        k_t = 3     #7
+        pad_t = 1   #3
         self.deconv_block = nn.Sequential(
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m1Ch),
             nn.ELU(),
-            nn.Conv3d(m1Ch, m2Ch, (7, 3, 3), (1, 1, 1), (3, 1, 1)),
+            nn.Conv3d(m1Ch, m2Ch, (k_t, 3, 3), (1, 1, 1), (pad_t, 1, 1)),
             nn.BatchNorm3d(m2Ch),
             nn.ELU(),
             nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m3Ch),
             nn.ELU(),
-            nn.Conv3d(m3Ch, m4Ch, (7, 3, 3), (1, 2, 2), (3, 1, 1)),
+            nn.Conv3d(m3Ch, m4Ch, (k_t, 3, 3), (1, 2, 2), (pad_t, 1, 1)),
             nn.BatchNorm3d(m4Ch),
             nn.ELU(),
-            nn.Conv3d(m4Ch, m5Ch, (7, 2, 2), (1, 1, 1), (3, 0, 0)),
+            nn.Conv3d(m4Ch, m5Ch, (k_t, 2, 2), (1, 1, 1), (pad_t, 0, 0)),
             nn.BatchNorm3d(m5Ch),
             nn.ELU(),
-            nn.Conv3d(m5Ch, outCh, (7, 1, 1), (1, 1, 1), (3, 0, 0)),
+            nn.Conv3d(m5Ch, outCh, (k_t, 1, 1), (1, 1, 1), (pad_t, 0, 0)),
         )
 
     def forward(self, x):
