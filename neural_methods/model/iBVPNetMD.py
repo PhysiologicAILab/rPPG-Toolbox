@@ -304,7 +304,7 @@ class FeaturesFactorizationModule(nn.Module):
         self.device = device
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
-        MD_R = frames // 16     #// 4 done by encoder, and //4 for NMF
+        MD_R = (frames // 4 // 2)     #// 4 done by encoder, and //2 for NMF
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
