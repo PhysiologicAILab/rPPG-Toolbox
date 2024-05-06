@@ -221,14 +221,13 @@ class EfficientPhysTrainer(BaseTrainer):
                 print(best_model_path)
                 self.model.load_state_dict(torch.load(best_model_path))
 
-        self.model = self.model.to(self.config.DEVICE)
+        self.model = self.model.to(self.device)
         self.model.eval()
         print("Running model evaluation on the testing dataset!")
         with torch.no_grad():
             for _, test_batch in enumerate(tqdm(data_loader["test"], ncols=80)):
                 batch_size = test_batch[0].shape[0]
-                data_test, labels_test = test_batch[0].to(
-                    self.config.DEVICE), test_batch[1].to(self.config.DEVICE)
+                data_test, labels_test = test_batch[0].to(self.device), test_batch[1].to(self.device)
                 N, D, C, H, W = data_test.shape
                 data_test = data_test.view(N * D, C, H, W)
                 labels_test = labels_test.view(-1, 1)
