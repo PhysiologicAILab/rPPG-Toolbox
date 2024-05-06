@@ -505,7 +505,7 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 160    #duration*fs
+    frames = 256    #duration*fs
     in_channels = 3
     height = 72
     width = 72
