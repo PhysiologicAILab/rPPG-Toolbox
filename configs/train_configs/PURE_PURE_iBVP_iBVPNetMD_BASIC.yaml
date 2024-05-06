@@ -3,7 +3,7 @@ TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test
 TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 50
-  LR: 1e-3
+  LR: 1e-4
   MODEL_FILE_NAME: PURE_PURE_iBVPNetFM_Raw_N-T_FD256_NegP_R4
   PLOT_LOSSES_AND_LR: True
   DATA:
@@ -93,7 +93,7 @@ TEST:
       RESIZE:
         H: 72
         W: 72
-DEVICE: cuda:2
+DEVICE: cuda:3
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
