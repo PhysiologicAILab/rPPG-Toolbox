@@ -437,12 +437,14 @@ class DeConvBlock3D(nn.Module):
 
 
 class decoder_block(nn.Module):
-    def __init__(self, device, frames, debug=False):
+    def __init__(self, device, frames, use_nmf, debug=False):
         super(decoder_block, self).__init__()
         self.debug = debug
+        self.use_nmf = use_nmf
         # MD_D = nf[1]
         # self.squeeze = ConvBNReLU(nf[5], nf[2], (3, 3, 3), (1, 1, 1))
-        self.feature_factorizer = FeaturesFactorizationModule(device, nf[5], frames)
+        if self.use_nmf:
+            self.feature_factorizer = FeaturesFactorizationModule(device, nf[5], frames)
         # self.align = ConvBNReLU(nf[2], nf[2], (1, 1, 1))
         self.conv_decoder = DeConvBlock3D(
             nf[5], nf[4], nf[3], nf[2], nf[1], nf[0], 1)  # note: nf[5] = 2 * nf[3]
@@ -450,16 +452,21 @@ class decoder_block(nn.Module):
     def forward(self, x):        
 
         # short_x = self.squeeze(x)
-        factorized_x = self.feature_factorizer(x)
+        if self.use_nmf:
+            factorized_x = self.feature_factorizer(x)
         # x = self.align(x)
 
         if self.debug:
             print("Decoder")
             print("     x.shape", x.shape)
-            print("     factorized_x.shape", factorized_x.shape)
+            if self.use_nmf:
+                print("     factorized_x.shape", factorized_x.shape)
 
         # x = self.conv_decoder(torch.concat([short_x, x], dim=1))
-        x = self.conv_decoder(factorized_x)
+        if self.use_nmf:
+            x = self.conv_decoder(factorized_x)
+        else:
+            x = self.conv_decoder(x)
         
         if self.debug:
             print("     conv_decoder_x.shape", x.shape)
@@ -472,10 +479,11 @@ class iBVPNetMD(nn.Module):
     def __init__(self, frames, device, in_channels=3, debug=False):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
+        use_nmf = False
         self.norm = nn.BatchNorm3d(in_channels)
         self.iBVPNetMD_model = nn.Sequential(
             encoder_block(in_channels, debug),
-            decoder_block(device, frames, debug)
+            decoder_block(device, frames, use_nmf, debug)
             # spatial adaptive pooling
             # nn.AdaptiveAvgPool3d((frames, 1, 1)),
             # nn.Conv3d(nf[0], 1, (1, 2, 2), stride=(1, 1, 1), padding=(0, 0, 0))
