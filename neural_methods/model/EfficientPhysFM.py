@@ -422,7 +422,7 @@ if __name__ == "__main__":
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
     batch_size = 2
-    frames = 256    #duration*fs
+    frames = 90    #duration*fs
     in_channels = 3
     height = 72
     width = 72
