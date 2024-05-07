@@ -31,9 +31,9 @@ class _MatrixDecompositionBase(nn.Module):
         # BN = batch_size * frame_depth
         BN = frame_depth
         factor = 4
-        self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
+        # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
         # # self.R = 2 * frame_depth
-        # self.R = 40
+        self.R = 4
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -108,13 +108,14 @@ class _MatrixDecompositionBase(nn.Module):
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             BN, C, H, W = x.shape
-            B = BN // self.frame_depth
-            D = C * H * W // self.S  # self.frame_depth  # C * H * W // self.S
-            N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
+            # print("BN, C, H, W", BN, C, H, W)
+            B = BN #BN // self.frame_depth
+            D = H * W  # C * H * W // self.S  # self.frame_depth  # C * H * W // self.S
+            N = C  # self.frame_depth  # C * H * W // self.S  # self.frame_depth
             # B = 1
             x = x.view(B * self.S, D, N)
 
-            # print("C, H, W", C, H, W)
+            # print("---")
             # print("D", D)
             # print("R", self.R)
             # print("N", N)
@@ -259,7 +260,7 @@ class FeaturesFactorizationModule(nn.Module):
         super().__init__()
 
         self.device = device
-        mid_c = in_c // 4
+        mid_c = in_c // 2
 
         self.pre_conv_block = nn.Sequential(
             nn.Conv2d(in_c, mid_c, (1, 1)),
