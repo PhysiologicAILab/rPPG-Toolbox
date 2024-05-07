@@ -79,8 +79,8 @@ class _MatrixDecompositionBase(nn.Module):
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
 
-            D = C * H * W // self.S
-            N = T
+            # D = C * H * W // self.S
+            # N = T
 
             # D = C // self.S
             # N = T * H * W
@@ -91,8 +91,8 @@ class _MatrixDecompositionBase(nn.Module):
             # D = T * H * W // self.S
             # N = C
 
-            # D = C * H // self.S
-            # N = T * W
+            D = C * H // self.S
+            N = T * W
 
             # D = T * C // self.S
             # N = H * W
@@ -304,7 +304,8 @@ class FeaturesFactorizationModule(nn.Module):
         self.device = device
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
-        MD_R = (frames // 4) // 8     #// 4 done by encoder, and //4 for NMF
+        # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
+        MD_R = 16
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -384,7 +385,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
 
             ConvBlock3D(nf[0], nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
 
             ConvBlock3D(nf[1], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
@@ -416,7 +417,7 @@ class DeConvBlock3D(nn.Module):
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m1Ch),
             nn.ELU(),
-            nn.Conv3d(m1Ch, m2Ch, (k_t, 3, 3), (1, 1, 1), (pad_t, 1, 1)),
+            nn.Conv3d(m1Ch, m2Ch, (k_t, 3, 3), (1, 2, 2), (pad_t, 1, 1)),
             nn.BatchNorm3d(m2Ch),
             nn.ELU(),
             nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
