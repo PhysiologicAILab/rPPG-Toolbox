@@ -304,7 +304,7 @@ class FeaturesFactorizationModule(nn.Module):
         self.device = device
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
-        MD_R = (frames // 4) // 4     #// 4 done by encoder, and //4 for NMF
+        MD_R = (frames // 4) // 8     #// 4 done by encoder, and //4 for NMF
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -376,8 +376,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 3  # 5   #7
-        pad_t = 1  # 2   #3
+        k_t = 7  # 3  # 5   #7
+        pad_t = 3  # 1  # 2   #3
         self.debug = debug
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -410,8 +410,8 @@ class encoder_block(nn.Module):
 class DeConvBlock3D(nn.Module):
     def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, m5Ch, outCh):
         super(DeConvBlock3D, self).__init__()
-        k_t = 3  # 5   #7
-        pad_t = 1  # 2   #3
+        k_t = 7  # 3  # 5   #7
+        pad_t = 3  # 1  # 2   #3
         self.deconv_block = nn.Sequential(
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m1Ch),
@@ -471,7 +471,7 @@ class iBVPNetMD(nn.Module):
     def __init__(self, frames, device, in_channels=3, debug=False):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
-        self.norm = nn.InstanceNorm3d(in_channels)
+        self.norm = nn.BatchNorm3d(in_channels)
         self.iBVPNetMD_model = nn.Sequential(
             encoder_block(in_channels, debug),
             decoder_block(device, frames, debug)
@@ -508,7 +508,7 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 180    #duration*fs
+    frames = 256    #duration*fs
     in_channels = 3
     height = 72
     width = 72
