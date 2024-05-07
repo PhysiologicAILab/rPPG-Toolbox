@@ -33,7 +33,7 @@ class _MatrixDecompositionBase(nn.Module):
         factor = 8
         # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
         # # self.R = 2 * frame_depth
-        self.R = 6
+        self.R = 25
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -112,8 +112,10 @@ class _MatrixDecompositionBase(nn.Module):
             B = BN // self.frame_depth
             # D = C * H * W // self.S  # self.frame_depth  # C * H * W // self.S
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
-            D = C * self.frame_depth
-            N = H * W
+            # D = C * self.frame_depth
+            # N = H * W
+            D = H * W
+            N = C * self.frame_depth
             # B = 1
             x = x.view(B * self.S, D, N)
 
