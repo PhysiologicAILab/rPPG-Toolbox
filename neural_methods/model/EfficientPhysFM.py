@@ -33,7 +33,7 @@ class _MatrixDecompositionBase(nn.Module):
         factor = 8
         # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
         # # self.R = 2 * frame_depth
-        self.R = 25
+        self.R = 6 * batch_size
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -114,8 +114,8 @@ class _MatrixDecompositionBase(nn.Module):
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
             # D = C * self.frame_depth
             # N = H * W
-            D = H * W
-            N = C * self.frame_depth
+            D = self.frame_depth
+            N = C * H * W
             # B = 1
             x = x.view(B * self.S, D, N)
 
@@ -426,7 +426,7 @@ if __name__ == "__main__":
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
     batch_size = 2
-    frames = 30    #duration*fs
+    frames = 240    #duration*fs
     in_channels = 3
     height = 72
     width = 72
