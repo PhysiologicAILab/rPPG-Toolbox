@@ -79,20 +79,20 @@ class _MatrixDecompositionBase(nn.Module):
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
 
-            # D = C * H * W // self.S
-            # N = T
+            # D = C * H * W // self.S # channels and spatial elements are considered as features
+            # N = T                   # while each time point is considered as a sample
 
             # D = C // self.S
             # N = T * H * W
 
-            # D = T 
-            # N = C * H * W // self.S
+            D = T           # dimension of vector of our interest is T (rPPG signal as T dimension), so forming this as vector
+            N = C * H * W // self.S     # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
 
             # D = T * H * W // self.S
             # N = C
 
-            D = C * H // self.S
-            N = T * W
+            # D = C * H // self.S
+            # N = T * W
 
             # D = T * C // self.S
             # N = H * W
@@ -305,7 +305,7 @@ class FeaturesFactorizationModule(nn.Module):
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 16
+        MD_R = 4
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(

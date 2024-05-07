@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 50
   LR: 5e-4
-  MODEL_FILE_NAME: PURE_PURE_iBVPNetFM_Raw_N-TW_D-CH_FD256_NegP_R8_BatchNorm
+  MODEL_FILE_NAME: PURE_PURE_iBVPNetFM_Raw_D-T_FD256_NegP_R-4_BatchNorm
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -108,4 +108,4 @@ INFERENCE:
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
-  MODEL_PATH: "./runs/exp/PURE_Raw_256_72x72_NCDHW/PreTrainedModels/PURE_PURE_iBVPNetFM_Raw_N-TW_D-CH_FD256_NegP_R8_BatchNorm_Epoch49.pth"
+  MODEL_PATH: "./runs/exp/PURE_Raw_256_72x72_NCDHW/PreTrainedModels/PURE_PURE_iBVPNetFM_Raw_D-T_FD256_NegP_R-4_BatchNorm_Epoch49.pth"
