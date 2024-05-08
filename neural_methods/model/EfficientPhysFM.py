@@ -400,7 +400,7 @@ class EfficientPhysFM(nn.Module):
         d5 = torch.tanh(self.motion_conv3(d4))
 
         d5 = self.avg_pooling_2(d5)
-        d5 = self.dropout_1(d5)
+        d5 = self.dropout_2(d5)
 
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
