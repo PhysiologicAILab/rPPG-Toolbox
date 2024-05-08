@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 50
   LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_EfficientPhysFM_Raw_D-BxFD_N-CxHxW_B-1_FD30_NegP_R-4
+  MODEL_FILE_NAME: PURE_PURE_EfficientPhysFM_Raw_D-CxFD_N-HxW_B-B_FD30_NegP_R-4_Re
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -93,7 +93,7 @@ TEST:
       RESIZE:
         H: 72
         W: 72
-DEVICE: cuda:0
+DEVICE: cuda:1
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
@@ -108,4 +108,4 @@ INFERENCE:
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
-  MODEL_PATH: "./final_model_release/PURE_EfficientPhysFM_Raw_D-BxFD_N-CxHxW_B-1_FD30_NegP_R-4.pth"
+  MODEL_PATH: "./final_model_release/PURE_EfficientPhysFM_Raw_D-CxFD_N-HxW_B-B_FD30_NegP_R-4_Re.pth"
