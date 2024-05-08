@@ -115,8 +115,8 @@ class _MatrixDecompositionBase(nn.Module):
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
             # D = C * self.frame_depth
             # N = H * W
-            D = self.frame_depth
-            N = C * H * W
+            D = C * self.frame_depth
+            N = H * W
             # B = 1
             x = x.view(B * self.S, D, N)
 
@@ -376,8 +376,8 @@ class EfficientPhysFM(nn.Module):
             self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
         elif img_size == 72:
             # self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
-            # self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
-            self.final_dense_1 = nn.Linear(576, self.nb_dense, bias=True)
+            self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
+            # self.final_dense_1 = nn.Linear(576, self.nb_dense, bias=True)
         elif img_size == 96:
             self.final_dense_1 = nn.Linear(30976, self.nb_dense, bias=True)
         else:
@@ -407,7 +407,6 @@ class EfficientPhysFM(nn.Module):
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
 
-        d6 = self.avg_pooling_3(d6)
         d6 = self.feature_factorizer(d6)
 
         d7 = self.avg_pooling_3(d6)
