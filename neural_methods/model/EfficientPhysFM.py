@@ -28,8 +28,8 @@ class _MatrixDecompositionBase(nn.Module):
         self.dim = dim
         self.S = model_config["MD_S"]
         # self.D = model_config["MD_D"]
-        # BN = batch_size * frame_depth
-        BN = frame_depth
+        BN = batch_size * frame_depth
+        # BN = frame_depth
         factor = 8
         # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
         # # self.R = 2 * frame_depth
@@ -114,9 +114,9 @@ class _MatrixDecompositionBase(nn.Module):
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
             # D = C * self.frame_depth
             # N = H * W
-            D = self.frame_depth
+            D = BN #self.frame_depth
             N = C * H * W
-            # B = 1
+            B = 1
             x = x.view(B * self.S, D, N)
 
             # print("---")
@@ -426,7 +426,7 @@ if __name__ == "__main__":
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
     batch_size = 2
-    frames = 240    #duration*fs
+    frames = 60    #duration*fs
     in_channels = 3
     height = 72
     width = 72

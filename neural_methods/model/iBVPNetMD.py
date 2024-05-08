@@ -479,7 +479,7 @@ class iBVPNetMD(nn.Module):
     def __init__(self, frames, device, in_channels=3, debug=False):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
-        use_nmf = False
+        use_nmf = True
         self.norm = nn.BatchNorm3d(in_channels)
         self.iBVPNetMD_model = nn.Sequential(
             encoder_block(in_channels, debug),
