@@ -373,7 +373,11 @@ class EfficientPhysFM(nn.Module):
         self.dropout_3 = nn.Dropout(self.dropout_rate1)
         self.dropout_4 = nn.Dropout(self.dropout_rate2)
 
-        self.final_conv1 = nn.Conv2d(self.nb_filters2, self.nb_filters1, kernel_size=self.kernel_size, bias=True)
+        self.final_conv1 = nn.Sequential(
+            nn.Conv2d(self.nb_filters2, self.nb_filters1, kernel_size=self.kernel_size, bias=True),
+            nn.BatchNorm2d(nb_filters1),
+            nn.ELU()
+        )
 
         # # Dense layers
         # if img_size == 36:
@@ -389,7 +393,17 @@ class EfficientPhysFM(nn.Module):
         
         
         # self.final_dense_2 = nn.Linear(self.nb_dense, 1, bias=True)
-        self.final_conv2 = nn.Conv1d(self.nb_filters1, 1, kernel_size=7, padding=3, bias=True)
+        self.final_conv2 = nn.Sequential(
+            nn.Conv1d(self.nb_filters1, self.nb_filters1//2, kernel_size=7, padding=3, bias=True),
+            nn.BatchNorm1d(self.nb_filters1//2),
+            nn.ELU(),
+            nn.Conv1d(self.nb_filters1//2, self.nb_filters1//4, kernel_size=7, padding=3, bias=True),
+            nn.BatchNorm1d(self.nb_filters1//4),
+            nn.ELU(),
+            nn.Conv1d(self.nb_filters1//4, 1, kernel_size=7, padding=3, bias=True)
+        )
+        
+
         self.channel = channel
 
     def forward(self, inputs, params=None):
@@ -422,7 +436,7 @@ class EfficientPhysFM(nn.Module):
         d9 = self.final_conv1(d8)
         d9 = d9.view(1, d9.size(1), -1)
 
-        d10 = torch.tanh(self.final_conv2(d9))
+        d10 = self.final_conv2(d9)
         out = d10.view(-1, 1)
 
         return out
