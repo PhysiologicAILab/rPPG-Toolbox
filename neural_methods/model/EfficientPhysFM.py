@@ -34,7 +34,7 @@ class _MatrixDecompositionBase(nn.Module):
         # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
         # # self.R = 2 * frame_depth
         # self.R = 4 * batch_size
-        self.R = 4
+        self.R = 8
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -265,7 +265,7 @@ class FeaturesFactorizationModule(nn.Module):
         super().__init__()
 
         self.device = device
-        mid_c = in_c // 8
+        mid_c = in_c // 4
 
         self.pre_conv_block = nn.Sequential(
             nn.Conv2d(in_c, mid_c, (1, 1)),
@@ -406,8 +406,8 @@ class EfficientPhysFM(nn.Module):
         d5 = self.dropout_2(d5)
 
         d5 = self.TSM_4(d5)
-        d6 = self.motion_conv4(d5)
-        d6 = torch.tanh(self.feature_factorizer(d6))
+        d6 = torch.tanh(self.motion_conv4(d5))
+        d6 = self.feature_factorizer(d6)
 
         d7 = self.avg_pooling_4(d6)
         d8 = self.dropout_3(d7)
@@ -428,7 +428,7 @@ if __name__ == "__main__":
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
     batch_size = 8
-    frames = 30    #duration*fs
+    frames = 20    #duration*fs
     in_channels = 3
     height = 72
     width = 72
