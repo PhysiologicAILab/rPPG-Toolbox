@@ -33,7 +33,8 @@ class _MatrixDecompositionBase(nn.Module):
         factor = 8
         # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
         # # self.R = 2 * frame_depth
-        self.R = 6 * batch_size
+        # self.R = 6 * batch_size
+        self.R = 4
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -114,9 +115,9 @@ class _MatrixDecompositionBase(nn.Module):
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
             # D = C * self.frame_depth
             # N = H * W
-            D = BN #self.frame_depth
+            D = self.frame_depth
             N = C * H * W
-            B = 1
+            # B = 1
             x = x.view(B * self.S, D, N)
 
             # print("---")
@@ -264,7 +265,7 @@ class FeaturesFactorizationModule(nn.Module):
         super().__init__()
 
         self.device = device
-        mid_c = in_c // 4
+        mid_c = in_c // 8
 
         self.pre_conv_block = nn.Sequential(
             nn.Conv2d(in_c, mid_c, (1, 1)),
@@ -375,7 +376,8 @@ class EfficientPhysFM(nn.Module):
             self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
         elif img_size == 72:
             # self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
-            self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
+            # self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
+            self.final_dense_1 = nn.Linear(576, self.nb_dense, bias=True)
         elif img_size == 96:
             self.final_dense_1 = nn.Linear(30976, self.nb_dense, bias=True)
         else:
@@ -405,6 +407,7 @@ class EfficientPhysFM(nn.Module):
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
 
+        d6 = self.avg_pooling_3(d6)
         d6 = self.feature_factorizer(d6)
 
         d7 = self.avg_pooling_3(d6)
@@ -426,7 +429,7 @@ if __name__ == "__main__":
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
     batch_size = 2
-    frames = 60    #duration*fs
+    frames = 240    #duration*fs
     in_channels = 3
     height = 72
     width = 72
