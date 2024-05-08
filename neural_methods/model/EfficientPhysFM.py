@@ -341,6 +341,7 @@ class EfficientPhysFM(nn.Module):
                 self.device = torch.device("cpu")
         self.in_channels = in_channels
         self.kernel_size = kernel_size
+        self.batch_norm = nn.BatchNorm2d(in_channels)
         self.dropout_rate1 = dropout_rate1
         self.dropout_rate2 = dropout_rate2
         self.pool_size = pool_size
@@ -371,19 +372,24 @@ class EfficientPhysFM(nn.Module):
         self.dropout_2 = nn.Dropout(self.dropout_rate1)
         self.dropout_3 = nn.Dropout(self.dropout_rate1)
         self.dropout_4 = nn.Dropout(self.dropout_rate2)
-        # Dense layers
-        if img_size == 36:
-            self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
-        elif img_size == 72:
-            # self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
-            # self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
-            self.final_dense_1 = nn.Linear(576, self.nb_dense, bias=True)
-        elif img_size == 96:
-            self.final_dense_1 = nn.Linear(30976, self.nb_dense, bias=True)
-        else:
-            raise Exception('Unsupported image size')
-        self.final_dense_2 = nn.Linear(self.nb_dense, 1, bias=True)
-        self.batch_norm = nn.BatchNorm2d(3)
+
+        self.final_conv1 = nn.Conv2d(self.nb_filters2, self.nb_filters1, kernel_size=self.kernel_size, bias=True)
+
+        # # Dense layers
+        # if img_size == 36:
+        #     self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
+        # elif img_size == 72:
+        #     # self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
+        #     # self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
+        #     self.final_dense_1 = nn.Linear(576, self.nb_dense, bias=True)
+        # elif img_size == 96:
+        #     self.final_dense_1 = nn.Linear(30976, self.nb_dense, bias=True)
+        # else:
+        #     raise Exception('Unsupported image size')
+        
+        
+        # self.final_dense_2 = nn.Linear(self.nb_dense, 1, bias=True)
+        self.final_conv2 = nn.Conv1d(self.nb_filters1, 1, kernel_size=7, padding=3, bias=True)
         self.channel = channel
 
     def forward(self, inputs, params=None):
@@ -413,11 +419,11 @@ class EfficientPhysFM(nn.Module):
         d7 = self.avg_pooling_3(d6)
         d8 = self.dropout_3(d7)
 
-        d9 = d8.view(d8.size(0), -1)
+        d9 = self.final_conv1(d8)
+        d9 = d9.view(1, d9.size(1), -1)
 
-        d10 = torch.tanh(self.final_dense_1(d9))
-        d11 = self.dropout_4(d10)
-        out = self.final_dense_2(d11)
+        d10 = torch.tanh(self.final_conv2(d9))
+        out = d10.view(-1, 1)
 
         return out
 
