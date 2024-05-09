@@ -14,10 +14,10 @@ TEST:
     BEGIN: 0.0
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['DiffNormalized']         #if use iBVPNet, should be DiffNormalized
-      LABEL_TYPE: DiffNormalized
+      DATA_TYPE: ['Raw']         #if use iBVPNet, should be Raw
+      LABEL_TYPE: Raw
       DO_CHUNK: True
-      CHUNK_LENGTH: 128                 #only support for factor of 512
+      CHUNK_LENGTH: 256                 #only support for factor of 512
       CROP_FACE:
         DO_CROP_FACE: True
         BACKEND: 'HC'    # HC for Haar Cascade, RF for RetinaFace
