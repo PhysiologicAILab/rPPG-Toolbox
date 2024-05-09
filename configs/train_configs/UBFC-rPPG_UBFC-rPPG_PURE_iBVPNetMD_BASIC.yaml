@@ -9,7 +9,7 @@ TRAIN:
   DATA:
     FS: 30
     DATASET: UBFC-rPPG
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/UBFC-rPPG/data"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/UBFC-rPPG"    # Processed dataset save path, need to be updated
@@ -65,7 +65,7 @@ VALID:
         W: 72
 TEST:
   METRICS: ['MAE', 'RMSE', 'MAPE', 'Pearson', 'SNR', 'BA', 'MACC']
-  USE_LAST_EPOCH: True
+  USE_LAST_EPOCH: False
   DATA:
     FS: 30
     DATASET: PURE
