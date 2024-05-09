@@ -29,7 +29,7 @@ TRAIN:
         LARGE_BOX_COEF: 1.5
         DETECTION:
           DO_DYNAMIC_DETECTION: False
-          DYNAMIC_DETECTION_FREQUENCY : 32
+          DYNAMIC_DETECTION_FREQUENCY : 30
           USE_MEDIAN_FACE_BOX: False    # This should be used ONLY if dynamic detection is used
       RESIZE:
         H: 72
@@ -38,7 +38,7 @@ VALID:
   DATA:
     FS: 30
     DATASET: UBFC-rPPG
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/UBFC-rPPG/data"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/UBFC-rPPG"    # Processed dataset save path, need to be updated
@@ -58,7 +58,7 @@ VALID:
         LARGE_BOX_COEF: 1.5
         DETECTION:
           DO_DYNAMIC_DETECTION: False
-          DYNAMIC_DETECTION_FREQUENCY : 32
+          DYNAMIC_DETECTION_FREQUENCY : 30
           USE_MEDIAN_FACE_BOX: False    # This should be used ONLY if dynamic detection is used
       RESIZE:
         H: 72
