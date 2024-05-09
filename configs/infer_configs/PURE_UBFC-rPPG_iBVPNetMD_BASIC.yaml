@@ -10,7 +10,7 @@ TEST:
     DATA_FORMAT: NCDHW
     DATA_PATH: "data/UBFC-rPPG/data"                     # Raw dataset path, need to be updated
     CACHED_PATH: "data/UBFC-rPPG/prep"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: ""
+    EXP_DATA_NAME: "UBFC-rPPG_Raw_256_72x72"
     BEGIN: 0.0
     END: 1.0
     PREPROCESS:
@@ -36,13 +36,13 @@ LOG:
   PATH: runs/exp
 MODEL:
   DROP_RATE: 0.2
-  NAME: iBVPNet
+  NAME: iBVPNetMD
   iBVPNET:
     FRAME_NUM: 256
 INFERENCE:
-  BATCH_SIZE: 4
+  BATCH_SIZE: 8
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
-  MODEL_PATH: "./final_model_release/PURE_iBVPNet_DiffNormalized.pth"
+  MODEL_PATH: "runs/exp/PURE_Raw_256_72x72_NCDHW/PreTrainedModels/PURE_PURE_iBVPNetFM_Raw_D-T_FD256_NegP_R-4_BatchNorm_Epoch16.pth"
