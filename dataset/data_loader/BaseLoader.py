@@ -64,7 +64,7 @@ class BaseLoader(Dataset):
 
         if self.do_preprocess:
             if self.config_data.PREPROCESS.CROP_FACE.BACKEND == 'Y5F':
-                self.Y5FObj = YOLO5Face(self.device)
+                self.Y5FObj = YOLO5Face(device)
 
         assert (config_data.BEGIN < config_data.END)
         assert (config_data.BEGIN > 0 or config_data.BEGIN == 0)
