@@ -10,7 +10,6 @@ class YOLO5Face(object):
         self.iou_thres = 0.5
         self.imgsz = (640, 640)
         self.img_size = 640
-        self.model = load_model("dataset/data_loader/face_detector/Y5sF_WFRGB.pt")
 
         if torch.cuda.is_available():
             if device != None:
@@ -20,6 +19,9 @@ class YOLO5Face(object):
                 self.device = torch.device(0)
         else:
             self.device = torch.device("cpu")  # if no GPUs set device is CPU
+
+        self.model = load_model("dataset/data_loader/face_detector/Y5sF_WFRGB.pt", self.device)
+
 
     def detect_face(self, frame):
 
