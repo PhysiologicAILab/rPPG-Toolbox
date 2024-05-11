@@ -113,6 +113,10 @@ class iBVPLoader(BaseLoader):
             # Utilize dataset-specific function to read video
             frames = self.read_video(
                 os.path.join(data_dirs[i]['path'], "{0}_rgb".format(filename), ""))
+            if "_RGBT" in self.dataset_mode:
+                thermal_frames = self.read_thermal_video(
+                    os.path.join(data_dirs[i]['path'], "{0}_t".format(filename), ""))
+
         elif 'Motion' in config_preprocess.DATA_AUG:
             # Utilize general function to read video in .npy format
             frames = self.read_npy_video(
@@ -127,7 +131,16 @@ class iBVPLoader(BaseLoader):
             bvps, sq_vec = self.read_wave(
                 os.path.join(data_dirs[i]['path'], "{0}_bvp.csv".format(filename)))
 
-        target_length = frames.shape[0]
+        if "_RGBT" in self.dataset_mode:
+            rgb_length = frames.shape[0]
+            thermal_length = thermal_frames.shape[0]
+            target_length = min(rgb_length, thermal_length)
+            frames = frames[:target_length, ...]
+            thermal_frames = thermal_frames[:target_length, ...]
+            frames = np.concatenate([frames, thermal_frames], axis=-1)
+        else:
+            target_length = frames.shape[0]
+
         bvps = BaseLoader.resample_ppg(bvps, target_length)
         sq_vec = BaseLoader.resample_ppg(sq_vec, target_length)
 
@@ -156,10 +169,27 @@ class iBVPLoader(BaseLoader):
         return np.asarray(frames)
 
     @staticmethod
+    def read_thermal_video(video_file):
+        """Reads a video file, returns frames(T, H, W, 1) """
+        im_width = 640
+        im_height = 512
+        frames = list()
+        all_raw = sorted(glob.glob(video_file + '*.raw'))
+        for raw_path in all_raw:
+            thermal_matrix = np.fromfile(raw_path, dtype=np.uint16, count=im_width *
+                                        im_height).reshape(im_height, im_width)
+            thermal_matrix = thermal_matrix.astype(np.float32)
+            thermal_matrix = (thermal_matrix * 0.04) - 273.15
+            frames.append(thermal_matrix)
+        frames = np.expand_dims(frames, axis=-1)
+        return np.asarray(frames)
+
+
+    @staticmethod
     def read_wave(bvp_file):
         """Reads a bvp signal file."""
         with open(bvp_file, "r") as f:
             labels = pd.read_csv(f).to_numpy()
             waves = labels[:, 0]
-            sq_vec = labels[:, 2]
+            sq_vec = labels[:, 3]   #SQ2
         return waves, sq_vec
