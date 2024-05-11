@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from dataset.data_loader.face_detector.models.common import Conv, DWConv
+from models.common import Conv, DWConv
 from dataset.data_loader.face_detector.utils.google_utils import attempt_download
 
 
