@@ -22,7 +22,7 @@ class YOLO5Face(object):
             self.device = torch.device("cpu")  # if no GPUs set device is CPU
 
         package_dir = os.path.dirname(os.path.abspath(__file__))
-        ckpt = os.path.join(package_dir, "dataset", "data_loader", "face_detector", "Y5sF_WFRGB.pt")
+        ckpt = os.path.join(package_dir, "Y5sF_WFRGB.pt")
         self.model = load_model(ckpt, self.device)
 
 
