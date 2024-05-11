@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from utils.data_ops import box_iou
+from dataset.data_loader.face_detector.utils.data_ops import box_iou
 
 
 def fitness(x):

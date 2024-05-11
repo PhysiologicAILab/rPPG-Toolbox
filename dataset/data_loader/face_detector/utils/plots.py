@@ -18,8 +18,8 @@ import yaml
 from PIL import Image, ImageDraw
 from scipy.signal import butter, filtfilt
 
-from utils.data_ops import xywh2xyxy, xyxy2xywh
-from utils.metrics import fitness
+from dataset.data_loader.face_detector.utils.data_ops import xywh2xyxy, xyxy2xywh
+from dataset.data_loader.face_detector.utils.metrics import fitness
 
 # Settings
 matplotlib.rc('font', **{'size': 11})
