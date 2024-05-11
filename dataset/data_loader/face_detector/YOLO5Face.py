@@ -3,6 +3,7 @@ import cv2
 import torch
 from dataset.data_loader.face_detector.model_load import load_model
 from dataset.data_loader.face_detector.data_ops import letterbox, scale_coords_landmarks, show_results, check_img_size, non_max_suppression_face, scale_coords
+from importlib.resources import files
 
 class YOLO5Face(object):
     def __init__(self, device=None) -> None:
@@ -20,7 +21,7 @@ class YOLO5Face(object):
         else:
             self.device = torch.device("cpu")  # if no GPUs set device is CPU
 
-        self.model = load_model("dataset/data_loader/face_detector/Y5sF_WFRGB.pt", self.device)
+        self.model = load_model(files('RPPG-TOOLBOX.dataset.data_loader.face_detector').joinpath('Y5sF_WFRGB.pt'), self.device)
 
 
     def detect_face(self, frame):
