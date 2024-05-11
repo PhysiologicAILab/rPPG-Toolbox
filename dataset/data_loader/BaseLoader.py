@@ -344,7 +344,7 @@ class BaseLoader(Dataset):
             # Use a YOLO5Face trained on WiderFace dataset
             # This utilizes both the CPU and GPU
 
-            res = self.Y5FObj(frame[:, :, :3])
+            res = self.Y5FObj.detect_face(frame[:, :, :3])
 
             if res != None:
                 x_min, y_min, x_max, y_max = res
