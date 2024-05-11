@@ -8,8 +8,8 @@ import torch
 import torch.nn as nn
 from PIL import Image, ImageDraw
 
-from utils.data_ops import letterbox, non_max_suppression, make_divisible, scale_coords, xyxy2xywh
-from utils.plots import color_list
+from dataset.data_loader.face_detector.data_ops import letterbox, non_max_suppression, make_divisible, scale_coords, xyxy2xywh
+from dataset.data_loader.face_detector.utils.plots import color_list
 import warnings
 
 def autopad(k, p=None):  # kernel, padding
