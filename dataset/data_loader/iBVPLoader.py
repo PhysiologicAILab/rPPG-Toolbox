@@ -140,11 +140,11 @@ class iBVPLoader(BaseLoader):
                 os.path.join(data_dirs[i]['path'], "{0}_bvp.csv".format(filename)))
 
         if "RGBT" in config_preprocess.IBVP.DATA_MODE:
-            rgb_length = rgb_frames.shape[0]
-            thermal_length = thermal_frames.shape[0]
+            rgb_length, rgb_height, rgb_width, rgb_ch = rgb_frames.shape
+            thermal_length, t_height, t_width, t_ch = thermal_frames.shape
             target_length = min(rgb_length, thermal_length)
             rgb_frames = rgb_frames[:target_length, ...]
-            thermal_frames = thermal_frames[:target_length, ...]
+            thermal_frames = thermal_frames[:target_length, :rgb_height, :, :]      #rgb_height = 480, thermal height = 512, so reducing thermal height to match with RGB.
             frames = np.concatenate([rgb_frames, thermal_frames], axis=-1)
         else:
             target_length = frames.shape[0]
