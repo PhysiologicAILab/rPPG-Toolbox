@@ -293,6 +293,7 @@ _C.MODEL.PHYSNET.FRAME_NUM = 64
 # -----------------------------------------------------------------------------
 _C.MODEL.iBVPNet = CN()
 _C.MODEL.iBVPNet.FRAME_NUM = 64
+_C.MODEL.iBVPNet.CHANNELS = 3
 
 # -----------------------------------------------------------------------------
 # Model Settings for TS-CAN

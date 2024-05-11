@@ -480,7 +480,13 @@ class iBVPNetMD(nn.Module):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
         use_nmf = True
-        self.norm = nn.BatchNorm3d(in_channels)
+        if in_channels == 1 or in_channels == 3:
+            self.norm = nn.BatchNorm3d(in_channels)
+        elif in_channels == 4:
+            self.rgb_norm = nn.BatchNorm3d(3)
+            self.thermal_norm = nn.BatchNorm3d(1)
+        else:
+            print("Unsupported input channels")
         self.iBVPNetMD_model = nn.Sequential(
             encoder_block(in_channels, debug),
             decoder_block(device, frames, use_nmf, debug)
@@ -493,7 +499,14 @@ class iBVPNetMD(nn.Module):
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
         [batch, channel, length, width, height] = x.shape
-        x = self.norm(x)
+        if channel <= 3:
+            x = self.norm(x)
+        else:
+            rgb_x = self.rgb_norm(x[:, :3, :, :, :])
+            thermal_x = self.thermal_norm(x[:, 3:4, :, :, :])
+
+        x = torch.concat([rgb_x, thermal_x], dim = 2)
+
         if self.debug:
             print("Input.shape", x.shape)
 
@@ -518,7 +531,7 @@ if __name__ == "__main__":
     # fs = 25
     batch_size = 2
     frames = 256    #duration*fs
-    in_channels = 3
+    in_channels = 4
     height = 72
     width = 72
 

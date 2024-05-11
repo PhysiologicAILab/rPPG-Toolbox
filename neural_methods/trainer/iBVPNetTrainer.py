@@ -37,10 +37,13 @@ class iBVPNetTrainer(BaseTrainer):
             self.device = torch.device("cpu")  # if no GPUs set device is CPU
             self.num_of_gpu = 0  # no GPUs used
 
+        frames = config.MODEL.iBVPNet.FRAME_NUM
+        in_channels = config.MODEL.iBVPNet.CHANNELS
+
         if config.MODEL.NAME == "iBVPNet":
-            self.model = iBVPNet(frames=config.MODEL.iBVPNet.FRAME_NUM) # [3, T, 128,128]
+            self.model = iBVPNet(frames=frames, in_channels=in_channels) # [3, T, 128,128]
         else:
-            self.model = iBVPNetMD(frames=config.MODEL.iBVPNet.FRAME_NUM, device=self.device) # [3, T, 128,128]
+            self.model = iBVPNetMD(frames=frames, in_channels=in_channels, device=self.device) # [3, T, 128,128]
 
         if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
             self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
