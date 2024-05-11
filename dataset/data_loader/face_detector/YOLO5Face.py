@@ -12,14 +12,19 @@ class YOLO5Face(object):
         self.imgsz = (640, 640)
         self.img_size = 640
 
-        if torch.cuda.is_available():
-            if device != None:
+        if device != None:
+            if device == "cpu":
+                self.device = torch.device("cpu")
+            elif torch.cuda.is_available():
                 dev_list = [int(d) for d in device.replace("cuda:", "").split(",")]
                 self.device = torch.device(dev_list[0])     #currently toolbox only supports 1 GPU
             else:
-                self.device = torch.device(0)
+                self.device = torch.device("cpu")
         else:
-            self.device = torch.device("cpu")  # if no GPUs set device is CPU
+            if torch.cuda.is_available():
+                self.device = torch.device(0)     #currently toolbox only supports 1 GPU
+            else:
+                self.device = torch.device("cpu")
 
         package_dir = os.path.dirname(os.path.abspath(__file__))
         ckpt = os.path.join(package_dir, "Y5sF_WFRGB.pt")
