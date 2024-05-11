@@ -8,7 +8,7 @@ TRAIN:
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
-    DATASET: iBVP_RGBT
+    DATASET: iBVP
     DO_PREPROCESS: True                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
@@ -24,20 +24,22 @@ TRAIN:
       CHUNK_LENGTH: 256                 #only support for factor of 512
       CROP_FACE:
         DO_CROP_FACE: True
-        BACKEND: 'HC'    # HC for Haar Cascade, RF for RetinaFace
+        BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
         USE_LARGE_FACE_BOX: True
         LARGE_BOX_COEF: 1.5
         DETECTION:
           DO_DYNAMIC_DETECTION: True
           DYNAMIC_DETECTION_FREQUENCY : 30
           USE_MEDIAN_FACE_BOX: False    # This should be used ONLY if dynamic detection is used
+      IBVP:
+        DATA_MODE: RGBT
       RESIZE:
         H: 72
         W: 72
 VALID:
   DATA:
     FS: 30
-    DATASET: iBVP_RGBT
+    DATASET: iBVP
     DO_PREPROCESS: True                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
@@ -53,7 +55,7 @@ VALID:
       CHUNK_LENGTH: 256                 #only support for factor of 512
       CROP_FACE:
         DO_CROP_FACE: True
-        BACKEND: 'HC'    # HC for Haar Cascade, RF for RetinaFace
+        BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
         USE_LARGE_FACE_BOX: True
         LARGE_BOX_COEF: 1.5
         DETECTION:
@@ -68,7 +70,7 @@ TEST:
   USE_LAST_EPOCH: False                   # to use provided validation dataset to find the best epoch, should be false
   DATA:
     FS: 30
-    DATASET: iBVP_RGBT
+    DATASET: iBVP
     DO_PREPROCESS: True                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
@@ -83,7 +85,7 @@ TEST:
       CHUNK_LENGTH: 256                 #only support for factor of 512
       CROP_FACE:
         DO_CROP_FACE: True
-        BACKEND: 'HC'    # HC for Haar Cascade, RF for RetinaFace
+        BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
         USE_LARGE_FACE_BOX: True
         LARGE_BOX_COEF: 1.5
         DETECTION:

@@ -22,7 +22,7 @@ import pandas as pd
 class iBVPLoader(BaseLoader):
     """The data loader for the iBVP dataset."""
 
-    def __init__(self, name, data_path, config_data):
+    def __init__(self, name, data_path, config_data, device=None):
         """Initializes an iBVP dataloader.
             Args:
                 data_path(str): path of a folder which stores raw video and bvp data.
@@ -47,8 +47,7 @@ class iBVPLoader(BaseLoader):
                 name(str): name of the dataloader.
                 config_data(CfgNode): data settings(ref:config.py).
         """
-        super().__init__(name, data_path, config_data)
-        self.dataset_mode = name
+        super().__init__(name, data_path, config_data, device)
 
     def get_raw_data(self, data_path):
         """Returns data directories under the path(For iBVP dataset)."""
@@ -111,11 +110,20 @@ class iBVPLoader(BaseLoader):
         # Read Frames
         if 'None' in config_preprocess.DATA_AUG:
             # Utilize dataset-specific function to read video
-            frames = self.read_video(
-                os.path.join(data_dirs[i]['path'], "{0}_rgb".format(filename), ""))
-            if "_RGBT" in self.dataset_mode:
+            
+            if config_preprocess.IBVP.DATA_MODE == "T":
+                frames = self.read_video(
+                    os.path.join(data_dirs[i]['path'], "{0}_t".format(filename), ""))
+            
+            elif config_preprocess.IBVP.DATA_MODE == "RGBT":
+                rgb_frames = self.read_video(
+                    os.path.join(data_dirs[i]['path'], "{0}_rgb".format(filename), ""))
+
                 thermal_frames = self.read_thermal_video(
                     os.path.join(data_dirs[i]['path'], "{0}_t".format(filename), ""))
+            else:
+                frames = self.read_video(
+                    os.path.join(data_dirs[i]['path'], "{0}_rgb".format(filename), ""))
 
         elif 'Motion' in config_preprocess.DATA_AUG:
             # Utilize general function to read video in .npy format
@@ -131,13 +139,13 @@ class iBVPLoader(BaseLoader):
             bvps, sq_vec = self.read_wave(
                 os.path.join(data_dirs[i]['path'], "{0}_bvp.csv".format(filename)))
 
-        if "_RGBT" in self.dataset_mode:
-            rgb_length = frames.shape[0]
+        if "RGBT" in config_preprocess.IBVP.DATA_MODE:
+            rgb_length = rgb_frames.shape[0]
             thermal_length = thermal_frames.shape[0]
             target_length = min(rgb_length, thermal_length)
-            frames = frames[:target_length, ...]
+            rgb_frames = rgb_frames[:target_length, ...]
             thermal_frames = thermal_frames[:target_length, ...]
-            frames = np.concatenate([frames, thermal_frames], axis=-1)
+            frames = np.concatenate([rgb_frames, thermal_frames], axis=-1)
         else:
             target_length = frames.shape[0]
 

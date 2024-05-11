@@ -138,7 +138,7 @@ if __name__ == "__main__":
             train_loader = data_loader.BP4DPlusBigSmallLoader.BP4DPlusBigSmallLoader
         elif config.TRAIN.DATA.DATASET == "UBFC-PHYS":
             train_loader = data_loader.UBFCPHYSLoader.UBFCPHYSLoader
-        elif config.TRAIN.DATA.DATASET == "iBVP" or config.TRAIN.DATA.DATASET == "iBVP_RGBT":
+        elif config.TRAIN.DATA.DATASET == "iBVP":
             train_loader = data_loader.iBVPLoader.iBVPLoader
         else:
             raise ValueError("Unsupported dataset! Currently supporting UBFC-rPPG, PURE, MMPD, \
@@ -151,7 +151,8 @@ if __name__ == "__main__":
             train_data_loader = train_loader(
                 name="train",
                 data_path=config.TRAIN.DATA.DATA_PATH,
-                config_data=config.TRAIN.DATA)
+                config_data=config.TRAIN.DATA,
+                device=config.DEVICE)
             data_loader_dict['train'] = DataLoader(
                 dataset=train_data_loader,
                 num_workers=16,
@@ -178,7 +179,7 @@ if __name__ == "__main__":
             valid_loader = data_loader.BP4DPlusBigSmallLoader.BP4DPlusBigSmallLoader
         elif config.VALID.DATA.DATASET == "UBFC-PHYS":
             valid_loader = data_loader.UBFCPHYSLoader.UBFCPHYSLoader
-        elif config.VALID.DATA.DATASET == "iBVP" or config.VALID.DATA.DATASET == "iBVP_RGBT":
+        elif config.VALID.DATA.DATASET == "iBVP":
             valid_loader = data_loader.iBVPLoader.iBVPLoader
         elif config.VALID.DATA.DATASET is None and not config.TEST.USE_LAST_EPOCH:
             raise ValueError("Validation dataset not specified despite USE_LAST_EPOCH set to False!")
@@ -192,7 +193,8 @@ if __name__ == "__main__":
             valid_data = valid_loader(
                 name="valid",
                 data_path=config.VALID.DATA.DATA_PATH,
-                config_data=config.VALID.DATA)
+                config_data=config.VALID.DATA,
+                device=config.DEVICE)
             data_loader_dict["valid"] = DataLoader(
                 dataset=valid_data,
                 num_workers=16,
@@ -223,7 +225,7 @@ if __name__ == "__main__":
             test_loader = data_loader.BP4DPlusBigSmallLoader.BP4DPlusBigSmallLoader
         elif config.TEST.DATA.DATASET == "UBFC-PHYS":
             test_loader = data_loader.UBFCPHYSLoader.UBFCPHYSLoader
-        elif config.TEST.DATA.DATASET == "iBVP" or config.TEST.DATA.DATASET == "iBVP_RGBT":
+        elif config.TEST.DATA.DATASET == "iBVP":
             test_loader = data_loader.iBVPLoader.iBVPLoader
         else:
             raise ValueError("Unsupported dataset! Currently supporting UBFC-rPPG, PURE, MMPD, \
@@ -238,7 +240,8 @@ if __name__ == "__main__":
             test_data = test_loader(
                 name="test",
                 data_path=config.TEST.DATA.DATA_PATH,
-                config_data=config.TEST.DATA)
+                config_data=config.TEST.DATA,
+                device=config.DEVICE)
             data_loader_dict["test"] = DataLoader(
                 dataset=test_data,
                 num_workers=16,
@@ -273,7 +276,8 @@ if __name__ == "__main__":
         unsupervised_data = unsupervised_loader(
             name="unsupervised",
             data_path=config.UNSUPERVISED.DATA.DATA_PATH,
-            config_data=config.UNSUPERVISED.DATA)
+            config_data=config.UNSUPERVISED.DATA,
+            device=config.DEVICE)
         data_loader_dict["unsupervised"] = DataLoader(
             dataset=unsupervised_data,
             num_workers=16,

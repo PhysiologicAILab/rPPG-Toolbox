@@ -20,9 +20,11 @@ from multiprocessing import Pool, Process, Value, Array, Manager
 import cv2
 import numpy as np
 import pandas as pd
+import torch
 from torch.utils.data import Dataset
 from tqdm import tqdm
 from retinaface import RetinaFace   # Source code: https://github.com/serengil/retinaface
+from dataset.data_loader.face_detector.YOLO5Face import YOLO5Face
 
 
 class BaseLoader(Dataset):
@@ -41,7 +43,7 @@ class BaseLoader(Dataset):
             "--preprocess", default=None, action='store_true')
         return parser
 
-    def __init__(self, dataset_name, raw_data_path, config_data):
+    def __init__(self, dataset_name, raw_data_path, config_data, device=None):
         """Inits dataloader with lists of files.
 
         Args:
@@ -59,6 +61,10 @@ class BaseLoader(Dataset):
         self.data_format = config_data.DATA_FORMAT
         self.do_preprocess = config_data.DO_PREPROCESS
         self.config_data = config_data
+
+        if self.do_preprocess:
+            if self.config_data.PREPROCESS.CROP_FACE.BACKEND == 'Y5F':
+                self.Y5FObj = YOLO5Face(self.device)
 
         assert (config_data.BEGIN < config_data.END)
         assert (config_data.BEGIN > 0 or config_data.BEGIN == 0)
@@ -333,6 +339,41 @@ class BaseLoader(Dataset):
             else:
                 print("ERROR: No Face Detected")
                 face_box_coor = [0, 0, frame.shape[0], frame.shape[1]]
+        
+        elif backend == "Y5F":
+            # Use a YOLO5Face trained on WiderFace dataset
+            # This utilizes both the CPU and GPU
+
+            res = self.Y5FObj(frame[:, :, :3])
+
+            if res != None:
+                x_min, y_min, x_max, y_max = res
+
+                # Convert to this toolbox's expected format
+                # Expected format: [x_coord, y_coord, width, height]
+                x = x_min
+                y = y_min
+                width = x_max - x_min
+                height = y_max - y_min
+
+                # Find the center of the face zone
+                center_x = x + width // 2
+                center_y = y + height // 2
+
+                # Determine the size of the square (use the maximum of width and height)
+                square_size = max(width, height)
+
+                # Calculate the new coordinates for a square face zone
+                new_x = center_x - (square_size // 2)
+                new_y = center_y - (square_size // 2)
+                face_box_coor = [new_x, new_y, square_size, square_size]
+
+            else:
+                print("ERROR: No Face Detected")
+                face_box_coor = [0, 0, frame.shape[0], frame.shape[1]]
+
+
+
         else:
             raise ValueError("Unsupported face detection backend!")
 
