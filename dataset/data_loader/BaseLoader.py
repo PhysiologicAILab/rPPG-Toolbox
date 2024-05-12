@@ -15,7 +15,8 @@ from scipy import sparse
 from unsupervised_methods.methods import POS_WANG
 from unsupervised_methods import utils
 import math
-from multiprocessing import Pool, Process, Value, Array, Manager
+import multiprocessing as mp
+mp.set_start_method('spawn')
 
 import cv2
 import numpy as np
@@ -524,7 +525,7 @@ class BaseLoader(Dataset):
         pbar = tqdm(list(choose_range))
 
         # shared data resource
-        manager = Manager()  # multi-process manager
+        manager = mp.Manager()  # multi-process manager
         file_list_dict = manager.dict()  # dictionary for all processes to store processed files
         p_list = []  # list of processes
         running_num = 0  # number of running processes
@@ -535,7 +536,7 @@ class BaseLoader(Dataset):
             while process_flag:  # ensure that every i creates a process
                 if running_num < multi_process_quota:  # in case of too many processes
                     # send data to be preprocessing task
-                    p = Process(target=self.preprocess_dataset_subprocess, 
+                    p = mp.Process(target=self.preprocess_dataset_subprocess, 
                                 args=(data_dirs,config_preprocess, i, file_list_dict))
                     p.start()
                     p_list.append(p)
