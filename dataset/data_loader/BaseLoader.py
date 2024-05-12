@@ -290,7 +290,7 @@ class BaseLoader(Dataset):
             # Computed face_zone(s) are in the form [x_coord, y_coord, width, height]
             # (x,y) corresponds to the top-left corner of the zone to define using
             # the computed width and height.
-            face_zone = detector.detectMultiScale(frame[:, :, :3])
+            face_zone = detector.detectMultiScale(frame[:, :, :3].astype(np.uint8))
 
             if len(face_zone) < 1:
                 print("ERROR: No Face Detected")
@@ -306,7 +306,7 @@ class BaseLoader(Dataset):
         elif backend == "RF":
             # Use a TensorFlow-based RetinaFace implementation for face detection
             # This utilizes both the CPU and GPU
-            res = RetinaFace.detect_faces(frame[:, :, :3])
+            res = RetinaFace.detect_faces(frame[:, :, :3].astype(np.uint8))
 
             if len(res) > 0:
                 # Pick the highest score
@@ -344,7 +344,7 @@ class BaseLoader(Dataset):
             # Use a YOLO5Face trained on WiderFace dataset
             # This utilizes both the CPU and GPU
 
-            res = self.Y5FObj.detect_face(frame[:, :, :3])
+            res = self.Y5FObj.detect_face(frame[:, :, :3].astype(np.uint8))
 
             if res != None:
                 x_min, y_min, x_max, y_max = res
@@ -421,7 +421,7 @@ class BaseLoader(Dataset):
             face_region_median = np.median(face_region_all, axis=0).astype('int')
 
         # Frame Resizing
-        total_frames, height, width, channels = frames.shape
+        total_frames, _, _, channels = frames.shape
         resized_frames = np.zeros((total_frames, height, width, channels))
         for i in range(0, total_frames):
             frame = frames[i]
