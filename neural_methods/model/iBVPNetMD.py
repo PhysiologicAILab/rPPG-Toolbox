@@ -503,9 +503,9 @@ class iBVPNetMD(nn.Module):
             x = self.norm(x)
         else:
             rgb_x = self.rgb_norm(x[:, :3, :, :, :])
-            thermal_x = self.thermal_norm(x[:, 3:4, :, :, :])
+            thermal_x = self.thermal_norm(x[:, 3:, :, :, :])
 
-        x = torch.concat([rgb_x, thermal_x], dim = 2)
+        x = torch.concat([rgb_x, thermal_x], dim = 1)
 
         if self.debug:
             print("Input.shape", x.shape)
