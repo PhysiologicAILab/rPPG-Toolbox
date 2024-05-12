@@ -16,7 +16,11 @@ from unsupervised_methods.methods import POS_WANG
 from unsupervised_methods import utils
 import math
 import multiprocessing as mp
-mp.set_start_method('spawn')
+try:
+   mp.set_start_method('spawn', force=True)
+   print("spawned")
+except RuntimeError:
+   pass
 
 import cv2
 import numpy as np
