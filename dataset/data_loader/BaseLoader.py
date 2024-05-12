@@ -17,10 +17,10 @@ from unsupervised_methods import utils
 import math
 import multiprocessing as mp
 try:
-   mp.set_start_method('spawn', force=True)
-   print("spawned")
+    mp.set_start_method('spawn', force=True)
+    # print("spawned")
 except RuntimeError:
-   pass
+    pass
 
 import cv2
 import numpy as np

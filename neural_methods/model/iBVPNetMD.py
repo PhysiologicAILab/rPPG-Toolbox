@@ -385,7 +385,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
 
             ConvBlock3D(nf[0], nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
 
             ConvBlock3D(nf[1], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
@@ -397,7 +397,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
 
             ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[4], nf[5], [3, 2, 2], [1, 1, 1], [1, 0, 0]),
+            ConvBlock3D(nf[4], nf[5], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
         )
 
     def forward(self, x):
@@ -547,11 +547,11 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 256    #duration*fs
+    frames = 180    #duration*fs
     in_channels = 4
     data_channels = 4
-    height = 72
-    width = 72
+    height = 128
+    width = 128
 
     if torch.cuda.is_available():
         device = torch.device(0)
