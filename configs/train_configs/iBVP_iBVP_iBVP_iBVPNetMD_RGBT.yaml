@@ -40,7 +40,7 @@ VALID:
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: False                  # if first time, should be true
+    DO_PREPROCESS: True                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
@@ -62,6 +62,8 @@ VALID:
           DO_DYNAMIC_DETECTION: True
           DYNAMIC_DETECTION_FREQUENCY : 30
           USE_MEDIAN_FACE_BOX: False    # This should be used ONLY if dynamic detection is used
+      IBVP:
+        DATA_MODE: RGBT
       RESIZE:
         H: 72
         W: 72
@@ -71,7 +73,7 @@ TEST:
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: False                  # if first time, should be true
+    DO_PREPROCESS: True                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
@@ -92,6 +94,8 @@ TEST:
           DO_DYNAMIC_DETECTION: True
           DYNAMIC_DETECTION_FREQUENCY : 30
           USE_MEDIAN_FACE_BOX: False    # This should be used ONLY if dynamic detection is used
+      IBVP:
+        DATA_MODE: RGBT
       RESIZE:
         H: 72
         W: 72

@@ -480,15 +480,16 @@ class iBVPNetMD(nn.Module):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
         use_nmf = True
-        if in_channels == 1 or in_channels == 3:
-            self.norm = nn.BatchNorm3d(in_channels)
-        elif in_channels == 4:
+        self.in_channels = in_channels
+        if self.in_channels == 1 or self.in_channels == 3:
+            self.norm = nn.BatchNorm3d(self.in_channels)
+        elif self.in_channels == 4:
             self.rgb_norm = nn.BatchNorm3d(3)
             self.thermal_norm = nn.BatchNorm3d(1)
         else:
             print("Unsupported input channels")
         self.iBVPNetMD_model = nn.Sequential(
-            encoder_block(in_channels, debug),
+            encoder_block(self.in_channels, debug),
             decoder_block(device, frames, use_nmf, debug)
             # spatial adaptive pooling
             # nn.AdaptiveAvgPool3d((frames, 1, 1)),
@@ -499,16 +500,32 @@ class iBVPNetMD(nn.Module):
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
         [batch, channel, length, width, height] = x.shape
-        if channel <= 3:
-            x = self.norm(x)
-        else:
-            rgb_x = self.rgb_norm(x[:, :3, :, :, :])
-            thermal_x = self.thermal_norm(x[:, 3:, :, :, :])
-
-        x = torch.concat([rgb_x, thermal_x], dim = 1)
 
         if self.debug:
             print("Input.shape", x.shape)
+
+        if self.in_channels == 1:
+            x = self.norm(x[:, -1:, :, :, :])
+        elif self.in_channels == 3:
+            x = self.norm(x[:, :3, :, :, :])
+        elif self.in_channels == 4:
+            rgb_x = self.rgb_norm(x[:, :3, :, :, :])
+            thermal_x = self.thermal_norm(x[:, -1:, :, :, :])
+            x = torch.concat([rgb_x, thermal_x], dim = 1)
+        else:
+            try:
+                print("Specified input channels:", self.in_channels)
+                print("Data channels", channel)
+                assert self.in_channels <= channel
+            except:
+                print("Incorrectly preprocessed data provided as input. Number of channels exceed the specified or default channels")
+                print("Default or specified channels:", self.in_channels)
+                print("Data channels [B, C, N, W, H]", x.shape)
+                print("Exiting")
+                exit()
+
+        if self.debug:
+            print("BatchNormed shape", x.shape)
 
         feats = self.iBVPNetMD_model(x)
         if self.debug:
@@ -532,6 +549,7 @@ if __name__ == "__main__":
     batch_size = 2
     frames = 256    #duration*fs
     in_channels = 4
+    data_channels = 4
     height = 72
     width = 72
 
@@ -541,7 +559,7 @@ if __name__ == "__main__":
         device = torch.device("cpu")
 
     # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
-    test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
+    test_data = torch.rand(batch_size, data_channels, frames, height, width).to(device)
     net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=True)
 
     # print("-"*100)
