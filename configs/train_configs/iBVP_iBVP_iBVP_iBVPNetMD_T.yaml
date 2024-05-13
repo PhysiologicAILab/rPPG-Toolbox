@@ -3,28 +3,28 @@ TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test
 TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 50
-  LR: 5e-4
+  LR: 1e-4
   MODEL_FILE_NAME: iBVP_iBVP_iBVP_iBVPNetMD_T
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "iBVP_T_180_128x128"
+    EXP_DATA_NAME: "iBVP_RGBT_256_72x72"
     BEGIN: 0.0
-    END: 0.6
+    END: 0.5
     PREPROCESS:
       DATA_TYPE: ['Raw']         #if use iBVPNetMD, should be Raw
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
-      LABEL_TYPE: Raw
+      LABEL_TYPE: Standardized
       DO_CHUNK: True
-      CHUNK_LENGTH: 180
+      CHUNK_LENGTH: 256
       CROP_FACE:
         DO_CROP_FACE: True
-        BACKEND: 'Y5F_IR'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
+        BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face, Y5F_IR for running it on thermal frames
         USE_LARGE_FACE_BOX: True
         LARGE_BOX_COEF: 1.5
         DETECTION:
@@ -32,30 +32,30 @@ TRAIN:
           DYNAMIC_DETECTION_FREQUENCY : 30
           USE_MEDIAN_FACE_BOX: False    # This should be used ONLY if dynamic detection is used
       IBVP:
-        DATA_MODE: T
+        DATA_MODE: RGBT
       RESIZE:
-        H: 128
-        W: 128
+        H: 72
+        W: 72
 VALID:
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "iBVP_T_180_128x128"
-    BEGIN: 0.6
-    END: 0.8
+    EXP_DATA_NAME: "iBVP_RGBT_256_72x72"
+    BEGIN: 0.5
+    END: 0.7
     PREPROCESS:
       DATA_TYPE: ['Raw']         #if use iBVPNetMD, should be Raw
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
-      LABEL_TYPE: Raw
+      LABEL_TYPE: Standardized
       DO_CHUNK: True
-      CHUNK_LENGTH: 180
+      CHUNK_LENGTH: 256
       CROP_FACE:
         DO_CROP_FACE: True
-        BACKEND: 'Y5F_IR'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
+        BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face, Y5F_IR for running it on thermal frames
         USE_LARGE_FACE_BOX: True
         LARGE_BOX_COEF: 1.5
         DETECTION:
@@ -63,31 +63,31 @@ VALID:
           DYNAMIC_DETECTION_FREQUENCY : 30
           USE_MEDIAN_FACE_BOX: False    # This should be used ONLY if dynamic detection is used
       IBVP:
-        DATA_MODE: T
+        DATA_MODE: RGBT
       RESIZE:
-        H: 128
-        W: 128
+        H: 72
+        W: 72
 TEST:
   METRICS: ['MAE', 'RMSE', 'MAPE', 'Pearson', 'SNR', 'BA', 'MACC']
   USE_LAST_EPOCH: False                   # to use provided validation dataset to find the best epoch, should be false
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "iBVP_T_180_128x128"
-    BEGIN: 0.8
+    EXP_DATA_NAME: "iBVP_RGBT_256_72x72"
+    BEGIN: 0.7
     END: 1.0
     PREPROCESS:
       DATA_TYPE: ['Raw']         #if use iBVPNetMD, should be Raw
-      LABEL_TYPE: Raw
+      LABEL_TYPE: Standardized
       DO_CHUNK: True
-      CHUNK_LENGTH: 180
+      CHUNK_LENGTH: 256
       CROP_FACE:
         DO_CROP_FACE: True
-        BACKEND: 'Y5F_IR'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
+        BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face, Y5F_IR for running it on thermal frames
         USE_LARGE_FACE_BOX: True
         LARGE_BOX_COEF: 1.5
         DETECTION:
@@ -95,11 +95,11 @@ TEST:
           DYNAMIC_DETECTION_FREQUENCY : 30
           USE_MEDIAN_FACE_BOX: False    # This should be used ONLY if dynamic detection is used
       IBVP:
-        DATA_MODE: T
+        DATA_MODE: RGBT
       RESIZE:
-        H: 128
-        W: 128
-DEVICE: cuda:2
+        H: 72
+        W: 72
+DEVICE: cuda:0
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
@@ -108,7 +108,7 @@ MODEL:
   NAME: iBVPNetMD
   iBVPNet:
     CHANNELS: 1
-    FRAME_NUM: 180
+    FRAME_NUM: 256
 INFERENCE:
   BATCH_SIZE: 8
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
