@@ -1,7 +1,7 @@
 BASE: ['']
 TOOLBOX_MODE: "train_and_test"      # "train_and_test"  or "only_test"
 TRAIN:
-  BATCH_SIZE: 8
+  BATCH_SIZE: 4
   EPOCHS: 50
   LR: 5e-4
   MODEL_FILE_NAME: PURE_PURE_UBFC_iBVPNetMD
@@ -9,7 +9,7 @@ TRAIN:
   DATA:
     FS: 30
     DATASET: PURE
-    DO_PREPROCESS: True            # if first time, should be true
+    DO_PREPROCESS: False            # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/PURE_Dataset"    # Processed dataset save path, need to be updated
@@ -38,7 +38,7 @@ VALID:
   DATA:
     FS: 30
     DATASET: PURE
-    DO_PREPROCESS: True            # if first time, should be true
+    DO_PREPROCESS: False            # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/PURE_Dataset"    # Processed dataset save path, need to be updated
@@ -68,7 +68,7 @@ TEST:
   DATA:
     FS: 30
     DATASET: UBFC-rPPG
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/UBFC-rPPG/data"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/UBFC-rPPG"    # Processed dataset save path, need to be updated
