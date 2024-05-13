@@ -21,7 +21,7 @@ def batch_resize(opt):
         frames = np.load(str(fp))
         T, C, H, W = frames.shape
         for idx in range(T):
-            frames[idx, ...] = cv2.resize(frames[idx, ...])
+            frames[idx, ...] = cv2.resize(frames[idx, ...], target_size)
         np.save(str(fp), frames)
 
 if __name__ == '__main__':
