@@ -4,12 +4,12 @@ TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 50
   LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_UBFC-rPPG_iBVPNetMD-B8-1e-3-Aug
+  MODEL_FILE_NAME: PURE_PURE_UBFC-rPPG_iBVPNetMD-B8-1e-3
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
     DATASET: PURE
-    DO_PREPROCESS: True            # if first time, should be true
+    DO_PREPROCESS: False            # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/PURE_Dataset"    # Processed dataset save path, need to be updated
@@ -18,7 +18,7 @@ TRAIN:
     END: 0.8
     PREPROCESS:
       DATA_TYPE: ['Raw']         #if use iBVPNetMD, should be Raw
-      DATA_AUG: ['Motion']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
+      DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Standardized
       DO_CHUNK: True
       CHUNK_LENGTH: 256
@@ -38,7 +38,7 @@ VALID:
   DATA:
     FS: 30
     DATASET: PURE
-    DO_PREPROCESS: True            # if first time, should be true
+    DO_PREPROCESS: False            # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/PURE_Dataset"    # Processed dataset save path, need to be updated
@@ -47,7 +47,7 @@ VALID:
     END: 1.0
     PREPROCESS:
       DATA_TYPE: ['Raw']         #if use iBVPNetMD, should be Raw
-      DATA_AUG: ['Motion']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
+      DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Standardized
       DO_CHUNK: True
       CHUNK_LENGTH: 256

@@ -80,12 +80,25 @@ class iBVPNetTrainer(BaseTrainer):
             tbar = tqdm(data_loader["train"], ncols=80)
             for idx, batch in enumerate(tbar):
                 tbar.set_description("Train epoch %s" % epoch)
-                rPPG = self.model(batch[0].to(torch.float32).to(self.device))
-                BVP_label = batch[1].to(torch.float32).to(self.device)
-                rPPG = (rPPG - torch.mean(rPPG)) / torch.std(rPPG)  # normalize
-                BVP_label = (BVP_label - torch.mean(BVP_label)) / \
-                            torch.std(BVP_label)  # normalize
-                loss = self.loss_model(rPPG, BVP_label)
+                
+                data, labels = batch[0].to(self.device), batch[1].to(self.device)
+
+                # last_frame = torch.unsqueeze(data[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
+                # data = torch.cat((data, last_frame), 0)
+
+                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # labels = torch.cat((labels, last_sample), 0)
+                # labels = torch.diff(labels, dim=0)
+                # labels = labels/ torch.std(labels)  # normalize
+                # labels[torch.isnan(labels)] = 0
+
+                self.optimizer.zero_grad()
+                pred_ppg = self.model(data)
+
+                pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
+
+                loss = self.loss_model(pred_ppg, labels)
+                
                 loss.backward()
                 running_loss += loss.item()
                 if idx % 100 == 99:  # print every 100 mini-batches
