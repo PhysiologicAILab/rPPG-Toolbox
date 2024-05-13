@@ -101,11 +101,11 @@ class _MatrixDecompositionBase(nn.Module):
 
             x = x.view(B * self.S, D, N)
 
-            print("C, T, H, W", C, T, H, W)
-            print("D", D)
-            print("R", self.R)
-            print("N", N)
-            print("x.shape", x.shape)
+            # print("C, T, H, W", C, T, H, W)
+            # print("D", D)
+            # print("R", self.R)
+            # print("N", N)
+            # print("x.shape", x.shape)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             B, C, H, W = x.shape
@@ -549,9 +549,9 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 180    #duration*fs
-    in_channels = 4
-    data_channels = 4
+    frames = 256    #duration*fs
+    in_channels = 3
+    data_channels = 3
     height = 72
     width = 72
 
