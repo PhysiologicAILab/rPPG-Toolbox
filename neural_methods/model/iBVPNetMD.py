@@ -396,7 +396,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 0, 0]),
 
             ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
 
             ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[4], nf[5], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -425,7 +425,7 @@ class DeConvBlock3D(nn.Module):
             nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m3Ch),
             nn.ELU(),
-            nn.Conv3d(m3Ch, m4Ch, (k_t, 3, 3), (1, 2, 2), (pad_t, 1, 1)),
+            nn.Conv3d(m3Ch, m4Ch, (k_t, 3, 3), (1, 1, 1), (pad_t, 1, 1)),
             nn.BatchNorm3d(m4Ch),
             nn.ELU(),
             nn.Conv3d(m4Ch, m5Ch, (k_t, 2, 2), (1, 1, 1), (pad_t, 0, 0)),
@@ -502,7 +502,7 @@ class iBVPNetMD(nn.Module):
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
         [batch, channel, length, width, height] = x.shape
-        # x = torch.diff(x, dim=2)
+        x = torch.diff(x, dim=2)
 
         if self.debug:
             print("Input.shape", x.shape)
@@ -533,7 +533,7 @@ class iBVPNetMD(nn.Module):
         feats = self.iBVPNetMD_model(x)
         if self.debug:
             print("feats.shape", feats.shape)
-        rPPG = feats.view(-1, length)
+        rPPG = feats.view(-1, length-1)
 
         if self.debug:
             print("rPPG.shape", rPPG.shape)
