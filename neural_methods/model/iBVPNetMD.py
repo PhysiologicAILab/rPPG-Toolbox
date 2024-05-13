@@ -502,7 +502,7 @@ class iBVPNetMD(nn.Module):
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
         [batch, channel, length, width, height] = x.shape
-        # x = torch.diff(x, dim=2)
+        x = torch.diff(x, dim=2)
 
         if self.debug:
             print("Input.shape", x.shape)
@@ -533,7 +533,7 @@ class iBVPNetMD(nn.Module):
         feats = self.iBVPNetMD_model(x)
         if self.debug:
             print("feats.shape", feats.shape)
-        rPPG = feats.view(-1, length)
+        rPPG = feats.view(-1, length-1)
 
         if self.debug:
             print("rPPG.shape", rPPG.shape)
