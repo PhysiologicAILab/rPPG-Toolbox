@@ -47,6 +47,7 @@ VALID:
     END: 1.0
     PREPROCESS:
       DATA_TYPE: ['Raw']         #if use iBVPNetMD, should be Raw
+      DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Standardized
       DO_CHUNK: True
       CHUNK_LENGTH: 256
