@@ -83,8 +83,6 @@ class iBVPNetTrainer(BaseTrainer):
                 
                 data, labels = batch[0].to(self.device), batch[1].to(self.device)
 
-                [batch, channel, length, width, height] = x.shape
-
                 last_frame = torch.unsqueeze(data[:, :, -1, :, :], 0).repeat(1, 1, self.num_of_gpu, 1, 1)
                 data = torch.cat((data, last_frame), 0)
 
