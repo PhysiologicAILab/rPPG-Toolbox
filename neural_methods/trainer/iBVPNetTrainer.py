@@ -83,14 +83,14 @@ class iBVPNetTrainer(BaseTrainer):
                 
                 data, labels = batch[0].to(self.device), batch[1].to(self.device)
 
-                # last_frame = torch.unsqueeze(data[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
-                # data = torch.cat((data, last_frame), 0)
+                last_frame = torch.unsqueeze(data[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
+                data = torch.cat((data, last_frame), 0)
 
-                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
-                # labels = torch.cat((labels, last_sample), 0)
-                # labels = torch.diff(labels, dim=0)
-                # labels = labels/ torch.std(labels)  # normalize
-                # labels[torch.isnan(labels)] = 0
+                last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
+                labels = torch.cat((labels, last_sample), 0)
+                labels = torch.diff(labels, dim=0)
+                labels = labels/ torch.std(labels)  # normalize
+                labels[torch.isnan(labels)] = 0
 
                 self.optimizer.zero_grad()
                 pred_ppg = self.model(data)
@@ -112,7 +112,7 @@ class iBVPNetTrainer(BaseTrainer):
 
                 self.optimizer.step()
                 self.scheduler.step()
-                self.optimizer.zero_grad()
+                
                 tbar.set_postfix(loss=loss.item())
 
             # Append the mean training loss for the epoch
