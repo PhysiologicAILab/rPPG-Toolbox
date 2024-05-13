@@ -213,24 +213,24 @@ class iBVPNetTrainer(BaseTrainer):
         with torch.no_grad():
             for _, test_batch in enumerate(tqdm(data_loader["test"], ncols=80)):
                 batch_size = test_batch[0].shape[0]
-                data, labels = test_batch[0].to(self.device), test_batch[1].to(self.device)
+                data, labels_test = test_batch[0].to(self.device), test_batch[1].to(self.device)
                 
-                labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
+                labels_test = (labels_test - torch.mean(labels_test)) / torch.std(labels_test)  # normalize
 
                 # last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
                 # data = torch.cat((data, last_frame), 2)
 
-                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
-                # labels = torch.cat((labels, last_sample), 0)
-                # labels = torch.diff(labels, dim=0)
-                # labels = labels/ torch.std(labels)  # normalize
-                # labels[torch.isnan(labels)] = 0
+                # last_sample = torch.unsqueeze(labels_test[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # labels_test = torch.cat((labels_test, last_sample), 0)
+                # labels_test = torch.diff(labels_test, dim=0)
+                # labels_test = labels_test/ torch.std(labels_test)  # normalize
+                # labels_test[torch.isnan(labels_test)] = 0
 
                 pred_ppg_test = self.model(data)
                 pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
 
                 if self.config.TEST.OUTPUT_SAVE_DIR:
-                    labels = labels.cpu()
+                    labels_test = labels_test.cpu()
                     pred_ppg_test = pred_ppg_test.cpu()
 
                 for idx in range(batch_size):
@@ -240,7 +240,8 @@ class iBVPNetTrainer(BaseTrainer):
                         predictions[subj_index] = dict()
                         labels[subj_index] = dict()
                     predictions[subj_index][sort_index] = pred_ppg_test[idx]
-                    labels[subj_index][sort_index] = labels[idx]
+                    labels[subj_index][sort_index] = labels_test[idx]
+
 
         print('')
         calculate_metrics(predictions, labels, self.config)
