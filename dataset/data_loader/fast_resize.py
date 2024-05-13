@@ -6,6 +6,7 @@ import argparse
 
 def batch_resize(opt):
     target_size = opt.target_size
+    newH, newW = target_size
     print("Target size:", target_size)
 
     datadir = Path(opt.datadir)
@@ -19,9 +20,10 @@ def batch_resize(opt):
     for fp in files_list:
         print("Processing:", fp.name)
         frames = np.load(str(fp))
-        T, C, H, W = frames.shape
+        T, H, W, C = frames.shape
+        new_frames = np.zeros((T, newH, newW, C))
         for idx in range(T):
-            frames[idx, ...] = cv2.resize(frames[idx, ...], target_size)
+            new_frames[idx, ...] = cv2.resize(frames[idx, ...], target_size)
         np.save(str(fp), frames)
 
 if __name__ == '__main__':
