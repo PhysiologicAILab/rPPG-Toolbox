@@ -300,7 +300,7 @@ class ConvBNReLU(nn.Module):
 
 
 class FeaturesFactorizationModule(nn.Module):
-    def __init__(self, device, in_c, frames):
+    def __init__(self, device, in_c):
         super().__init__()
 
         self.device = device
@@ -439,14 +439,14 @@ class DeConvBlock3D(nn.Module):
 
 
 class decoder_block(nn.Module):
-    def __init__(self, device, frames, use_nmf, debug=False):
+    def __init__(self, device, use_nmf, debug=False):
         super(decoder_block, self).__init__()
         self.debug = debug
         self.use_nmf = use_nmf
         # MD_D = nf[1]
         # self.squeeze = ConvBNReLU(nf[5], nf[2], (3, 3, 3), (1, 1, 1))
         if self.use_nmf:
-            self.feature_factorizer = FeaturesFactorizationModule(device, nf[5], frames)
+            self.feature_factorizer = FeaturesFactorizationModule(device, nf[5])
         # self.align = ConvBNReLU(nf[2], nf[2], (1, 1, 1))
         self.conv_decoder = DeConvBlock3D(
             nf[5], nf[4], nf[3], nf[2], nf[1], nf[0], 1)  # note: nf[5] = 2 * nf[3]
@@ -492,7 +492,7 @@ class iBVPNetMD(nn.Module):
             print("Unsupported input channels")
         self.iBVPNetMD_model = nn.Sequential(
             encoder_block(self.in_channels, debug),
-            decoder_block(device, frames, use_nmf, debug)
+            decoder_block(device, use_nmf, debug)
             # spatial adaptive pooling
             # nn.AdaptiveAvgPool3d((frames, 1, 1)),
             # nn.Conv3d(nf[0], 1, (1, 2, 2), stride=(1, 1, 1), padding=(0, 0, 0))
@@ -533,7 +533,7 @@ class iBVPNetMD(nn.Module):
         feats = self.iBVPNetMD_model(x)
         if self.debug:
             print("feats.shape", feats.shape)
-        rPPG = feats.view(-1, length)
+        rPPG = feats.view(-1, length-1)
 
         if self.debug:
             print("rPPG.shape", rPPG.shape)
@@ -562,7 +562,7 @@ if __name__ == "__main__":
         device = torch.device("cpu")
 
     # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
-    test_data = torch.rand(batch_size, data_channels, frames, height, width).to(device)
+    test_data = torch.rand(batch_size, data_channels, frames+1, height, width).to(device)
     net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=True)
 
     # print("-"*100)

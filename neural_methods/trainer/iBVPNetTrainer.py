@@ -206,8 +206,6 @@ class iBVPNetTrainer(BaseTrainer):
         with torch.no_grad():
             for _, test_batch in enumerate(tqdm(data_loader["test"], ncols=80)):
                 batch_size = test_batch[0].shape[0]
-                data, label = test_batch[0].to(self.device), test_batch[1].to(self.device)
-
                 data, labels = test_batch[0].to(self.device), test_batch[1].to(self.device)
                 last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
                 data = torch.cat((data, last_frame), 2)
@@ -222,7 +220,7 @@ class iBVPNetTrainer(BaseTrainer):
                 pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
 
                 if self.config.TEST.OUTPUT_SAVE_DIR:
-                    label = label.cpu()
+                    labels = labels.cpu()
                     pred_ppg_test = pred_ppg_test.cpu()
 
                 for idx in range(batch_size):
@@ -232,7 +230,7 @@ class iBVPNetTrainer(BaseTrainer):
                         predictions[subj_index] = dict()
                         labels[subj_index] = dict()
                     predictions[subj_index][sort_index] = pred_ppg_test[idx]
-                    labels[subj_index][sort_index] = label[idx]
+                    labels[subj_index][sort_index] = labels[idx]
 
         print('')
         calculate_metrics(predictions, labels, self.config)
