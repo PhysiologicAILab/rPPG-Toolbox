@@ -305,7 +305,7 @@ class FeaturesFactorizationModule(nn.Module):
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 4
+        MD_R = 8
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -391,10 +391,10 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
 
             ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 0, 0]),
 
             ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 1, 1], [pad_t, 1, 1]),
 
             ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[4], nf[5], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -550,8 +550,8 @@ if __name__ == "__main__":
     frames = 180    #duration*fs
     in_channels = 4
     data_channels = 4
-    height = 128
-    width = 128
+    height = 72
+    width = 72
 
     if torch.cuda.is_available():
         device = torch.device(0)
