@@ -6,7 +6,7 @@ from dataset.data_loader.face_detector.model_load import load_model
 from dataset.data_loader.face_detector.data_ops import letterbox, scale_coords_landmarks, show_results, check_img_size, non_max_suppression_face, scale_coords
 
 class YOLO5Face(object):
-    def __init__(self, device=None) -> None:
+    def __init__(self, backend="Y5F", device=None) -> None:
         self.conf_thres = 0.6
         self.iou_thres = 0.5
         self.imgsz = (640, 640)
@@ -27,7 +27,10 @@ class YOLO5Face(object):
                 self.device = torch.device("cpu")
 
         package_dir = os.path.dirname(os.path.abspath(__file__))
-        ckpt = os.path.join(package_dir, "Y5sF_WFRGB.pt")
+        if backend == "Y5F_IR":
+            ckpt = os.path.join(package_dir, "Y5sF_iBVP_IR.pt")
+        else:
+            ckpt = os.path.join(package_dir, "Y5sF_WFRGB.pt")
         self.model = load_model(ckpt, self.device)
 
 

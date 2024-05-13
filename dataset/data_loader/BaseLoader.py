@@ -68,8 +68,8 @@ class BaseLoader(Dataset):
         self.config_data = config_data
 
         if self.do_preprocess:
-            if self.config_data.PREPROCESS.CROP_FACE.BACKEND == 'Y5F':
-                self.Y5FObj = YOLO5Face(device)
+            if 'Y5F' in self.config_data.PREPROCESS.CROP_FACE.BACKEND:
+                self.Y5FObj = YOLO5Face(self.config_data.PREPROCESS.CROP_FACE.BACKEND, device)
 
         assert (config_data.BEGIN < config_data.END)
         assert (config_data.BEGIN > 0 or config_data.BEGIN == 0)
@@ -345,7 +345,7 @@ class BaseLoader(Dataset):
                 print("ERROR: No Face Detected")
                 face_box_coor = [0, 0, frame.shape[0], frame.shape[1]]
         
-        elif backend == "Y5F":
+        elif "Y5F" in backend:
             # Use a YOLO5Face trained on WiderFace dataset
             # This utilizes both the CPU and GPU
 
