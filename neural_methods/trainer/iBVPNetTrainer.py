@@ -83,16 +83,16 @@ class iBVPNetTrainer(BaseTrainer):
                 
                 data, labels = batch[0].to(self.device), batch[1].to(self.device)
 
-                # labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
+                labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
 
-                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
-                data = torch.cat((data, last_frame), 2)
+                # last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                # data = torch.cat((data, last_frame), 2)
 
-                last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
-                labels = torch.cat((labels, last_sample), 0)
-                labels = torch.diff(labels, dim=0)
-                labels = labels/ torch.std(labels)  # normalize
-                labels[torch.isnan(labels)] = 0
+                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # labels = torch.cat((labels, last_sample), 0)
+                # labels = torch.diff(labels, dim=0)
+                # labels = labels/ torch.std(labels)  # normalize
+                # labels[torch.isnan(labels)] = 0
 
                 self.optimizer.zero_grad()
                 pred_ppg = self.model(data)
@@ -156,16 +156,16 @@ class iBVPNetTrainer(BaseTrainer):
 
                 data, labels = valid_batch[0].to(self.device), valid_batch[1].to(self.device)
                 
-                # labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
+                labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
 
-                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
-                data = torch.cat((data, last_frame), 2)
+                # last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                # data = torch.cat((data, last_frame), 2)
 
-                last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
-                labels = torch.cat((labels, last_sample), 0)
-                labels = torch.diff(labels, dim=0)
-                labels = labels/ torch.std(labels)  # normalize
-                labels[torch.isnan(labels)] = 0
+                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # labels = torch.cat((labels, last_sample), 0)
+                # labels = torch.diff(labels, dim=0)
+                # labels = labels/ torch.std(labels)  # normalize
+                # labels[torch.isnan(labels)] = 0
 
                 pred_ppg = self.model(data)
                 pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
@@ -215,16 +215,16 @@ class iBVPNetTrainer(BaseTrainer):
                 batch_size = test_batch[0].shape[0]
                 data, labels = test_batch[0].to(self.device), test_batch[1].to(self.device)
                 
-                # labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
+                labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
 
-                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
-                data = torch.cat((data, last_frame), 2)
+                # last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                # data = torch.cat((data, last_frame), 2)
 
-                last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
-                labels = torch.cat((labels, last_sample), 0)
-                labels = torch.diff(labels, dim=0)
-                labels = labels/ torch.std(labels)  # normalize
-                labels[torch.isnan(labels)] = 0
+                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # labels = torch.cat((labels, last_sample), 0)
+                # labels = torch.diff(labels, dim=0)
+                # labels = labels/ torch.std(labels)  # normalize
+                # labels[torch.isnan(labels)] = 0
 
                 pred_ppg_test = self.model(data)
                 pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
