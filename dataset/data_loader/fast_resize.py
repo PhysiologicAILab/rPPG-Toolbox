@@ -24,7 +24,7 @@ def batch_resize(opt):
         new_frames = np.zeros((T, newH, newW, C))
         for idx in range(T):
             new_frames[idx, ...] = cv2.resize(frames[idx, ...], target_size)
-        np.save(str(fp), frames)
+        np.save(str(fp), new_frames)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
