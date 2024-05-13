@@ -3,25 +3,25 @@ TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test
 TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 50
-  LR: 5e-4
+  LR: 1e-3
   MODEL_FILE_NAME: iBVP_iBVP_iBVP_iBVPNetMD_RGB
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: False                  # if first time, should be true
+    DO_PREPROCESS: True                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "iBVP_RGBT_SQ2_180_72x72"
+    EXP_DATA_NAME: "iBVP_RGBT_256_72x72"
     BEGIN: 0.0
     END: 0.5
     PREPROCESS:
       DATA_TYPE: ['Raw']         #if use iBVPNetMD, should be Raw
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
-      LABEL_TYPE: Raw
+      LABEL_TYPE: Standardized
       DO_CHUNK: True
-      CHUNK_LENGTH: 180
+      CHUNK_LENGTH: 256
       CROP_FACE:
         DO_CROP_FACE: True
         BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
@@ -40,19 +40,19 @@ VALID:
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: False                  # if first time, should be true
+    DO_PREPROCESS: True                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "iBVP_RGBT_SQ2_180_72x72"
+    EXP_DATA_NAME: "iBVP_RGBT_256_72x72"
     BEGIN: 0.5
     END: 0.7
     PREPROCESS:
       DATA_TYPE: ['Raw']         #if use iBVPNetMD, should be Raw
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
-      LABEL_TYPE: Raw
+      LABEL_TYPE: Standardized
       DO_CHUNK: True
-      CHUNK_LENGTH: 180
+      CHUNK_LENGTH: 256
       CROP_FACE:
         DO_CROP_FACE: True
         BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
@@ -73,18 +73,18 @@ TEST:
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: False                  # if first time, should be true
+    DO_PREPROCESS: True                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "iBVP_RGBT_SQ2_180_72x72"
+    EXP_DATA_NAME: "iBVP_RGBT_256_72x72"
     BEGIN: 0.7
     END: 1.0
     PREPROCESS:
       DATA_TYPE: ['Raw']         #if use iBVPNetMD, should be Raw
-      LABEL_TYPE: Raw
+      LABEL_TYPE: Standardized
       DO_CHUNK: True
-      CHUNK_LENGTH: 180
+      CHUNK_LENGTH: 256
       CROP_FACE:
         DO_CROP_FACE: True
         BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
@@ -108,7 +108,7 @@ MODEL:
   NAME: iBVPNetMD
   iBVPNet:
     CHANNELS: 3
-    FRAME_NUM: 180
+    FRAME_NUM: 256
 INFERENCE:
   BATCH_SIZE: 8
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
