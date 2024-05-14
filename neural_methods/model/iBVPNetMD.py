@@ -307,7 +307,7 @@ class FeaturesFactorizationModule(nn.Module):
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 1
+        MD_R = 4
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -350,7 +350,7 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.md_block(x)
         x = self.post_conv_block(x)
 
-        x = F.relu(x + shortcut, inplace=True)
+        x = F.elu(x + shortcut, inplace=True)
 
         return x
 
