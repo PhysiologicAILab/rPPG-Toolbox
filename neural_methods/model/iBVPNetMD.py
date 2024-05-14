@@ -79,16 +79,18 @@ class _MatrixDecompositionBase(nn.Module):
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
 
-            # D = C * H * W // self.S # channels and spatial elements are considered as features
-            # N = T                   # while each time point is considered as a sample
+            # channels and spatial elements are considered as features
+            # while each time point is considered as a sample
+            D = C * H * W // self.S
+            N = T                   
 
             # D = C // self.S
             # N = T * H * W
 
-            # dimension of vector of our interest is T (rPPG signal as T dimension), so forming this as vector
-            # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
-            D = T
-            N = C * H * W // self.S
+            # # dimension of vector of our interest is T (rPPG signal as T dimension), so forming this as vector
+            # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
+            # D = T
+            # N = C * H * W // self.S
 
             # D = T * H * W // self.S
             # N = C
@@ -305,9 +307,9 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 4
+        mid_C = in_c // 2
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 16
+        MD_R = 8
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -393,10 +395,10 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
 
             ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 0, 0]),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
 
-            ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 1, 1], [pad_t, 1, 1])
+            ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1])
         )
 
     def forward(self, x):
