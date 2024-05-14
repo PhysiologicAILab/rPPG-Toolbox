@@ -23,7 +23,7 @@ model_config = {
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
-    "MD_TYPE": "NMF"
+    "MD_TYPE": "VQ"
 }
 
 class _MatrixDecompositionBase(nn.Module):
@@ -89,11 +89,11 @@ class _MatrixDecompositionBase(nn.Module):
 
             # # dimension of vector of our interest is T (rPPG signal as T dimension), so forming this as vector
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
-            # D = T
-            # N = C * H * W // self.S
+            D = T
+            N = C * H * W // self.S
 
-            D = T * H * W // self.S
-            N = C
+            # D = T * H * W // self.S
+            # N = C
 
             # D = C * H // self.S
             # N = T * W
@@ -210,8 +210,8 @@ class NMF(_MatrixDecompositionBase):
 
 
 class VQ(_MatrixDecompositionBase):
-    def __init__(self, device, dim="3D"):
-        super().__init__(device, dim=dim)
+    def __init__(self, device, MD_R, dim="3D"):
+        super().__init__(device, MD_R, dim=dim)
         self.device = device
 
     def _build_bases(self, B, S, D, R):
@@ -309,7 +309,7 @@ class FeaturesFactorizationModule(nn.Module):
         md_type = model_config["MD_TYPE"]
         mid_C = in_c #// 2
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 8
+        MD_R = 4
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -322,7 +322,7 @@ class FeaturesFactorizationModule(nn.Module):
         if "nmf" in md_type.lower():
             self.md_block = NMF(self.device, MD_R)
         elif "vq" in md_type.lower():
-            self.md_block = VQ(self.device)
+            self.md_block = VQ(self.device, MD_R)
         else:
             print("Unknown type specified for MD_TYPE:", md_type)
             exit()
@@ -548,7 +548,7 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 128    #duration*fs
+    frames = 256    #duration*fs
     in_channels = 3
     data_channels = 3
     height = 72
