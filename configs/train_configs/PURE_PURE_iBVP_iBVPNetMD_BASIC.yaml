@@ -2,9 +2,9 @@ BASE: ['']
 TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test"
 TRAIN:
   BATCH_SIZE: 8
-  EPOCHS: 100
+  EPOCHS: 30
   LR: 5e-4
-  MODEL_FILE_NAME: PURE_PURE_iBVP_iBVPNetMD
+  MODEL_FILE_NAME: PURE_PURE_iBVP_iBVPNetMD_NoBN_Tanh
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -69,7 +69,7 @@ TEST:
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated

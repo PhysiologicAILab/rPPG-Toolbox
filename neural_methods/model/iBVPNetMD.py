@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32, 32]
+nf = [8, 16, 24, 40, 64]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -386,7 +386,8 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.md_block(x)
         x = self.post_conv_block(x)
 
-        x = F.relu(x + shortcut, inplace=True)
+        # x = F.relu(x + shortcut, inplace=True)
+        x = F.tanh(x + shortcut)
 
         return x
 
@@ -401,8 +402,9 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            nn.BatchNorm3d(out_channel),
-            nn.ReLU(inplace=True)
+            nn.Tanh()
+            # nn.BatchNorm3d(out_channel),
+            # nn.ELU(inplace=True)
         )
 
     def forward(self, x):
@@ -450,20 +452,25 @@ class DeConvBlock3D(nn.Module):
         # pad_t = 1  # 1  # 2   #3
         self.deconv_block = nn.Sequential(
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
-            nn.BatchNorm3d(m1Ch),
-            nn.ReLU(),
+            # nn.BatchNorm3d(m1Ch),
+            # nn.ReLU(),
+            nn.Tanh(),
             nn.Conv3d(m1Ch, m2Ch, (3, 3, 3), (1, 3, 3), (1, 0, 0)),
-            nn.BatchNorm3d(m2Ch),
-            nn.ReLU(),
+            # nn.BatchNorm3d(m2Ch),
+            # nn.ReLU(),
+            nn.Tanh(),
             nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
-            nn.BatchNorm3d(m3Ch),
-            nn.ReLU(),
+            # nn.BatchNorm3d(m3Ch),
+            # nn.ReLU(),
+            nn.Tanh(),
             nn.Conv3d(m3Ch, m4Ch, (3, 3, 3), (1, 1, 1), (1, 0, 0)),
-            nn.BatchNorm3d(m4Ch),
-            nn.ReLU(),
+            # nn.BatchNorm3d(m4Ch),
+            # nn.ReLU(),
+            nn.Tanh(),
             nn.Conv3d(m4Ch, m4Ch, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
-            nn.BatchNorm3d(m4Ch),
-            nn.ReLU(),
+            # nn.BatchNorm3d(m4Ch),
+            # nn.ReLU(),
+            nn.Tanh(),
             nn.Conv3d(m4Ch, outCh, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
         )
 
