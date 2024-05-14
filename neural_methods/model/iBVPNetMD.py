@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 40, 64]
+nf = [8, 16, 24, 32, 32]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -308,7 +308,7 @@ class FeaturesFactorizationModule(nn.Module):
         self.device = device
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
-        MD_R = 4
+        MD_R = 8
 
         if "nmf" in md_type.lower():
             self.md_block = NMF(self.device, MD_R)
@@ -415,8 +415,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 3  # 3  # 5   #7
-        pad_t = 1  # 1  # 2   #3
+        k_t = 5  # 3  # 5   #7
+        pad_t = 2  # 1  # 2   #3
         self.debug = debug
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -431,7 +431,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
 
-            ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
             ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1])
         )
 
@@ -446,25 +446,25 @@ class encoder_block(nn.Module):
 class DeConvBlock3D(nn.Module):
     def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, outCh):
         super(DeConvBlock3D, self).__init__()
-        k_t = 3  # 3  # 5   #7
-        pad_t = 1  # 1  # 2   #3
+        # k_t = 3  # 3  # 5   #7
+        # pad_t = 1  # 1  # 2   #3
         self.deconv_block = nn.Sequential(
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m1Ch),
             nn.ReLU(),
-            nn.Conv3d(m1Ch, m2Ch, (k_t, 3, 3), (1, 2, 2), (pad_t, 1, 1)),
+            nn.Conv3d(m1Ch, m2Ch, (3, 3, 3), (1, 2, 2), (1, 1, 1)),
             nn.BatchNorm3d(m2Ch),
             nn.ReLU(),
             nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m3Ch),
             nn.ReLU(),
-            nn.Conv3d(m3Ch, m4Ch, (k_t, 3, 3), (1, 2, 2), (pad_t, 1, 1)),
+            nn.Conv3d(m3Ch, m4Ch, (3, 3, 3), (1, 2, 2), (1, 1, 1)),
             nn.BatchNorm3d(m4Ch),
             nn.ReLU(),
-            nn.Conv3d(m4Ch, m4Ch, (k_t, 2, 2), (1, 1, 1), (pad_t, 0, 0)),
+            nn.Conv3d(m4Ch, m4Ch, (3, 2, 2), (1, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m4Ch),
             nn.ReLU(),
-            nn.Conv3d(m4Ch, outCh, (k_t, 1, 1), (1, 1, 1), (pad_t, 0, 0)),
+            nn.Conv3d(m4Ch, outCh, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
         )
 
     def forward(self, x):
@@ -585,8 +585,8 @@ if __name__ == "__main__":
     frames = 160    #duration*fs
     in_channels = 3
     data_channels = 3
-    height = 72
-    width = 72
+    height = 128
+    width = 128
 
     if torch.cuda.is_available():
         device = torch.device(0)
