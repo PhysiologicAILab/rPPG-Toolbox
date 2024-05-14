@@ -301,7 +301,7 @@ class ConvBNReLU(nn.Module):
         return x
 
 
-class FeaturesFactorizationModule(nn.Module):
+class FeaturesFactorizationModule_Direct(nn.Module):
     def __init__(self, device, in_c):
         super().__init__()
 
@@ -335,7 +335,7 @@ class FeaturesFactorizationModule(nn.Module):
             self.md_block.online_update(bases)
 
 
-class FeaturesFactorizationModule_org(nn.Module):
+class FeaturesFactorizationModule(nn.Module):
     def __init__(self, device, in_c):
         super().__init__()
 
@@ -343,7 +343,7 @@ class FeaturesFactorizationModule_org(nn.Module):
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 4
+        MD_R = 8
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -431,7 +431,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
 
-            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1])
         )
 
@@ -452,16 +452,16 @@ class DeConvBlock3D(nn.Module):
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m1Ch),
             nn.ReLU(),
-            nn.Conv3d(m1Ch, m2Ch, (3, 3, 3), (1, 2, 2), (1, 1, 1)),
+            nn.Conv3d(m1Ch, m2Ch, (3, 3, 3), (1, 3, 3), (1, 0, 0)),
             nn.BatchNorm3d(m2Ch),
             nn.ReLU(),
             nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m3Ch),
             nn.ReLU(),
-            nn.Conv3d(m3Ch, m4Ch, (3, 3, 3), (1, 2, 2), (1, 1, 1)),
+            nn.Conv3d(m3Ch, m4Ch, (3, 3, 3), (1, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m4Ch),
             nn.ReLU(),
-            nn.Conv3d(m4Ch, m4Ch, (3, 2, 2), (1, 1, 1), (1, 0, 0)),
+            nn.Conv3d(m4Ch, m4Ch, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m4Ch),
             nn.ReLU(),
             nn.Conv3d(m4Ch, outCh, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
@@ -582,11 +582,11 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 160    #duration*fs
+    frames = 256    #duration*fs
     in_channels = 3
     data_channels = 3
-    height = 128
-    width = 128
+    height = 72
+    width = 72
 
     if torch.cuda.is_available():
         device = torch.device(0)
