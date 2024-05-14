@@ -308,6 +308,40 @@ class FeaturesFactorizationModule(nn.Module):
         self.device = device
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
+        MD_R = 4
+
+        if "nmf" in md_type.lower():
+            self.md_block = NMF(self.device, MD_R)
+        elif "vq" in md_type.lower():
+            self.md_block = VQ(self.device, MD_R)
+        else:
+            print("Unknown type specified for MD_TYPE:", md_type)
+            exit()
+
+        self.shortcut = nn.Sequential()
+        # self._init_weight()
+
+
+    def forward(self, x):
+        shortcut = self.shortcut(x)
+        x = self.md_block(x)
+
+        x = F.relu(x + shortcut, inplace=True)
+
+        return x
+
+    def online_update(self, bases):
+        if hasattr(self.md_block, 'online_update'):
+            self.md_block.online_update(bases)
+
+
+class FeaturesFactorizationModule_org(nn.Module):
+    def __init__(self, device, in_c):
+        super().__init__()
+
+        self.device = device
+        md_type = model_config["MD_TYPE"]
+        mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
         MD_R = 4
 
@@ -352,7 +386,7 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.md_block(x)
         x = self.post_conv_block(x)
 
-        x = F.elu(x + shortcut, inplace=True)
+        x = F.relu(x + shortcut, inplace=True)
 
         return x
 
