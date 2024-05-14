@@ -65,7 +65,7 @@ VALID:
         W: 72
 TEST:
   METRICS: ['MAE', 'RMSE', 'MAPE', 'Pearson', 'SNR', 'BA', 'MACC']
-  USE_LAST_EPOCH: True
+  USE_LAST_EPOCH: False
   DATA:
     FS: 30
     DATASET: UBFC-rPPG
