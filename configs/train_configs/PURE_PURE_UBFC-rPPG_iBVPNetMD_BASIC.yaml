@@ -3,8 +3,8 @@ TOOLBOX_MODE: "train_and_test"      # "train_and_test"  or "only_test"
 TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 30
-  LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_UBFC-rPPG_iBVPNetMD_Diff
+  LR: 9e-3
+  MODEL_FILE_NAME: PURE_PURE_UBFC-rPPG_iBVPNetMD_Diff_R8
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30

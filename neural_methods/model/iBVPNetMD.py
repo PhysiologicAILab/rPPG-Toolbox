@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32, 48, 64]
+nf = [8, 16, 24, 40, 64]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -307,7 +307,7 @@ class FeaturesFactorizationModule(nn.Module):
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 4
+        MD_R = 8
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -379,8 +379,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 7  # 3  # 5   #7
-        pad_t = 3  # 1  # 2   #3
+        k_t = 5  # 3  # 5   #7
+        pad_t = 2  # 1  # 2   #3
         self.debug = debug
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -396,10 +396,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 0, 0]),
 
             ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
-
-            ConvBlock3D(nf[4], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[4], nf[5], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 1, 1], [pad_t, 1, 1])
         )
 
     def forward(self, x):
@@ -411,10 +408,10 @@ class encoder_block(nn.Module):
 
 
 class DeConvBlock3D(nn.Module):
-    def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, m5Ch, outCh):
+    def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, outCh):
         super(DeConvBlock3D, self).__init__()
-        k_t = 7  # 3  # 5   #7
-        pad_t = 3  # 1  # 2   #3
+        k_t = 5  # 3  # 5   #7
+        pad_t = 2  # 1  # 2   #3
         self.deconv_block = nn.Sequential(
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m1Ch),
@@ -425,13 +422,13 @@ class DeConvBlock3D(nn.Module):
             nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m3Ch),
             nn.ELU(),
-            nn.Conv3d(m3Ch, m4Ch, (k_t, 3, 3), (1, 1, 1), (pad_t, 1, 1)),
+            nn.Conv3d(m3Ch, m4Ch, (k_t, 3, 3), (1, 2, 2), (pad_t, 1, 1)),
             nn.BatchNorm3d(m4Ch),
             nn.ELU(),
-            nn.Conv3d(m4Ch, m5Ch, (k_t, 2, 2), (1, 1, 1), (pad_t, 0, 0)),
-            nn.BatchNorm3d(m5Ch),
+            nn.Conv3d(m4Ch, m4Ch, (k_t, 2, 2), (1, 1, 1), (pad_t, 0, 0)),
+            nn.BatchNorm3d(m4Ch),
             nn.ELU(),
-            nn.Conv3d(m5Ch, outCh, (k_t, 1, 1), (1, 1, 1), (pad_t, 0, 0)),
+            nn.Conv3d(m4Ch, outCh, (1, 1, 1)),
         )
 
     def forward(self, x):
@@ -446,10 +443,9 @@ class decoder_block(nn.Module):
         # MD_D = nf[1]
         # self.squeeze = ConvBNReLU(nf[5], nf[2], (3, 3, 3), (1, 1, 1))
         if self.use_nmf:
-            self.feature_factorizer = FeaturesFactorizationModule(device, nf[5])
+            self.feature_factorizer = FeaturesFactorizationModule(device, nf[4])
         # self.align = ConvBNReLU(nf[2], nf[2], (1, 1, 1))
-        self.conv_decoder = DeConvBlock3D(
-            nf[5], nf[4], nf[3], nf[2], nf[1], nf[0], 1)  # note: nf[5] = 2 * nf[3]
+        self.conv_decoder = DeConvBlock3D(nf[4], nf[3], nf[2], nf[1], nf[0], 1)  # note: nf[5] = 2 * nf[3]
 
     def forward(self, x):        
 
@@ -562,7 +558,7 @@ if __name__ == "__main__":
         device = torch.device("cpu")
 
     # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
-    test_data = torch.rand(batch_size, data_channels, frames+1, height, width).to(device)
+    test_data = torch.rand(batch_size, data_channels, frames + 1, height, width).to(device)
     net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=True)
 
     # print("-"*100)
