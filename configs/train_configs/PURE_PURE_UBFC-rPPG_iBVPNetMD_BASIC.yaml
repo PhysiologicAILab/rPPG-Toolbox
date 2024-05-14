@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 30
   LR: 5e-4
-  MODEL_FILE_NAME: PURE_PURE_UBFC-rPPG_iBVPNetMD_Diff_R8_ELU_Kernel7_N-T_D-CHW
+  MODEL_FILE_NAME: PURE_PURE_UBFC-rPPG_iBVPNetMD_Diff_R8_ELU_Kernel7_D-T_N-CHW
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -65,7 +65,7 @@ VALID:
         W: 72
 TEST:
   METRICS: ['MAE', 'RMSE', 'MAPE', 'Pearson', 'SNR', 'BA', 'MACC']
-  USE_LAST_EPOCH: False
+  USE_LAST_EPOCH: True
   DATA:
     FS: 30
     DATASET: UBFC-rPPG
@@ -93,7 +93,7 @@ TEST:
       RESIZE:
         H: 72
         W: 72
-DEVICE: cuda:3
+DEVICE: cuda:1
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp

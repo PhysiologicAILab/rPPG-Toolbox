@@ -81,16 +81,16 @@ class _MatrixDecompositionBase(nn.Module):
 
             # channels and spatial elements are considered as features
             # while each time point is considered as a sample
-            D = C * H * W // self.S
-            N = T                   
+            # D = C * H * W // self.S
+            # N = T                   
 
             # D = C // self.S
             # N = T * H * W
 
             # # dimension of vector of our interest is T (rPPG signal as T dimension), so forming this as vector
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
-            # D = T
-            # N = C * H * W // self.S
+            D = T
+            N = C * H * W // self.S
 
             # D = T * H * W // self.S
             # N = C
