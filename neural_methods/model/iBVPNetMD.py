@@ -89,11 +89,11 @@ class _MatrixDecompositionBase(nn.Module):
 
             # # dimension of vector of our interest is T (rPPG signal as T dimension), so forming this as vector
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
-            D = T
-            N = C * H * W // self.S
+            # D = T
+            # N = C * H * W // self.S
 
-            # D = T * H * W // self.S
-            # N = C
+            D = T * H * W // self.S
+            N = C
 
             # D = C * H // self.S
             # N = T * W
@@ -307,7 +307,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 2
+        mid_C = in_c #// 2
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
         MD_R = 8
 
@@ -548,7 +548,7 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 256    #duration*fs
+    frames = 128    #duration*fs
     in_channels = 3
     data_channels = 3
     height = 72
