@@ -23,7 +23,7 @@ model_config = {
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
-    "MD_TYPE": "VQ"
+    "MD_TYPE": "NMF"
 }
 
 class _MatrixDecompositionBase(nn.Module):
@@ -307,9 +307,9 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 2
+        mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 8
+        MD_R = 4
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -368,7 +368,7 @@ class ConvBlock3D(nn.Module):
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
             nn.BatchNorm3d(out_channel),
-            nn.ELU(inplace=True)
+            nn.ReLU(inplace=True)
         )
 
     def forward(self, x):
@@ -381,8 +381,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 7  # 3  # 5   #7
-        pad_t = 3  # 1  # 2   #3
+        k_t = 3  # 3  # 5   #7
+        pad_t = 1  # 1  # 2   #3
         self.debug = debug
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -412,24 +412,24 @@ class encoder_block(nn.Module):
 class DeConvBlock3D(nn.Module):
     def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, outCh):
         super(DeConvBlock3D, self).__init__()
-        k_t = 7  # 3  # 5   #7
-        pad_t = 3  # 1  # 2   #3
+        k_t = 3  # 3  # 5   #7
+        pad_t = 1  # 1  # 2   #3
         self.deconv_block = nn.Sequential(
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m1Ch),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv3d(m1Ch, m2Ch, (k_t, 3, 3), (1, 2, 2), (pad_t, 1, 1)),
             nn.BatchNorm3d(m2Ch),
-            nn.ELU(),
+            nn.ReLU(),
             nn.ConvTranspose3d(m2Ch, m3Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(m3Ch),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv3d(m3Ch, m4Ch, (k_t, 3, 3), (1, 2, 2), (pad_t, 1, 1)),
             nn.BatchNorm3d(m4Ch),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv3d(m4Ch, m4Ch, (k_t, 2, 2), (1, 1, 1), (pad_t, 0, 0)),
             nn.BatchNorm3d(m4Ch),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv3d(m4Ch, outCh, (k_t, 1, 1), (1, 1, 1), (pad_t, 0, 0)),
         )
 
@@ -548,7 +548,7 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 256    #duration*fs
+    frames = 160    #duration*fs
     in_channels = 3
     data_channels = 3
     height = 72
