@@ -325,7 +325,7 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
         print("after patch_embedding", x.shape)
         x = x.flatten(2).transpose(1, 2)  # [B, 40*4*4, 64]
         print("after flatten", x.shape)
-        exit()
+        # exit()
         
         Trans_features, Score1 =  self.transformer1(x, gra_sharp)  # [B, 4*4*40, 64]
         Trans_features2, Score2 =  self.transformer2(Trans_features, gra_sharp)  # [B, 4*4*40, 64]
@@ -354,11 +354,16 @@ if __name__ == "__main__":
     batch_size = 1
     frames = 160  # duration*fs
     in_channels = 3
-    height = 128
-    width = 128
+    height = 72
+    width = 72
     patch_size = 4
+    dim = 96
+    ff_dim = 144
     patches = (patch_size,) * 3
     gra_sharp = 2.0
+    NUM_HEADS = 4
+    NUM_LAYERS = 12
+    THETA =  0.7
 
     if torch.cuda.is_available():
         device = torch.device(0)
@@ -371,9 +376,13 @@ if __name__ == "__main__":
     net = ViT_ST_ST_Compact3_TDC_gra_sharp(
         patches=patches,
         image_size=(frames, height, width), 
-        frame = frames, 
-        in_channels=in_channels
-        )
+        in_channels=in_channels,
+        dim=dim,
+        ff_dim=ff_dim,
+        num_heads=NUM_HEADS,
+        num_layers=NUM_LAYERS,
+        theta=THETA
+        ).to(device)
     # patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers,
     # dropout_rate=self.dropout_rate, theta=self.theta)
 
