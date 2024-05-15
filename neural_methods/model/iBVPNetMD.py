@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 40, 64]
+nf = [8, 16, 24, 32, 32]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -27,12 +27,13 @@ model_config = {
 }
 
 class _MatrixDecompositionBase(nn.Module):
-    def __init__(self, device, MD_R, dim="3D"):
+    def __init__(self, device, MD_R, debug=False, dim="3D"):
         super().__init__()
 
         self.dim = dim
         self.S = model_config["MD_S"]
         self.R = MD_R
+        self.debug = debug
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -103,11 +104,12 @@ class _MatrixDecompositionBase(nn.Module):
 
             x = x.view(B * self.S, D, N)
 
-            # print("C, T, H, W", C, T, H, W)
-            # print("D", D)
-            # print("R", self.R)
-            # print("N", N)
-            # print("x.shape", x.shape)
+            if self.debug:
+                print("C, T, H, W", C, T, H, W)
+                print("D", D)
+                print("R", self.R)
+                print("N", N)
+                print("x.shape", x.shape)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             B, C, H, W = x.shape
@@ -169,8 +171,8 @@ class _MatrixDecompositionBase(nn.Module):
 
 
 class NMF(_MatrixDecompositionBase):
-    def __init__(self, device, MD_R, dim="3D"):
-        super().__init__(device, MD_R, dim=dim)
+    def __init__(self, device, MD_R, debug=False, dim="3D"):
+        super().__init__(device, MD_R, debug=debug, dim=dim)
         self.device = device
         self.inv_t = 1
 
@@ -210,8 +212,8 @@ class NMF(_MatrixDecompositionBase):
 
 
 class VQ(_MatrixDecompositionBase):
-    def __init__(self, device, MD_R, dim="3D"):
-        super().__init__(device, MD_R, dim=dim)
+    def __init__(self, device, MD_R, debug=False, dim="3D"):
+        super().__init__(device, MD_R, debug=debug, dim=dim)
         self.device = device
 
     def _build_bases(self, B, S, D, R):
@@ -336,14 +338,14 @@ class FeaturesFactorizationModule_Direct(nn.Module):
 
 
 class FeaturesFactorizationModule(nn.Module):
-    def __init__(self, device, in_c):
+    def __init__(self, device, in_c, debug=False):
         super().__init__()
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 4
+        mid_C = in_c // 2
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 8
+        MD_R = 4
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -354,9 +356,9 @@ class FeaturesFactorizationModule(nn.Module):
             self.pre_conv_block = nn.Conv3d(in_c, mid_C, (1, 1, 1))
 
         if "nmf" in md_type.lower():
-            self.md_block = NMF(self.device, MD_R)
+            self.md_block = NMF(self.device, MD_R, debug=debug)
         elif "vq" in md_type.lower():
-            self.md_block = VQ(self.device, MD_R)
+            self.md_block = VQ(self.device, MD_R, debug=debug)
         else:
             print("Unknown type specified for MD_TYPE:", md_type)
             exit()
@@ -417,8 +419,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 7  # 3  # 5   #7
-        pad_t = 3  # 1  # 2   #3
+        k_t = 3  # 3  # 5   #7
+        pad_t = 1  # 1  # 2   #3
         self.debug = debug
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -448,8 +450,8 @@ class encoder_block(nn.Module):
 class DeConvBlock3D(nn.Module):
     def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, outCh):
         super(DeConvBlock3D, self).__init__()
-        k_t = 7  # 3  # 5   #7
-        pad_t = 3  # 1  # 2   #3
+        k_t = 3  # 3  # 5   #7
+        pad_t = 1  # 1  # 2   #3
         self.deconv_block = nn.Sequential(
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             # nn.BatchNorm3d(m1Ch),
@@ -486,7 +488,7 @@ class decoder_block(nn.Module):
         # MD_D = nf[1]
         # self.squeeze = ConvBNReLU(nf[5], nf[2], (3, 3, 3), (1, 1, 1))
         if self.use_nmf:
-            self.feature_factorizer = FeaturesFactorizationModule(device, nf[4])
+            self.feature_factorizer = FeaturesFactorizationModule(device, nf[4], debug=debug)
         # self.align = ConvBNReLU(nf[2], nf[2], (1, 1, 1))
         self.conv_decoder = DeConvBlock3D(nf[4], nf[3], nf[2], nf[1], nf[0], 1)  # note: nf[5] = 2 * nf[3]
 
@@ -594,6 +596,7 @@ if __name__ == "__main__":
     data_channels = 3
     height = 72
     width = 72
+    debug = True
 
     if torch.cuda.is_available():
         device = torch.device(0)
@@ -602,7 +605,7 @@ if __name__ == "__main__":
 
     # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
     test_data = torch.rand(batch_size, data_channels, frames + 1, height, width).to(device)
-    net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=True)
+    net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=debug)
 
     # print("-"*100)
     # print(net)
