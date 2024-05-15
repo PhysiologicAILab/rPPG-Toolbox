@@ -1,5 +1,5 @@
 BASE: ['']
-TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test"
+TOOLBOX_MODE: "only_test"  # "train_and_test" or "only_train" or "only_test"
 TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 30
@@ -110,4 +110,4 @@ INFERENCE:
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
-  MODEL_PATH: "./final_model_release/PURE_EfficientPhys_Raw_FD20_NegP.pth"
+  MODEL_PATH: "./runs/exp/PURE_Raw_256_72x72/PreTrainedModels/PURE_PURE_EfficientPhys_Epoch26.pth"

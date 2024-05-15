@@ -16,6 +16,8 @@ from unsupervised_methods.methods import POS_WANG
 from unsupervised_methods import utils
 import math
 import multiprocessing as mp
+
+# To be used only for preparing data - for detecting face with YOLO5Face
 try:
     mp.set_start_method('spawn', force=True)
     # print("spawned")

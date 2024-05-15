@@ -417,8 +417,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 5  # 3  # 5   #7
-        pad_t = 2  # 1  # 2   #3
+        k_t = 7  # 3  # 5   #7
+        pad_t = 3  # 1  # 2   #3
         self.debug = debug
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -448,14 +448,14 @@ class encoder_block(nn.Module):
 class DeConvBlock3D(nn.Module):
     def __init__(self, inCh, m1Ch, m2Ch, m3Ch, m4Ch, outCh):
         super(DeConvBlock3D, self).__init__()
-        # k_t = 3  # 3  # 5   #7
-        # pad_t = 1  # 1  # 2   #3
+        k_t = 7  # 3  # 5   #7
+        pad_t = 3  # 1  # 2   #3
         self.deconv_block = nn.Sequential(
             nn.ConvTranspose3d(inCh, m1Ch, (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             # nn.BatchNorm3d(m1Ch),
             # nn.ReLU(),
             nn.Tanh(),
-            nn.Conv3d(m1Ch, m2Ch, (3, 3, 3), (1, 3, 3), (1, 0, 0)),
+            nn.Conv3d(m1Ch, m2Ch, (k_t, 3, 3), (1, 3, 3), (pad_t, 0, 0)),
             # nn.BatchNorm3d(m2Ch),
             # nn.ReLU(),
             nn.Tanh(),
@@ -463,15 +463,15 @@ class DeConvBlock3D(nn.Module):
             # nn.BatchNorm3d(m3Ch),
             # nn.ReLU(),
             nn.Tanh(),
-            nn.Conv3d(m3Ch, m4Ch, (3, 3, 3), (1, 1, 1), (1, 0, 0)),
+            nn.Conv3d(m3Ch, m4Ch, (k_t, 3, 3), (1, 1, 1), (pad_t, 0, 0)),
             # nn.BatchNorm3d(m4Ch),
             # nn.ReLU(),
             nn.Tanh(),
-            nn.Conv3d(m4Ch, m4Ch, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
+            nn.Conv3d(m4Ch, m4Ch, (k_t, 1, 1), (1, 1, 1), (pad_t, 0, 0)),
             # nn.BatchNorm3d(m4Ch),
             # nn.ReLU(),
             nn.Tanh(),
-            nn.Conv3d(m4Ch, outCh, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
+            nn.Conv3d(m4Ch, outCh, (k_t, 1, 1), (1, 1, 1), (pad_t, 0, 0)),
         )
 
     def forward(self, x):
