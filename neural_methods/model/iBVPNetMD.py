@@ -474,10 +474,6 @@ class DeConvBlock3D(nn.Module):
             # nn.BatchNorm3d(m4Ch),
             # nn.ReLU(),
             nn.Tanh(),
-            nn.Conv3d(m4Ch, m4Ch, (11, 1, 1), (1, 1, 1), (5, 0, 0)),
-            # nn.BatchNorm3d(m4Ch),
-            # nn.ReLU(),
-            nn.Tanh(),
             nn.Conv3d(m4Ch, outCh, (11, 1, 1), (1, 1, 1), (5, 0, 0)),
         )
 
