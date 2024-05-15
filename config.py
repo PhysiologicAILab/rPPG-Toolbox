@@ -313,6 +313,8 @@ _C.MODEL.TSCAN.FRAME_DEPTH = 10
 # -----------------------------------------------------------------------------
 _C.MODEL.EFFICIENTPHYS = CN()
 _C.MODEL.EFFICIENTPHYS.FRAME_DEPTH = 10
+_C.MODEL.EFFICIENTPHYS.CHANNELS = 3
+
 
 # -----------------------------------------------------------------------------
 # Model Settings for BigSmall

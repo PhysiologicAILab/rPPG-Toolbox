@@ -90,12 +90,41 @@ class EfficientPhys(nn.Module):
         else:
             raise Exception('Unsupported image size')
         self.final_dense_2 = nn.Linear(self.nb_dense, 1, bias=True)
-        self.batch_norm = nn.BatchNorm2d(3)
+
+        if self.in_channels == 1 or self.in_channels == 3:
+            self.batch_norm = nn.BatchNorm2d(self.in_channels)
+        elif self.in_channels == 4:
+            self.rgb_norm = nn.BatchNorm2d(3)
+            self.thermal_norm = nn.BatchNorm2d(1)
+        else:
+            print("Unsupported input channels")
+
         self.channel = channel
 
     def forward(self, inputs, params=None):
+
+        [batch, channel, width, height] = inputs.shape
         inputs = torch.diff(inputs, dim=0)
-        inputs = self.batch_norm(inputs)
+
+        if self.in_channels == 1:
+            inputs = self.batch_norm(inputs[:, -1:, :, :])
+        elif self.in_channels == 3:
+            inputs = self.batch_norm(inputs[:, :3, :, :])
+        elif self.in_channels == 4:
+            rgb_inputs = self.rgb_norm(inputs[:, :3, :, :])
+            thermal_inputs = self.thermal_norm(inputs[:, -1:, :, :])
+            inputs = torch.concat([rgb_inputs, thermal_inputs], dim = 1)
+        else:
+            try:
+                print("Specified input channels:", self.in_channels)
+                print("Data channels", channel)
+                assert self.in_channels <= channel
+            except:
+                print("Incorrectly preprocessed data provided as input. Number of channels exceed the specified or default channels")
+                print("Default or specified channels:", self.in_channels)
+                print("Data channels [B, C, W, H]", inputs.shape)
+                print("Exiting")
+                exit()
 
         network_input = self.TSM_1(inputs)
         d1 = torch.tanh(self.motion_conv1(network_input))
