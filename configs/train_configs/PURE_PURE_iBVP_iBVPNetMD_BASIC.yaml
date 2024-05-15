@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 50
   LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_iBVP_iBVPNetMD_NoBN_Tanh_MultiplyAtt_K-3_R-8_LR-1e-3_MaxF-64_DropOut
+  MODEL_FILE_NAME: PURE_PURE_iBVP_iBVPNetMD_NoBN_Tanh_MultiplyAtt_K-5-11_R-8_LR-1e-3_MaxF-64_DropOut
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -95,7 +95,7 @@ TEST:
       RESIZE:
         H: 72
         W: 72
-DEVICE: cuda:3
+DEVICE: cuda:0
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
