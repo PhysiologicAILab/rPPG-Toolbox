@@ -80,14 +80,14 @@ class EfficientPhysTrainer(BaseTrainer):
                 self.model = EfficientPhys(
                     in_channels=in_channels,
                     frame_depth=self.frame_depth,
-                    img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H,
+                    img_size=config.TEST.DATA.PREPROCESS.RESIZE.H,
                     batch_size=self.batch_size,
                     device=self.device)
             else:
                 self.model = EfficientPhysFM(
                     in_channels=in_channels,
                     frame_depth=self.frame_depth,
-                    img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H,
+                    img_size=config.TEST.DATA.PREPROCESS.RESIZE.H,
                     batch_size=self.batch_size,
                     device=self.device)
 
