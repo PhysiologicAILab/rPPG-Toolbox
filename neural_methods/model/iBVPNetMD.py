@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32, 40]
+nf = [8, 16, 32, 48, 64]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -422,21 +422,26 @@ class encoder_block(nn.Module):
         k_t = 3  # 3  # 5   #7
         pad_t = 1  # 1  # 2   #3
         self.debug = debug
+
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
 
             ConvBlock3D(nf[0], nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            nn.Dropout3d(p=0.1),
 
             ConvBlock3D(nf[1], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
+            nn.Dropout3d(p=0.1),
 
             ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
+            nn.Dropout3d(p=0.1),
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1])
+            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            nn.Dropout3d(p=0.1)
         )
 
     def forward(self, x):
