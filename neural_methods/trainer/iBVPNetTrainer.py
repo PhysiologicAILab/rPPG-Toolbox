@@ -24,6 +24,7 @@ class iBVPNetTrainer(BaseTrainer):
         self.model_file_name = config.TRAIN.MODEL_FILE_NAME
         self.batch_size = config.TRAIN.BATCH_SIZE
         self.num_of_gpu = config.NUM_OF_GPU_TRAIN
+        self.dropout_rate = config.MODEL.DROP_RATE
         self.base_len = self.num_of_gpu
         self.config = config
         self.min_valid_loss = None
@@ -43,7 +44,8 @@ class iBVPNetTrainer(BaseTrainer):
         if config.MODEL.NAME == "iBVPNet":
             self.model = iBVPNet(frames=frames, in_channels=in_channels) # [3, T, 128,128]
         else:
-            self.model = iBVPNetMD(frames=frames, in_channels=in_channels, device=self.device) # [3, T, 128,128]
+            self.model = iBVPNetMD(frames=frames, in_channels=in_channels,
+                                   dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
 
         if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
             self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
