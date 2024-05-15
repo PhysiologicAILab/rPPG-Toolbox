@@ -45,6 +45,8 @@ class PhysFormerTrainer(BaseTrainer):
         self.config = config 
         self.min_valid_loss = None
         self.best_epoch = 0
+        self.in_channels = config.MODEL.PHYSFORMER.CHANNELS
+
         if torch.cuda.is_available() and config.NUM_OF_GPU_TRAIN > 0:
             dev_list = [int(d) for d in config.DEVICE.replace("cuda:", "").split(",")]
             self.device = torch.device(dev_list[0])     #currently toolbox only supports 1 GPU
@@ -55,6 +57,7 @@ class PhysFormerTrainer(BaseTrainer):
 
         if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_train":
             self.model = ViT_ST_ST_Compact3_TDC_gra_sharp(
+                in_channels=self.in_channels,
                 image_size=(self.chunk_len,config.TRAIN.DATA.PREPROCESS.RESIZE.H,config.TRAIN.DATA.PREPROCESS.RESIZE.W), 
                 patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers, 
                 dropout_rate=self.dropout_rate, theta=self.theta)
@@ -76,6 +79,7 @@ class PhysFormerTrainer(BaseTrainer):
             self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=50, gamma=0.5)
         elif config.TOOLBOX_MODE == "only_test":
             self.model = ViT_ST_ST_Compact3_TDC_gra_sharp(
+                in_channels=self.in_channels,
                 image_size=(self.chunk_len,config.TRAIN.DATA.PREPROCESS.RESIZE.H,config.TRAIN.DATA.PREPROCESS.RESIZE.W), 
                 patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers, 
                 dropout_rate=self.dropout_rate, theta=self.theta)
@@ -118,6 +122,11 @@ class PhysFormerTrainer(BaseTrainer):
             for idx, batch in enumerate(tbar):
                 hr = torch.tensor([self.get_hr(i) for i in batch[1]]).float().to(self.device)
                 data, label = batch[0].float().to(self.device), batch[1].float().to(self.device)
+
+                # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
+                last_frame = torch.unsqueeze(
+                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                data = torch.cat((data, last_frame), 2)
 
                 self.optimizer.zero_grad()
 
@@ -209,6 +218,12 @@ class PhysFormerTrainer(BaseTrainer):
             for val_idx, val_batch in enumerate(vbar):
                 data, label = val_batch[0].float().to(self.device), val_batch[1].float().to(self.device)
                 gra_sharp = 2.0
+
+                # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
+                last_frame = torch.unsqueeze(
+                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                data = torch.cat((data, last_frame), 2)
+
                 rPPG, _, _, _ = self.model(data, gra_sharp)
                 rPPG = (rPPG-torch.mean(rPPG, axis=-1).view(-1, 1))/torch.std(rPPG).view(-1, 1)
                 for _1, _2 in zip(rPPG, label):
@@ -255,6 +270,12 @@ class PhysFormerTrainer(BaseTrainer):
                 data, label = test_batch[0].to(
                     self.config.DEVICE), test_batch[1].to(self.config.DEVICE)
                 gra_sharp = 2.0
+
+                # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
+                last_frame = torch.unsqueeze(
+                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                data = torch.cat((data, last_frame), 2)
+
                 pred_ppg_test, _, _, _ = self.model(data, gra_sharp)
                 for idx in range(batch_size):
                     subj_index = test_batch[2][idx]

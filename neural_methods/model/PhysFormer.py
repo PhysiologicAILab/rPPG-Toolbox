@@ -96,6 +96,7 @@ class MultiHeadedSelfAttention_TDC_gra_sharp(nn.Module):
         # (B, S, D) -proj-> (B, S, D) -split-> (B, S, H, W) -trans-> (B, H, S, W)
         
         [B, P, C]=x.shape
+        print("x.shape", x.shape)
         x = x.transpose(1, 2).view(B, C, P//16, 4, 4)      # [B, dim, 40, 4, 4]
         q, k, v = self.proj_q(x), self.proj_k(x), self.proj_v(x)
         q = q.flatten(2).transpose(1, 2)  # [B, 4*4*40, dim]
@@ -210,11 +211,22 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
         self.frame = frame  
         self.dim = dim              
 
+        self.in_channels = in_channels
+        if self.in_channels == 1 or self.in_channels == 3:
+            self.input_norm = nn.BatchNorm3d(self.in_channels)
+        elif self.in_channels == 4:
+            self.rgb_norm = nn.BatchNorm3d(3)
+            self.thermal_norm = nn.BatchNorm3d(1)
+        else:
+            print("Unsupported input channels")
+
         # Image and patch sizes
         t, h, w = as_tuple(image_size)  # tube sizes
         ft, fh, fw = as_tuple(patches)  # patch sizes, ft = 4 ==> 160/4=40
         gt, gh, gw = t//ft, h // fh, w // fw  # number of patches
         seq_len = gh * gw * gt
+        print("gt, gh, gw", gt, gh, gw)
+        print("seq_len", seq_len)
 
         # Patch embedding    [4x16x16]conv
         self.patch_embedding = nn.Conv3d(dim, dim, kernel_size=(ft, fh, fw), stride=(ft, fh, fw))
@@ -229,10 +241,8 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
         self.transformer3 = Transformer_ST_TDC_gra_sharp(num_layers=num_layers//3, dim=dim, num_heads=num_heads, 
                                        ff_dim=ff_dim, dropout=dropout_rate, theta=theta)
         
-        
-        
         self.Stem0 = nn.Sequential(
-            nn.Conv3d(3, dim//4, [1, 5, 5], stride=1, padding=[0,2,2]),
+            nn.Conv3d(self.in_channels, dim//4, [1, 5, 5], stride=1, padding=[0,2,2]),
             nn.BatchNorm3d(dim//4),
             nn.ReLU(inplace=True),
             nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
@@ -284,14 +294,38 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
 
         # b is batch number, c channels, t frame, fh frame height, and fw frame width
         b, c, t, fh, fw = x.shape
-        
+
+        x = torch.diff(x, dim=2)
+
+        if self.in_channels == 1:
+            x = self.input_norm(x[:, -1:, :, :, :])
+        elif self.in_channels == 3:
+            x = self.input_norm(x[:, :3, :, :, :])
+        elif self.in_channels == 4:
+            rgb_x = self.rgb_norm(x[:, :3, :, :, :])
+            thermal_x = self.thermal_norm(x[:, -1:, :, :, :])
+            x = torch.concat([rgb_x, thermal_x], dim = 1)
+        else:
+            try:
+                print("Specified input channels:", self.in_channels)
+                print("Data channels", c)
+                assert self.in_channels <= c
+            except:
+                print("Incorrectly preprocessed data provided as input. Number of channels exceed the specified or default channels")
+                print("Default or specified channels:", self.in_channels)
+                print("Data channels [B, C, N, W, H]", x.shape)
+                print("Exiting")
+                exit()
+
         x = self.Stem0(x)
         x = self.Stem1(x)
         x = self.Stem2(x)  # [B, 64, 160, 64, 64]
-        
+        print("after stem2", x.shape)
         x = self.patch_embedding(x)  # [B, 64, 40, 4, 4]
+        print("after patch_embedding", x.shape)
         x = x.flatten(2).transpose(1, 2)  # [B, 40*4*4, 64]
-        
+        print("after flatten", x.shape)
+        exit()
         
         Trans_features, Score1 =  self.transformer1(x, gra_sharp)  # [B, 4*4*40, 64]
         Trans_features2, Score2 =  self.transformer2(Trans_features, gra_sharp)  # [B, 4*4*40, 64]
@@ -312,40 +346,51 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
         
         return rPPG, Score1, Score2, Score3
 
-'''
+# '''
 if __name__ == "__main__":
 
     # duration = 8
     # fs = 25
     batch_size = 1
-    frames = 240  # duration*fs
+    frames = 160  # duration*fs
     in_channels = 3
     height = 128
     width = 128
+    patch_size = 4
+    patches = (patch_size,) * 3
+    gra_sharp = 2.0
 
     if torch.cuda.is_available():
         device = torch.device(0)
     else:
         device = torch.device("cpu")
 
-    test_data = torch.rand(batch_size, in_channels,
-                           frames, height, width).to(device)
+    test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
+    print("test_data.shape", test_data.shape)
     
-    net = ViT_ST_ST_Compact3_TDC_gra_sharp(frames=240, config.TRAIN.DATA.PREPROCESS.RESIZE.H,
-                    config.TRAIN.DATA.PREPROCESS.RESIZE.W),
-    patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers,
-    dropout_rate=self.dropout_rate, theta=self.theta)
+    net = ViT_ST_ST_Compact3_TDC_gra_sharp(
+        patches=patches,
+        image_size=(frames, height, width), 
+        frame = frames, 
+        in_channels=in_channels
+        )
+    # patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers,
+    # dropout_rate=self.dropout_rate, theta=self.theta)
 
-
-    (frames=frames, device=device,
-                    in_channels=in_channels, debug=True)
     # print("-"*100)
     # print(net)
     # print("-"*100)
 
-    pred = net(test_data)
+    pred = net(test_data, gra_sharp)
     print("pred.shape", pred.shape)
+
+    pytorch_total_params = sum(p.numel() for p in net.parameters())
+    print("Total parameters = ", pytorch_total_params)
+
+    pytorch_trainable_params = sum(p.numel()
+                                   for p in net.parameters() if p.requires_grad)
+    print("Trainable parameters = ", pytorch_trainable_params)
 
     # writer.add_graph(net, test_data)
     # writer.close()
-'''
+# '''
