@@ -32,6 +32,7 @@ class EfficientPhysTrainer(BaseTrainer):
         self.config = config
         self.min_valid_loss = None
         self.best_epoch = 0
+        in_channels = config.MODEL.EFFICIENTPHYS.CHANNELS
         if torch.cuda.is_available() and config.NUM_OF_GPU_TRAIN > 0:
             dev_list = [int(d) for d in config.DEVICE.replace("cuda:", "").split(",")]
             self.device = torch.device(dev_list[0])     #currently toolbox only supports 1 GPU
@@ -44,10 +45,18 @@ class EfficientPhysTrainer(BaseTrainer):
 
             if config.MODEL.NAME == "EfficientPhys":
                 self.model = EfficientPhys(
-                    frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H, batch_size=self.batch_size, device=self.device)
+                    in_channels=in_channels,
+                    frame_depth=self.frame_depth,
+                    img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H,
+                    batch_size=self.batch_size,
+                    device=self.device)
             else:
                 self.model = EfficientPhysFM(
-                    frame_depth=self.frame_depth, img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H, batch_size=self.batch_size, device=self.device)
+                    in_channels=in_channels,
+                    frame_depth=self.frame_depth,
+                    img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H,
+                    batch_size=self.batch_size,
+                    device=self.device)
 
             if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
                 self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
@@ -61,9 +70,27 @@ class EfficientPhysTrainer(BaseTrainer):
                 self.model.parameters(), lr=config.TRAIN.LR, weight_decay=0)
             # See more details on the OneCycleLR scheduler here: https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.OneCycleLR.html
             self.scheduler = torch.optim.lr_scheduler.OneCycleLR(
-                self.optimizer, max_lr=config.TRAIN.LR, epochs=config.TRAIN.EPOCHS, steps_per_epoch=self.num_train_batches)
+                self.optimizer, 
+                max_lr=config.TRAIN.LR, 
+                epochs=config.TRAIN.EPOCHS,
+                steps_per_epoch=self.num_train_batches)
+        
         elif config.TOOLBOX_MODE == "only_test":
-            self.model = EfficientPhys(frame_depth=self.frame_depth, img_size=config.TEST.DATA.PREPROCESS.RESIZE.H, device=self.device)
+            if config.MODEL.NAME == "EfficientPhys":
+                self.model = EfficientPhys(
+                    in_channels=in_channels,
+                    frame_depth=self.frame_depth,
+                    img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H,
+                    batch_size=self.batch_size,
+                    device=self.device)
+            else:
+                self.model = EfficientPhysFM(
+                    in_channels=in_channels,
+                    frame_depth=self.frame_depth,
+                    img_size=config.TRAIN.DATA.PREPROCESS.RESIZE.H,
+                    batch_size=self.batch_size,
+                    device=self.device)
+
             if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
                 self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
             else:
