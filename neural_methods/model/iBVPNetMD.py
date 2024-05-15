@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [16, 24, 32, 48, 64]
+nf = [16, 16, 32, 48, 64]
 
 model_config = {
     "INPUT_CHANNELS": 1,
