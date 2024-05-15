@@ -294,6 +294,7 @@ _C.MODEL.MODEL_DIR = 'PreTrainedModels'
 # Specific parameters for physnet parameters
 _C.MODEL.PHYSNET = CN()
 _C.MODEL.PHYSNET.FRAME_NUM = 64
+_C.MODEL.PHYSNET.CHANNELS = 3
 
 # -----------------------------------------------------------------------------
 # Specific parameters for iBVPNet parameters
@@ -332,6 +333,7 @@ _C.MODEL.PHYSFORMER.FF_DIM = 144
 _C.MODEL.PHYSFORMER.NUM_HEADS = 4
 _C.MODEL.PHYSFORMER.NUM_LAYERS = 12
 _C.MODEL.PHYSFORMER.THETA = 0.7
+_C.MODEL.PHYSFORMER.CHANNELS = 3
 
 # -----------------------------------------------------------------------------
 # Inference settings
