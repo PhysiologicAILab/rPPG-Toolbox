@@ -36,7 +36,10 @@ class PhysnetTrainer(BaseTrainer):
             self.device = torch.device("cpu")  # if no GPUs set device is CPU
             self.num_of_gpu = 0  # no GPUs used
 
-        self.model = PhysNet_padding_Encoder_Decoder_MAX(frames=config.MODEL.PHYSNET.FRAME_NUM)  # [3, T, 128,128]
+        in_channels = config.MODEL.PHYSNET.CHANNELS
+        frames_num = config.MODEL.PHYSNET.FRAME_NUM  # [3, T, 128,128]
+
+        self.model = PhysNet_padding_Encoder_Decoder_MAX(in_channels=in_channels, frames=frames_num)
 
         if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
             self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
@@ -73,13 +76,22 @@ class PhysnetTrainer(BaseTrainer):
             tbar = tqdm(data_loader["train"], ncols=80)
             for idx, batch in enumerate(tbar):
                 tbar.set_description("Train epoch %s" % epoch)
-                rPPG, x_visual, x_visual3232, x_visual1616 = self.model(
-                    batch[0].to(torch.float32).to(self.device))
+
+                data = batch[0].to(torch.float32).to(self.device)
+
+                # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
+                last_frame = torch.unsqueeze(
+                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                data = torch.cat((data, last_frame), 2)
+
+                rPPG, x_visual, x_visual3232, x_visual1616 = self.model(data)
+
                 BVP_label = batch[1].to(
                     torch.float32).to(self.device)
                 rPPG = (rPPG - torch.mean(rPPG)) / torch.std(rPPG)  # normalize
                 BVP_label = (BVP_label - torch.mean(BVP_label)) / \
                             torch.std(BVP_label)  # normalize
+
                 loss = self.loss_model(rPPG, BVP_label)
                 loss.backward()
                 running_loss += loss.item()
@@ -135,8 +147,16 @@ class PhysnetTrainer(BaseTrainer):
                 vbar.set_description("Validation")
                 BVP_label = valid_batch[1].to(
                     torch.float32).to(self.device)
-                rPPG, x_visual, x_visual3232, x_visual1616 = self.model(
-                    valid_batch[0].to(torch.float32).to(self.device))
+
+                data = valid_batch[0].to(torch.float32).to(self.device)
+
+                # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
+                last_frame = torch.unsqueeze(
+                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                data = torch.cat((data, last_frame), 2)
+
+                rPPG, x_visual, x_visual3232, x_visual1616 = self.model(data)
+
                 rPPG = (rPPG - torch.mean(rPPG)) / torch.std(rPPG)  # normalize
                 BVP_label = (BVP_label - torch.mean(BVP_label)) / \
                             torch.std(BVP_label)  # normalize
@@ -183,8 +203,15 @@ class PhysnetTrainer(BaseTrainer):
         with torch.no_grad():
             for _, test_batch in enumerate(tqdm(data_loader["test"], ncols=80)):
                 batch_size = test_batch[0].shape[0]
-                data, label = test_batch[0].to(
-                    self.config.DEVICE), test_batch[1].to(self.config.DEVICE)
+                
+                data = test_batch[0].to(torch.float32).to(self.device)
+                label = test_batch[1].to(torch.float32).to(self.device)
+
+                # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
+                last_frame = torch.unsqueeze(
+                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                data = torch.cat((data, last_frame), 2)
+
                 pred_ppg_test, _, _, _ = self.model(data)
 
                 if self.config.TEST.OUTPUT_SAVE_DIR:

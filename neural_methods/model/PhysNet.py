@@ -18,11 +18,20 @@ from torch.nn.modules.utils import _triple
 
 
 class PhysNet_padding_Encoder_Decoder_MAX(nn.Module):
-    def __init__(self, frames=128):
+    def __init__(self, in_channels=3, frames=128):
         super(PhysNet_padding_Encoder_Decoder_MAX, self).__init__()
 
+        self.in_channels = in_channels
+        if self.in_channels == 1 or self.in_channels == 3:
+            self.norm = nn.BatchNorm3d(self.in_channels)
+        elif self.in_channels == 4:
+            self.rgb_norm = nn.BatchNorm3d(3)
+            self.thermal_norm = nn.BatchNorm3d(1)
+        else:
+            print("Unsupported input channels")
+
         self.ConvBlock1 = nn.Sequential(
-            nn.Conv3d(3, 16, [1, 5, 5], stride=1, padding=[0, 2, 2]),
+            nn.Conv3d(self.in_channels, 16, [1, 5, 5], stride=1, padding=[0, 2, 2]),
             nn.BatchNorm3d(16),
             nn.ReLU(inplace=True),
         )
@@ -93,6 +102,29 @@ class PhysNet_padding_Encoder_Decoder_MAX(nn.Module):
     def forward(self, x):  # Batch_size*[3, T, 128,128]
         x_visual = x
         [batch, channel, length, width, height] = x.shape
+
+        x = torch.diff(x, dim=2)
+
+        if self.in_channels == 1:
+            x = self.norm(x[:, -1:, :, :, :])
+        elif self.in_channels == 3:
+            x = self.norm(x[:, :3, :, :, :])
+        elif self.in_channels == 4:
+            rgb_x = self.rgb_norm(x[:, :3, :, :, :])
+            thermal_x = self.thermal_norm(x[:, -1:, :, :, :])
+            x = torch.concat([rgb_x, thermal_x], dim = 1)
+        else:
+            try:
+                print("Specified input channels:", self.in_channels)
+                print("Data channels", channel)
+                assert self.in_channels <= channel
+            except:
+                print("Incorrectly preprocessed data provided as input. Number of channels exceed the specified or default channels")
+                print("Default or specified channels:", self.in_channels)
+                print("Data channels [B, C, N, W, H]", x.shape)
+                print("Exiting")
+                exit()
+
 
         x = self.ConvBlock1(x)  # x [3, T, 128,128]
         x = self.MaxpoolSpa(x)  # x [16, T, 64,64]
