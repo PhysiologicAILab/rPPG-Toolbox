@@ -34,7 +34,7 @@ class _MatrixDecompositionBase(nn.Module):
         # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
         # # self.R = 2 * frame_depth
         # self.R = 4 * batch_size
-        self.R = frame_depth // 2
+        self.R = 8
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
