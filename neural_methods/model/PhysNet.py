@@ -165,7 +165,7 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 160    #duration*fs
+    frames = 256    #duration*fs
     in_channels = 3
     height = 72
     width = 72
@@ -176,7 +176,7 @@ if __name__ == "__main__":
         device = torch.device("cpu")
 
     # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
-    test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
+    test_data = torch.rand(batch_size, in_channels, frames+1, height, width).to(device)
     net = PhysNet_padding_Encoder_Decoder_MAX(frames=frames)
 
     # print("-"*100)

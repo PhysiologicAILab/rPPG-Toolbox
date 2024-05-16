@@ -265,7 +265,7 @@ class FeaturesFactorizationModule(nn.Module):
         super().__init__()
 
         self.device = device
-        mid_c = in_c // 4
+        mid_c = in_c // 2
 
         self.pre_conv_block = nn.Sequential(
             nn.Conv2d(in_c, mid_c, (1, 1)),
@@ -299,7 +299,7 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.md_block(x)
         x = self.post_conv_block(x)
 
-        x = F.tanh(shortcut + torch.multiply(shortcut, x))
+        x = F.tanh(shortcut + F.tanh(torch.multiply(shortcut, x)))
 
         return x
 
