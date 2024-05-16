@@ -117,14 +117,16 @@ class EfficientPhysTrainer(BaseTrainer):
             for idx, batch in enumerate(tbar):
                 tbar.set_description("Train epoch %s" % epoch)
                 data, labels = batch[0].to(self.device), batch[1].to(self.device)
+                print(data.shape)
                 N, D, C, H, W = data.shape
                 data = data.view(N * D, C, H, W)
-                labels = labels.view(-1, 1)
+
                 data = data[:(N * D) // self.base_len * self.base_len]
                 # Add one more frame for EfficientPhys since it does torch.diff for the input
                 last_frame = torch.unsqueeze(data[-1, :, :, :], 0).repeat(self.num_of_gpu, 1, 1, 1)
                 data = torch.cat((data, last_frame), 0)
 
+                labels = labels.view(-1, 1)
                 labels = labels[:(N * D) // self.base_len * self.base_len]
 
                 last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
