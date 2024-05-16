@@ -265,7 +265,7 @@ class FeaturesFactorizationModule(nn.Module):
         super().__init__()
 
         self.device = device
-        mid_c = in_c // 2
+        mid_c = in_c // 4
 
         self.pre_conv_block = nn.Sequential(
             nn.Conv2d(in_c, mid_c, (1, 1)),
@@ -299,7 +299,7 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.md_block(x)
         x = self.post_conv_block(x)
 
-        x = F.tanh(shortcut + F.tanh(torch.multiply(shortcut, x)))
+        x = F.tanh(shortcut + torch.multiply(shortcut, x))
 
         return x
 
@@ -376,8 +376,8 @@ class EfficientPhysFM(nn.Module):
         if img_size == 36:
             self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
         elif img_size == 72:
-            # self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
-            self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
+            self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
+            # self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
             # self.final_dense_1 = nn.Linear(576, self.nb_dense, bias=True)
         elif img_size == 96:
             self.final_dense_1 = nn.Linear(30976, self.nb_dense, bias=True)
@@ -431,8 +431,8 @@ class EfficientPhysFM(nn.Module):
         d4 = self.TSM_3(d4)
         d5 = torch.tanh(self.motion_conv3(d4))
 
-        d5 = self.avg_pooling_2(d5)
-        d5 = self.dropout_2(d5)
+        # d5 = self.avg_pooling_2(d5)
+        # d5 = self.dropout_2(d5)
 
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
