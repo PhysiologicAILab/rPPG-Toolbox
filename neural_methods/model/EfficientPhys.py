@@ -155,3 +155,77 @@ class EfficientPhys(nn.Module):
         out = self.final_dense_2(d11)
 
         return out
+    
+
+if __name__ == "__main__":
+    # from torch.utils.tensorboard import SummaryWriter
+
+    # default `log_dir` is "runs" - we'll be more specific here
+    # writer = SummaryWriter('runs/EfficientPhys')
+
+    batch_size = 8
+    frames = 30  # duration*fs
+    in_channels = 3
+    height = 72
+    width = 72
+    num_of_gpu = 1
+    base_len = num_of_gpu * frames
+
+    if torch.cuda.is_available():
+        device = torch.device(0)
+    else:
+        device = torch.device("cpu")
+
+    # test_data = torch.rand(batch_size, frames, in_channels, height, width).to(device)
+    test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
+    print("Before: test_data.shape", test_data.shape)
+    labels = torch.rand(batch_size, frames)
+    print("org labels.shape", labels.shape)
+    labels = labels.view(-1, 1)
+    print("view labels.shape", labels.shape)
+
+    N, C, D, H, W = test_data.shape
+    print(test_data.shape)
+
+    test_data = test_data.view(N * D, C, H, W)
+
+    test_data = test_data[:(N * D) // base_len * base_len]
+    # Add one more frame for EfficientPhys since it does torch.diff for the input
+    last_frame = torch.unsqueeze(
+        test_data[-1, :, :, :], 0).repeat(num_of_gpu, 1, 1, 1)
+    test_data = torch.cat((test_data, last_frame), 0)
+
+    labels = labels[:(N * D) // base_len * base_len]
+    print("s1 labels.shape", labels.shape)
+    last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(num_of_gpu, 1)
+    print("s2 labels.shape", labels.shape)
+
+    labels = torch.cat((labels, last_sample), 0)
+    print("s3 labels.shape", labels.shape)
+    labels = torch.diff(labels, dim=0)
+    print("s4 labels.shape", labels.shape)
+    labels = labels / torch.std(labels)  # normalize
+    labels[torch.isnan(labels)] = 0
+    print("s5 labels.shape", labels.shape)
+
+    # print("After: test_data.shape", test_data.shape)
+    # exit()
+
+    net = EfficientPhys(frame_depth=frames,
+                          img_size=height, batch_size=batch_size)
+    # print("-"*100)
+    # print(net)
+    # print("-"*100)
+
+    pred = net(test_data)
+    print("pred.shape", pred.shape)
+
+    pytorch_total_params = sum(p.numel() for p in net.parameters())
+    print("Total parameters = ", pytorch_total_params)
+
+    pytorch_trainable_params = sum(p.numel()
+                                   for p in net.parameters() if p.requires_grad)
+    print("Trainable parameters = ", pytorch_trainable_params)
+
+    # writer.add_graph(net, test_data)
+    # writer.close()
