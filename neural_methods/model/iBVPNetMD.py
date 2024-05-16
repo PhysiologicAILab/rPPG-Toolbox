@@ -387,10 +387,7 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.pre_conv_block(x)
         x = self.md_block(x)
         x = self.post_conv_block(x)
-
-        # x = F.relu(x + shortcut, inplace=True)
-        x = F.tanh(shortcut + torch.multiply(shortcut, x))
-        # x = F.elu(shortcut + torch.multiply(shortcut, x))
+        x = F.tanh(shortcut + F.tanh(torch.multiply(shortcut, x)))
 
         return x
 
