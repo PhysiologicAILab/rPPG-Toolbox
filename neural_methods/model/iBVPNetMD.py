@@ -93,11 +93,11 @@ class _MatrixDecompositionBase(nn.Module):
             # D = T
             # N = C * H * W // self.S
 
-            D = T * H * W // self.S
-            N = C
+            # D = T * H * W // self.S
+            # N = C
 
-            # D = C * H // self.S
-            # N = T * W
+            D = T * C // self.S
+            N = H * W
 
             # D = T * C // self.S
             # N = H * W
@@ -345,7 +345,7 @@ class FeaturesFactorizationModule(nn.Module):
         md_type = model_config["MD_TYPE"]
         mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 2
+        MD_R = 8
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
