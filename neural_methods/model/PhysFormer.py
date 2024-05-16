@@ -96,7 +96,7 @@ class MultiHeadedSelfAttention_TDC_gra_sharp(nn.Module):
         # (B, S, D) -proj-> (B, S, D) -split-> (B, S, H, W) -trans-> (B, H, S, W)
         
         [B, P, C]=x.shape
-        print("x.shape", x.shape)
+        # print("x.shape", x.shape)
         x = x.transpose(1, 2).view(B, C, P//16, 4, 4)      # [B, dim, 40, 4, 4]
         q, k, v = self.proj_q(x), self.proj_k(x), self.proj_v(x)
         q = q.flatten(2).transpose(1, 2)  # [B, 4*4*40, dim]
@@ -225,8 +225,8 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
         ft, fh, fw = as_tuple(patches)  # patch sizes, ft = 4 ==> 160/4=40
         gt, gh, gw = t//ft, h // fh, w // fw  # number of patches
         seq_len = gh * gw * gt
-        print("gt, gh, gw", gt, gh, gw)
-        print("seq_len", seq_len)
+        # print("gt, gh, gw", gt, gh, gw)
+        # print("seq_len", seq_len)
 
         # Patch embedding    [4x16x16]conv
         self.patch_embedding = nn.Conv3d(dim, dim, kernel_size=(ft, fh, fw), stride=(ft, fh, fw))
@@ -320,11 +320,11 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
         x = self.Stem0(x)
         x = self.Stem1(x)
         x = self.Stem2(x)  # [B, 64, 160, 64, 64]
-        print("after stem2", x.shape)
+        # print("after stem2", x.shape)
         x = self.patch_embedding(x)  # [B, 64, 40, 4, 4]
-        print("after patch_embedding", x.shape)
+        # print("after patch_embedding", x.shape)
         x = x.flatten(2).transpose(1, 2)  # [B, 40*4*4, 64]
-        print("after flatten", x.shape)
+        # print("after flatten", x.shape)
         # exit()
         
         Trans_features, Score1 =  self.transformer1(x, gra_sharp)  # [B, 4*4*40, 64]
@@ -390,8 +390,8 @@ if __name__ == "__main__":
     # print(net)
     # print("-"*100)
 
-    pred = net(test_data, gra_sharp)
-    print("pred.shape", pred.shape)
+    # pred = net(test_data, gra_sharp)
+    # print("pred.shape", pred.shape)
 
     pytorch_total_params = sum(p.numel() for p in net.parameters())
     print("Total parameters = ", pytorch_total_params)
