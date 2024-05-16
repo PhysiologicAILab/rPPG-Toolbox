@@ -34,7 +34,7 @@ class _MatrixDecompositionBase(nn.Module):
         # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
         # # self.R = 2 * frame_depth
         # self.R = 4 * batch_size
-        self.R = 16
+        self.R = 4
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -376,8 +376,8 @@ class EfficientPhysFM(nn.Module):
         if img_size == 36:
             self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
         elif img_size == 72:
-            self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
-            # self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
+            # self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
+            self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
             # self.final_dense_1 = nn.Linear(576, self.nb_dense, bias=True)
         elif img_size == 96:
             self.final_dense_1 = nn.Linear(30976, self.nb_dense, bias=True)
@@ -431,8 +431,8 @@ class EfficientPhysFM(nn.Module):
         d4 = self.TSM_3(d4)
         d5 = torch.tanh(self.motion_conv3(d4))
 
-        # d5 = self.avg_pooling_2(d5)
-        # d5 = self.dropout_2(d5)
+        d5 = self.avg_pooling_2(d5)
+        d5 = self.dropout_2(d5)
 
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
