@@ -265,7 +265,7 @@ class FeaturesFactorizationModule(nn.Module):
         super().__init__()
 
         self.device = device
-        mid_c = in_c // 4
+        mid_c = in_c // 8
 
         self.pre_conv_block = nn.Sequential(
             nn.Conv2d(in_c, mid_c, (1, 1)),
