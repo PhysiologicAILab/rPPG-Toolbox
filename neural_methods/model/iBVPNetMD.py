@@ -420,8 +420,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 5  # 3  # 5   #7
-        pad_t = 2  # 1  # 2   #3
+        k_t = 3  # 3  # 5   #7
+        pad_t = 1  # 1  # 2   #3
         self.debug = debug
 
         self.encoder = nn.Sequential(
@@ -474,10 +474,10 @@ class decoder_block(nn.Module):
             nn.ConvTranspose3d(nf[2], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[1], nf[0], (5, 4, 4), (1, 1, 1), (2, 0, 0)),
+            nn.Conv3d(nf[1], nf[0], (3, 4, 4), (1, 1, 1), (1, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[0], 1, (5, 1, 1), (1, 1, 1), (2, 0, 0)),
+            nn.Conv3d(nf[0], 1, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
         )
 
 
