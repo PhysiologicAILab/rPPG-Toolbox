@@ -474,7 +474,7 @@ class decoder_block(nn.Module):
             nn.ConvTranspose3d(nf[2], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[1], nf[0], (k_t, 2, 2), (1, 2, 2), (pad_t, 0, 0)),
+            nn.Conv3d(nf[1], nf[0], (k_t, 4, 4), (1, 1, 1), (pad_t, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
             nn.Conv3d(nf[0], 1, (k_t, 1, 1), (1, 1, 1), (pad_t, 0, 0)),
