@@ -133,7 +133,7 @@ class PhysFormerTrainer(BaseTrainer):
                 gra_sharp = 2.0
                 rPPG, _, _, _ = self.model(data, gra_sharp)
                 rPPG = (rPPG-torch.mean(rPPG, axis=-1).view(-1, 1))/torch.std(rPPG, axis=-1).view(-1, 1)    # normalize
-                loss_rPPG = self.criterion_reg(rPPG, label)
+                loss_rPPG = self.criterion_Pearson(rPPG, label)
 
                 fre_loss = 0.0
                 kl_loss = 0.0
@@ -145,8 +145,7 @@ class PhysFormerTrainer(BaseTrainer):
                         rPPG[bb],
                         hr[bb],
                         self.frame_rate,
-                        std=1.0,
-                        compute_dev=self.device
+                        std=1.0
                     )
                     fre_loss = fre_loss+fre_loss_temp
                     kl_loss = kl_loss+loss_distribution_kl
