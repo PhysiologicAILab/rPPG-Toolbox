@@ -508,7 +508,7 @@ if __name__ == "__main__":
     # print("After: test_data.shape", test_data.shape)
     # exit()
     net = EfficientPhysFM(frame_depth=frames, img_size=height, batch_size=batch_size).to(device)
-
+    net.eval()
     num_trials = 10
     time_vec = []
     for passes in range(num_trials):

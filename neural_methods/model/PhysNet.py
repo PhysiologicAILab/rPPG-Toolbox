@@ -182,7 +182,7 @@ if __name__ == "__main__":
     test_data = torch.rand(batch_size, in_channels, frames+1, height, width).to(device)
 
     net = PhysNet_padding_Encoder_Decoder_MAX(frames=frames).to(device)
-
+    net.eval()
     num_trials = 10
     time_vec = []
     for passes in range(num_trials):

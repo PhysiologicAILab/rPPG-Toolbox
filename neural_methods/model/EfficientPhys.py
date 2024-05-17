@@ -216,7 +216,7 @@ if __name__ == "__main__":
     # exit()
 
     net = EfficientPhys(frame_depth=frames, img_size=height, batch_size=batch_size).to(device)
- 
+    net.eval()
     num_trials = 10
     time_vec = []
     for passes in range(num_trials):

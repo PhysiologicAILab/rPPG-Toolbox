@@ -596,7 +596,7 @@ if __name__ == "__main__":
     # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
     test_data = torch.rand(batch_size, data_channels, frames + 1, height, width).to(device)
     net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=debug).to(device)
-
+    net.eval()
     num_trials = 10
     time_vec = []
     for passes in range(num_trials):
