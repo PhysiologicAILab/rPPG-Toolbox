@@ -8,14 +8,14 @@ TEST:
     DATASET: iBVP
     DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
-    DATA_PATH: "data/iBVP_Dataset/raw"                     # Raw dataset path, need to be updated
-    CACHED_PATH: "data/iBVP_Dataset/prep"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: ""
+    DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
+    CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
+    EXP_DATA_NAME: "iBVP_RGBT_160_128x128"
     BEGIN: 0.0
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['DiffNormalized'] #if use physnet, should be DiffNormalized
-      LABEL_TYPE: DiffNormalized
+      DATA_TYPE: ['Raw'] #if use physnet, should be DiffNormalized
+      LABEL_TYPE: Standardized
       DO_CHUNK: True
       CHUNK_LENGTH: 160
       CROP_FACE:
@@ -30,7 +30,7 @@ TEST:
       RESIZE:
         H: 128
         W: 128
-DEVICE: cuda:0
+DEVICE: cuda:1
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
@@ -49,5 +49,5 @@ INFERENCE:
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
-    WINDOW_SIZE: 10        # In seconds
-  MODEL_PATH:   "./final_model_release/PURE_PhysFormer_DiffNormalized.pth"
+    WINDOW_SIZE: 30        # In seconds
+  MODEL_PATH: "./final_model_release/PURE_PhysFormer_DiffNormalized.pth"
