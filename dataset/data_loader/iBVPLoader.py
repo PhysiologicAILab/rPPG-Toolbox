@@ -59,7 +59,7 @@ class iBVPLoader(BaseLoader):
         for data_dir in data_dirs:
             subject_trail_val = os.path.split(data_dir)[-1].replace('_', '')
             index = subject_trail_val
-            subject = subject_trail_val[0:2]
+            subject = subject_trail_val[0:3]
             dirs.append({"index": index, "path": data_dir, "subject": subject})
         return dirs
 
