@@ -418,8 +418,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 5  # 3  # 5   #7
-        pad_t = 2  # 1  # 2   #3
+        k_t = 3  # 3  # 5   #7
+        pad_t = 1  # 1  # 2   #3
         self.debug = debug
 
         self.encoder = nn.Sequential(
