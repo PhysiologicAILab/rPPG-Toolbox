@@ -181,13 +181,13 @@ if __name__ == "__main__":
     # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
     test_data = torch.rand(batch_size, in_channels, frames+1, height, width).to(device)
 
-    # net = PhysNet_padding_Encoder_Decoder_MAX(frames=frames)
+    net = PhysNet_padding_Encoder_Decoder_MAX(frames=frames).to(device)
 
-    num_trials = 100
+    num_trials = 10
     time_vec = []
     for passes in range(num_trials):
         t0 = time.time()
-        net = PhysNet_padding_Encoder_Decoder_MAX(frames=frames)
+        pred, _, _, _ = net(test_data)
         t1 = time.time()
         time_vec.append(t1-t0)
 
@@ -201,7 +201,6 @@ if __name__ == "__main__":
     # print(net)
     # print("-"*100)
 
-    pred, _, _, _ = net(test_data)
     print("pred.shape", pred.shape)
 
     pytorch_total_params = sum(p.numel() for p in net.parameters())
