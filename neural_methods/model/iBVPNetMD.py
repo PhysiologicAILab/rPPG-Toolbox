@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32, 40]
+nf = [8, 16, 24, 32, 64]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -90,18 +90,20 @@ class _MatrixDecompositionBase(nn.Module):
 
             # # dimension of vector of our interest is T (rPPG signal as T dimension), so forming this as vector
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
-            D = T
-            N = C * H * W // self.S
-            self.R = max(4, int(0.01 * N))
+            # D = T
+            # N = C * H * W // self.S
 
-            # D = T * H * W // self.S
-            # N = C
+            D = C
+            N = T * H * W // self.S
+
+            # D = T * C // self.S
+            # N = H * W
 
             # D = T * C // self.S
             # N = H * W
 
-            # D = T * C // self.S
-            # N = H * W
+            # self.R = max(4, int(0.01 * N))
+            self.R = min(D, N) // 4
 
             x = x.view(B * self.S, D, N)
 
@@ -418,8 +420,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 5  # 3  # 5   #7
-        pad_t = 2  # 1  # 2   #3
+        k_t = 3  # 3  # 5   #7
+        pad_t = 1  # 1  # 2   #3
         self.debug = debug
 
         self.encoder = nn.Sequential(
@@ -439,7 +441,7 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 1, 1], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate)
         )
 
@@ -467,15 +469,18 @@ class decoder_block(nn.Module):
             nn.ConvTranspose3d(nf[4], nf[3], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[3], nf[2], (3, 3, 3), (1, 2, 2), (1, 0, 0)),
+            nn.ConvTranspose3d(nf[3], nf[2], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.Tanh(),
+            nn.Dropout3d(p=dropout_rate),
+            # nn.Conv3d(nf[3], nf[2], (3, 3, 3), (1, 2, 2), (1, 0, 0)),
+            # nn.Tanh(),
             nn.ConvTranspose3d(nf[2], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[1], nf[0], (3, 4, 4), (1, 1, 1), (1, 0, 0)),
+            nn.Conv3d(nf[1], nf[0], (3, 3, 3), (1, 2, 2), (1, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[0], 1, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
+            nn.Conv3d(nf[0], 1, (3, 4, 4), (1, 1, 1), (1, 0, 0)),
         )
 
 
