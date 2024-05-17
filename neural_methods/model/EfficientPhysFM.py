@@ -118,7 +118,8 @@ class _MatrixDecompositionBase(nn.Module):
             D = C * self.frame_depth
             N = H * W
             # B = 1
-            self.R = min(D, N) // max(C, self.frame_depth)   #since we need to have a rank lower than frame-depth and C
+            # self.R = min(D, N) // max(C, self.frame_depth)   #since we need to have a rank lower than frame-depth and C
+            self.R = min(D, N) // 16   #since we need to have a rank lower than frame-depth and C
             x = x.view(B * self.S, D, N)
 
             # print("---")
@@ -266,7 +267,7 @@ class FeaturesFactorizationModule(nn.Module):
         super().__init__()
 
         self.device = device
-        mid_c = in_c // 8
+        mid_c = in_c // 4
 
         self.pre_conv_block = nn.Sequential(
             nn.Conv2d(in_c, mid_c, (1, 1)),
@@ -468,6 +469,7 @@ if __name__ == "__main__":
     num_of_gpu = 1
     base_len = num_of_gpu * frames
     assess_latency = False
+    # assess_latency = True
 
     if torch.cuda.is_available():
         device = torch.device(0)
