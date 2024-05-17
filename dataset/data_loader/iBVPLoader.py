@@ -67,6 +67,9 @@ class iBVPLoader(BaseLoader):
         """Returns a subset of data dirs, split with begin and end values, 
         and ensures no overlapping subjects between splits"""
 
+        if type(data_dirs) is list:
+            data_dirs = data_dirs[0]
+
         # return the full directory
         if begin == 0 and end == 1:
             return data_dirs
