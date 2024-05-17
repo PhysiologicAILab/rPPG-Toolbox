@@ -92,7 +92,7 @@ class _MatrixDecompositionBase(nn.Module):
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
             D = T
             N = C * H * W // self.S
-            self.R = min(D, N) // 4
+            self.R = min(D, N) // 16
 
             # D = T * H * W // self.S
             # N = C
