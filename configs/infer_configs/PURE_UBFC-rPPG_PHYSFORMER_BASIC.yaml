@@ -14,7 +14,7 @@ TEST:
     BEGIN: 0.0
     END: 1.0
     PREPROCESS:
-      DATA_TYPE: ['Raw']         #if use iBVPNet, should be Raw
+      DATA_TYPE: ['Raw']         #if use PHYSFORMER, should be Raw
       LABEL_TYPE: Standardized
       DO_CHUNK: True
       CHUNK_LENGTH: 160
