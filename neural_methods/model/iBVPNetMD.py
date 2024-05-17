@@ -586,13 +586,14 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 256    #duration*fs
+    frames = 128    #duration*fs
     in_channels = 3
     data_channels = 3
     height = 72
     width = 72
     debug = True
     assess_latency = False
+    # assess_latency = True  # False
 
     if torch.cuda.is_available():
         device = torch.device(0)
