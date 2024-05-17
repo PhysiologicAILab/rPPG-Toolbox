@@ -606,7 +606,6 @@ class BaseLoader(Dataset):
         filename_list = list(set(filename_list))  # ensure all indexes are unique
 
         # generate a list of all preprocessed / chunked data files
-        print("filename_list[0:5]", filename_list[0:5])
         file_list = []
         for fname in filename_list:
             processed_file_data = list(glob.glob(self.cached_path + os.sep + "{0}_input*.npy".format(fname)))
