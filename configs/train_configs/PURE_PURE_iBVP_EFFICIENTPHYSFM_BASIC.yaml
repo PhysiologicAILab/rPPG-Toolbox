@@ -111,4 +111,4 @@ INFERENCE:
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
-  MODEL_PATH: "./final_model_release/PURE_EfficientPhysFM_Raw_FD180_MSE_R8.pth"
+  MODEL_PATH: ""
