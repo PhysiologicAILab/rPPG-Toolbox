@@ -34,7 +34,7 @@ class _MatrixDecompositionBase(nn.Module):
         # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
         # # self.R = 2 * frame_depth
         # self.R = 4 * batch_size
-        self.R = 8
+        self.R = 4
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -109,7 +109,7 @@ class _MatrixDecompositionBase(nn.Module):
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             BN, C, H, W = x.shape
-            # print("BN, C, H, W", BN, C, H, W)
+            print("BN, C, H, W", BN, C, H, W)
             B = BN // self.frame_depth
             # D = C * H * W // self.S  # self.frame_depth  # C * H * W // self.S
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
@@ -122,11 +122,11 @@ class _MatrixDecompositionBase(nn.Module):
             # self.R = min(D, N) // 16   #since we need to have a rank lower than frame-depth and C
             x = x.view(B * self.S, D, N)
 
-            # print("---")
-            # print("D", D)
-            # print("R", self.R)
-            # print("N", N)
-            # print("x.shape", x.shape)
+            print("---")
+            print("D", D)
+            print("R", self.R)
+            print("N", N)
+            print("x.shape", x.shape)
 
         else:                       # (B, C, L) -> (B * S, D, N)
             B, C, L = x.shape
@@ -438,10 +438,10 @@ class EfficientPhysFM(nn.Module):
 
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
-        d6 = self.feature_factorizer(d6)
 
         d7 = self.avg_pooling_4(d6)
         d8 = self.dropout_3(d7)
+        d8 = self.feature_factorizer(d8)
 
         d9 = d8.view(d8.size(0), -1)
 
@@ -462,7 +462,7 @@ if __name__ == "__main__":
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
     batch_size = 8
-    frames = 90    #duration*fs
+    frames = 30    #duration*fs
     in_channels = 3
     height = 72
     width = 72

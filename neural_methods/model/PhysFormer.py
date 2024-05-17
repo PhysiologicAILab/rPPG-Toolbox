@@ -245,7 +245,7 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
             nn.Conv3d(self.in_channels, dim//4, [1, 5, 5], stride=1, padding=[0,2,2]),
             nn.BatchNorm3d(dim//4),
             nn.ReLU(inplace=True),
-            nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
+            # nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
         )
         
         self.Stem1 = nn.Sequential(
@@ -357,8 +357,8 @@ if __name__ == "__main__":
     batch_size = 1
     frames = 160  # duration*fs
     in_channels = 3
-    height = 128
-    width = 128
+    height = 72
+    width = 72
     patch_size = 4
     dim = 96
     ff_dim = 144

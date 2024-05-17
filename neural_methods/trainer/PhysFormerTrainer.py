@@ -42,6 +42,7 @@ class PhysFormerTrainer(BaseTrainer):
         self.num_of_gpu = config.NUM_OF_GPU_TRAIN
         self.chunk_len = config.TRAIN.DATA.PREPROCESS.CHUNK_LENGTH
         self.frame_rate = config.TRAIN.DATA.FS
+        self.frame_num = config.MODEL.PHYSFORMER.FRAME_NUM
         self.config = config 
         self.min_valid_loss = None
         self.best_epoch = 0
@@ -58,7 +59,7 @@ class PhysFormerTrainer(BaseTrainer):
         if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_train":
             self.model = ViT_ST_ST_Compact3_TDC_gra_sharp(
                 in_channels=self.in_channels,
-                image_size=(self.chunk_len,config.TRAIN.DATA.PREPROCESS.RESIZE.H,config.TRAIN.DATA.PREPROCESS.RESIZE.W), 
+                image_size=(self.frame_num,config.TRAIN.DATA.PREPROCESS.RESIZE.H,config.TRAIN.DATA.PREPROCESS.RESIZE.W), 
                 patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers, 
                 dropout_rate=self.dropout_rate, theta=self.theta)
 
@@ -80,7 +81,7 @@ class PhysFormerTrainer(BaseTrainer):
         elif config.TOOLBOX_MODE == "only_test":
             self.model = ViT_ST_ST_Compact3_TDC_gra_sharp(
                 in_channels=self.in_channels,
-                image_size=(self.chunk_len,config.TRAIN.DATA.PREPROCESS.RESIZE.H,config.TRAIN.DATA.PREPROCESS.RESIZE.W), 
+                image_size=(self.frame_num,config.TRAIN.DATA.PREPROCESS.RESIZE.H,config.TRAIN.DATA.PREPROCESS.RESIZE.W), 
                 patches=(self.patch_size,) * 3, dim=self.dim, ff_dim=self.ff_dim, num_heads=self.num_heads, num_layers=self.num_layers, 
                 dropout_rate=self.dropout_rate, theta=self.theta)
 
