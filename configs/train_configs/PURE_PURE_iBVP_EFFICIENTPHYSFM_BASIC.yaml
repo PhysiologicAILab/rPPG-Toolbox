@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 50
   LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_EfficientPhys_VEFM_R-min-by-8_NoDiffLabel
+  MODEL_FILE_NAME: PURE_PURE_EfficientPhys_VEFM_R-Max-C-FD_NoDiffLabel
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
