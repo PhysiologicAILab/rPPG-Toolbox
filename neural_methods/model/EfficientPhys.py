@@ -174,6 +174,7 @@ if __name__ == "__main__":
     width = 72
     num_of_gpu = 1
     base_len = num_of_gpu * frames
+    assess_latency = False
 
     if torch.cuda.is_available():
         device = torch.device(0)
@@ -217,17 +218,21 @@ if __name__ == "__main__":
 
     net = EfficientPhys(frame_depth=frames, img_size=height, batch_size=batch_size).to(device)
     net.eval()
-    num_trials = 10
-    time_vec = []
-    for passes in range(num_trials):
-        t0 = time.time()
-        pred = net(test_data)
-        t1 = time.time()
-        time_vec.append(t1-t0)
 
-    print("Average time: ", np.median(time_vec))
-    plt.plot(time_vec)
-    plt.show()
+    if assess_latency:
+        num_trials = 10
+        time_vec = []
+        for passes in range(num_trials):
+            t0 = time.time()
+            pred = net(test_data)
+            t1 = time.time()
+            time_vec.append(t1-t0)
+
+        print("Average time: ", np.median(time_vec))
+        plt.plot(time_vec)
+        plt.show()
+    else:
+        pred = net(test_data)
     # print("-"*100)
     # print(net)
     # print("-"*100)

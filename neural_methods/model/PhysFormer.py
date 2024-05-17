@@ -294,6 +294,7 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
 
         # b is batch number, c channels, t frame, fh frame height, and fw frame width
         b, c, t, fh, fw = x.shape
+        print("actual input shape", x.shape)
 
         x = torch.diff(x, dim=2)
 
@@ -367,6 +368,7 @@ if __name__ == "__main__":
     NUM_HEADS = 4
     NUM_LAYERS = 12
     THETA =  0.7
+    assess_latency = False
 
     if torch.cuda.is_available():
         device = torch.device(0)
@@ -397,17 +399,21 @@ if __name__ == "__main__":
     # print("pred.shape", pred.shape)
 
     net.eval()
-    num_trials = 10
-    time_vec = []
-    for passes in range(num_trials):
-        t0 = time.time()
-        pred, _, _, _ = net(test_data, gra_sharp)
-        t1 = time.time()
-        time_vec.append(t1-t0)
 
-    print("Average time: ", np.median(time_vec))
-    plt.plot(time_vec)
-    plt.show()
+    if assess_latency:
+        num_trials = 10
+        time_vec = []
+        for passes in range(num_trials):
+            t0 = time.time()
+            pred, _, _, _ = net(test_data, gra_sharp)
+            t1 = time.time()
+            time_vec.append(t1-t0)
+
+        print("Average time: ", np.median(time_vec))
+        plt.plot(time_vec)
+        plt.show()
+    else:
+        pred, _, _, _ = net(test_data, gra_sharp)
 
     pytorch_total_params = sum(p.numel() for p in net.parameters())
     print("Total parameters = ", pytorch_total_params)

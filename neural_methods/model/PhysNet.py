@@ -172,6 +172,7 @@ if __name__ == "__main__":
     in_channels = 3
     height = 72
     width = 72
+    assess_latency = False
 
     if torch.cuda.is_available():
         device = torch.device(0)
@@ -183,17 +184,21 @@ if __name__ == "__main__":
 
     net = PhysNet_padding_Encoder_Decoder_MAX(frames=frames).to(device)
     net.eval()
-    num_trials = 10
-    time_vec = []
-    for passes in range(num_trials):
-        t0 = time.time()
-        pred, _, _, _ = net(test_data)
-        t1 = time.time()
-        time_vec.append(t1-t0)
 
-    print("Average time: ", np.median(time_vec))
-    plt.plot(time_vec)
-    plt.show()
+    if assess_latency:
+        num_trials = 10
+        time_vec = []
+        for passes in range(num_trials):
+            t0 = time.time()
+            pred, _, _, _ = net(test_data)
+            t1 = time.time()
+            time_vec.append(t1-t0)
+
+        print("Average time: ", np.median(time_vec))
+        plt.plot(time_vec)
+        plt.show()
+    else:
+        pred, _, _, _ = net(test_data)
     
     # print("-"*100)
     # print(net)

@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 8, 16, 24, 32]
+nf = [8, 16, 24, 32, 40]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -92,7 +92,7 @@ class _MatrixDecompositionBase(nn.Module):
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
             D = T
             N = C * H * W // self.S
-            self.R = min(D, N) // 8
+            self.R = max(4, int(0.01 * N))
 
             # D = T * H * W // self.S
             # N = C
@@ -459,7 +459,7 @@ class decoder_block(nn.Module):
         self.use_nmf = use_nmf
 
         if self.use_nmf:
-            self.feature_factorizer = FeaturesFactorizationModule(device, nf[4], debug=debug).to(device)
+            self.feature_factorizer = FeaturesFactorizationModule(device, nf[4], debug=debug)
 
         # k_t = 3  # 3  # 5   #7
         # pad_t = 1  # 1  # 2   #3
@@ -587,6 +587,7 @@ if __name__ == "__main__":
     height = 72
     width = 72
     debug = True
+    assess_latency = False
 
     if torch.cuda.is_available():
         device = torch.device(0)
@@ -597,18 +598,21 @@ if __name__ == "__main__":
     test_data = torch.rand(batch_size, data_channels, frames + 1, height, width).to(device)
     net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=debug).to(device)
     net.eval()
-    num_trials = 10
-    time_vec = []
-    for passes in range(num_trials):
-        t0 = time.time()
+
+    if assess_latency:
+        num_trials = 10
+        time_vec = []
+        for passes in range(num_trials):
+            t0 = time.time()
+            pred = net(test_data)
+            t1 = time.time()
+            time_vec.append(t1-t0)
+
+        print("Average time: ", np.median(time_vec))
+        plt.plot(time_vec)
+        plt.show()
+    else:
         pred = net(test_data)
-        t1 = time.time()
-        time_vec.append(t1-t0)
-
-    print("Average time: ", np.median(time_vec))
-    plt.plot(time_vec)
-    plt.show()
-
     # print("-"*100)
     # print(net)
     # print("-"*100)
