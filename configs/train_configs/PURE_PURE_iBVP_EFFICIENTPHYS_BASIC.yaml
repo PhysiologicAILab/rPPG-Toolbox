@@ -2,7 +2,7 @@ BASE: ['']
 TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test"
 TRAIN:
   BATCH_SIZE: 8
-  EPOCHS: 30
+  EPOCHS: 50
   LR: 1e-3
   MODEL_FILE_NAME: PURE_PURE_EfficientPhys_NoDiffLabel
   PLOT_LOSSES_AND_LR: True
@@ -95,7 +95,7 @@ TEST:
       RESIZE:
         H: 72
         W: 72
-DEVICE: cuda:1
+DEVICE: cuda:2
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
@@ -104,7 +104,7 @@ MODEL:
   NAME: EfficientPhys
   EFFICIENTPHYS:
     CHANNELS: 3
-    FRAME_DEPTH: 90
+    FRAME_DEPTH: 20
 INFERENCE:
   BATCH_SIZE: 8
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
