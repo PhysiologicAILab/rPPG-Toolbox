@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 8
   EPOCHS: 50
   LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_EfficientPhys_NoDiffLabel
+  MODEL_FILE_NAME: PURE_PURE_EfficientPhys_NoDiffLabel_FD90
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -104,7 +104,7 @@ MODEL:
   NAME: EfficientPhys
   EFFICIENTPHYS:
     CHANNELS: 3
-    FRAME_DEPTH: 20
+    FRAME_DEPTH: 90
 INFERENCE:
   BATCH_SIZE: 8
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
