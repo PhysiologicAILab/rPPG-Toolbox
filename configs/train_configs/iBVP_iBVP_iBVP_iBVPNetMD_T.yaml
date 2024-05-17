@@ -2,17 +2,17 @@ BASE: ['']
 TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test"
 TRAIN:
   BATCH_SIZE: 8
-  EPOCHS: 30
-  LR: 1e-4
-  MODEL_FILE_NAME: iBVP_iBVP_iBVP_iBVPNetMD_T
+  EPOCHS: 50
+  LR: 1e-3
+  MODEL_FILE_NAME: iBVP_iBVP_iBVP_iBVPNetMD_FactorizePhys_T
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
-    CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
+    CACHED_PATH: "/home/jitesh/data/iBVP_Dataset" # "/media/jitesh/Elements/rppg/iBVP_Dataset/" # "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
     EXP_DATA_NAME: "iBVP_RGBT_256_72x72"
     BEGIN: 0.0
     END: 0.5
@@ -40,10 +40,10 @@ VALID:
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
-    CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
+    CACHED_PATH: "/home/jitesh/data/iBVP_Dataset" # "/media/jitesh/Elements/rppg/iBVP_Dataset/" # "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
     EXP_DATA_NAME: "iBVP_RGBT_256_72x72"
     BEGIN: 0.5
     END: 0.7
@@ -73,10 +73,10 @@ TEST:
   DATA:
     FS: 30
     DATASET: iBVP
-    DO_PREPROCESS: True                  # if first time, should be true
+    DO_PREPROCESS: False                  # if first time, should be true
     DATA_FORMAT: NCDHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
-    CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
+    CACHED_PATH: "/home/jitesh/data/iBVP_Dataset" # "/media/jitesh/Elements/rppg/iBVP_Dataset/" # "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
     EXP_DATA_NAME: "iBVP_RGBT_256_72x72"
     BEGIN: 0.7
     END: 1.0
@@ -104,7 +104,7 @@ NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
 MODEL:
-  DROP_RATE: 0.2
+  DROP_RATE: 0.1
   NAME: iBVPNetMD
   iBVPNet:
     CHANNELS: 1
