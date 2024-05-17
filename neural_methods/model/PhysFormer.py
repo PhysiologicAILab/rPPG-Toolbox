@@ -294,7 +294,6 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
 
         # b is batch number, c channels, t frame, fh frame height, and fw frame width
         b, c, t, fh, fw = x.shape
-        print("actual input shape", x.shape)
 
         x = torch.diff(x, dim=2)
 
@@ -368,14 +367,14 @@ if __name__ == "__main__":
     NUM_HEADS = 4
     NUM_LAYERS = 12
     THETA =  0.7
-    assess_latency = False
+    assess_latency = True
 
     if torch.cuda.is_available():
         device = torch.device(0)
     else:
         device = torch.device("cpu")
 
-    test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
+    test_data = torch.rand(batch_size, in_channels, frames+1, height, width).to(device)
     print("test_data.shape", test_data.shape)
     
     net = ViT_ST_ST_Compact3_TDC_gra_sharp(
