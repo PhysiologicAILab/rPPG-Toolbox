@@ -87,8 +87,6 @@ class BaseLoader(Dataset):
             if not os.path.exists(self.file_list_path):
                 print('File list does not exist... generating now...')
                 self.raw_data_dirs = self.get_raw_data(self.raw_data_path)
-                print("raw_data_dirs", self.raw_data_dirs)
-                exit()
                 self.build_file_list_retroactive(self.raw_data_dirs, config_data.BEGIN, config_data.END)
                 print('File list generated.', end='\n\n')
 
@@ -600,6 +598,8 @@ class BaseLoader(Dataset):
 
         # get data split based on begin and end indices.
         data_dirs_subset = self.split_raw_data(data_dirs, begin, end)
+        print(data_dirs_subset)
+        exit()
 
         # generate a list of unique raw-data file names
         filename_list = []
