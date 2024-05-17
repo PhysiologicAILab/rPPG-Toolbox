@@ -334,6 +334,7 @@ _C.MODEL.PHYSFORMER.NUM_HEADS = 4
 _C.MODEL.PHYSFORMER.NUM_LAYERS = 12
 _C.MODEL.PHYSFORMER.THETA = 0.7
 _C.MODEL.PHYSFORMER.CHANNELS = 3
+_C.MODEL.PHYSFORMER.FRAME_NUM = 160
 
 # -----------------------------------------------------------------------------
 # Inference settings
