@@ -348,14 +348,17 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
 
 # '''
 if __name__ == "__main__":
+    import time
+    import matplotlib.pyplot as plt
+    import numpy as np
 
     # duration = 8
     # fs = 25
     batch_size = 1
     frames = 160  # duration*fs
     in_channels = 3
-    height = 72
-    width = 72
+    height = 128
+    width = 128
     patch_size = 4
     dim = 96
     ff_dim = 144
@@ -392,6 +395,19 @@ if __name__ == "__main__":
 
     # pred = net(test_data, gra_sharp)
     # print("pred.shape", pred.shape)
+
+    net.eval()
+    num_trials = 10
+    time_vec = []
+    for passes in range(num_trials):
+        t0 = time.time()
+        pred, _, _, _ = net(test_data, gra_sharp)
+        t1 = time.time()
+        time_vec.append(t1-t0)
+
+    print("Average time: ", np.median(time_vec))
+    plt.plot(time_vec)
+    plt.show()
 
     pytorch_total_params = sum(p.numel() for p in net.parameters())
     print("Total parameters = ", pytorch_total_params)

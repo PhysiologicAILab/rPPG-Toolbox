@@ -195,8 +195,6 @@ if __name__ == "__main__":
     plt.plot(time_vec)
     plt.show()
     
-
-
     # print("-"*100)
     # print(net)
     # print("-"*100)
