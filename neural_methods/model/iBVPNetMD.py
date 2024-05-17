@@ -570,6 +570,9 @@ class iBVPNetMD(nn.Module):
     
 
 if __name__ == "__main__":
+    import time
+    import matplotlib.pyplot as plt
+    import numpy as np
     # from torch.utils.tensorboard import SummaryWriter
 
     # default `log_dir` is "runs" - we'll be more specific here
@@ -592,7 +595,20 @@ if __name__ == "__main__":
 
     # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
     test_data = torch.rand(batch_size, data_channels, frames + 1, height, width).to(device)
-    net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=debug)
+    # net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=debug)
+
+    num_trials = 100
+    time_vec = []
+    for passes in range(num_trials):
+        t0 = time.time()
+        net = iBVPNetMD(frames=frames, device=device,
+                        in_channels=in_channels, debug=debug)
+        t1 = time.time()
+        time_vec.append(t1-t0)
+
+    print("Average time: ", np.median(time_vec))
+    plt.plot(time_vec)
+    plt.show()
 
     # print("-"*100)
     # print(net)

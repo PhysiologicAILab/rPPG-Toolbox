@@ -452,6 +452,9 @@ class EfficientPhysFM(nn.Module):
 
 
 if __name__ == "__main__":
+    import time
+    import matplotlib.pyplot as plt
+    import numpy as np
     # from torch.utils.tensorboard import SummaryWriter
 
     # default `log_dir` is "runs" - we'll be more specific here
@@ -505,7 +508,17 @@ if __name__ == "__main__":
     # print("After: test_data.shape", test_data.shape)
     # exit()
 
-    net = EfficientPhysFM(frame_depth=frames, img_size=height, batch_size=batch_size)
+    num_trials = 100
+    time_vec = []
+    for passes in range(num_trials):
+        t0 = time.time()
+        net = EfficientPhysFM(frame_depth=frames, img_size=height, batch_size=batch_size)
+        t1 = time.time()
+        time_vec.append(t1-t0)
+    
+    print("Average time: ", np.median(time_vec))
+    plt.plot(time_vec)
+    plt.show()
     # print("-"*100)
     # print(net)
     # print("-"*100)
