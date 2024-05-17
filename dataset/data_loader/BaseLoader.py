@@ -598,7 +598,7 @@ class BaseLoader(Dataset):
 
         # get data split based on begin and end indices.
         data_dirs_subset = self.split_raw_data(data_dirs, begin, end)
-        print("data_dirs_subset", data_dirs_subset)
+        print("data_dirs, data_dirs_subset", data_dirs, data_dirs_subset)
         exit()
 
         # generate a list of unique raw-data file names
