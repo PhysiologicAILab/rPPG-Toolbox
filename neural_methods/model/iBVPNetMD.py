@@ -459,7 +459,7 @@ class decoder_block(nn.Module):
         self.use_nmf = use_nmf
 
         if self.use_nmf:
-            self.feature_factorizer = FeaturesFactorizationModule(device, nf[4], debug=debug)
+            self.feature_factorizer = FeaturesFactorizationModule(device, nf[4], debug=debug).to(device)
 
         # k_t = 3  # 3  # 5   #7
         # pad_t = 1  # 1  # 2   #3
