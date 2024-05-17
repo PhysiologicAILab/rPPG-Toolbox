@@ -344,7 +344,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 5
+        mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
         MD_R = 8
 
@@ -439,7 +439,7 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate)
         )
 
@@ -467,18 +467,15 @@ class decoder_block(nn.Module):
             nn.ConvTranspose3d(nf[4], nf[3], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
-            nn.ConvTranspose3d(nf[3], nf[2], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.Conv3d(nf[3], nf[2], (3, 3, 3), (1, 2, 2), (1, 0, 0)),
             nn.Tanh(),
-            nn.Dropout3d(p=dropout_rate),
-            # nn.Conv3d(nf[3], nf[2], (3, 3, 3), (1, 2, 2), (1, 0, 0)),
-            # nn.Tanh(),
             nn.ConvTranspose3d(nf[2], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[1], nf[0], (3, 3, 3), (1, 2, 2), (1, 1, 1)),
+            nn.Conv3d(nf[1], nf[0], (3, 4, 4), (1, 1, 1), (1, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[0], 1, (5, 3, 3), (1, 1, 1), (2, 0, 0)),
+            nn.Conv3d(nf[0], 1, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
         )
 
 
@@ -591,7 +588,6 @@ if __name__ == "__main__":
     width = 72
     debug = True
     assess_latency = False
-    # assess_latency = True
 
     if torch.cuda.is_available():
         device = torch.device(0)
