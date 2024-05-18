@@ -96,7 +96,7 @@ class iBVPNetTrainer(BaseTrainer):
                 # labels[torch.isnan(labels)] = 0
 
                 self.optimizer.zero_grad()
-                pred_ppg, vox_embed, factorized_embed = self.model(data)
+                pred_ppg, vox_embed, factorized_embed, att_mask = self.model(data)
                 
                 pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
 
@@ -168,7 +168,7 @@ class iBVPNetTrainer(BaseTrainer):
                 # labels = labels/ torch.std(labels)  # normalize
                 # labels[torch.isnan(labels)] = 0
 
-                pred_ppg, vox_embed, factorized_embed = self.model(data)
+                pred_ppg, vox_embed, factorized_embed, att_mask = self.model(data)
                 pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
                 loss = self.criterion(pred_ppg, labels)
 
@@ -227,7 +227,7 @@ class iBVPNetTrainer(BaseTrainer):
                 # labels_test = labels_test/ torch.std(labels_test)  # normalize
                 # labels_test[torch.isnan(labels_test)] = 0
 
-                pred_ppg_test, vox_embed, factorized_embed = self.model(data)
+                pred_ppg_test, vox_embed, factorized_embed, att_mask = self.model(data)
                 pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
 
                 if self.config.TEST.OUTPUT_SAVE_DIR:
