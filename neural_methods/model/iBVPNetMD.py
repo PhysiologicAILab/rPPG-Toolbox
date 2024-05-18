@@ -386,12 +386,12 @@ class FeaturesFactorizationModule(nn.Module):
         shortcut = self.shortcut(x)
 
         x = self.pre_conv_block(x)
-        x = self.md_block(x)
-        x = self.post_conv_block(x)
-        # x = F.tanh(shortcut + torch.multiply(shortcut, x))
-        x = F.tanh(torch.multiply(shortcut, x))
+        att = self.md_block(x)
+        att = self.post_conv_block(att)
+        x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        # x = F.tanh(torch.multiply(shortcut, att))
 
-        return x
+        return x, att
 
     def online_update(self, bases):
         if hasattr(self.md_block, 'online_update'):
@@ -550,7 +550,7 @@ class iBVPNetMD(nn.Module):
         if self.debug:
             print("voxel_embeddings.shape", voxel_embeddings.shape)
         
-        factorized_embeddings = self.VEFM(voxel_embeddings)
+        factorized_embeddings, att_mask = self.VEFM(voxel_embeddings)
         if self.debug:
             print("factorized_embeddings.shape", factorized_embeddings.shape)
 
@@ -563,13 +563,14 @@ class iBVPNetMD(nn.Module):
         if self.debug:
             print("rPPG.shape", rPPG.shape)
 
-        return rPPG, voxel_embeddings, factorized_embeddings
+        return rPPG, voxel_embeddings, factorized_embeddings, att_mask
     
 
 if __name__ == "__main__":
     import time
     import matplotlib.pyplot as plt
     import numpy as np
+    from scipy.signal import resample
     # from torch.utils.tensorboard import SummaryWriter
 
     # default `log_dir` is "runs" - we'll be more specific here
@@ -577,9 +578,11 @@ if __name__ == "__main__":
 
     # ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch6.pth"
     # ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch12.pth"
-    ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch19.pth"
-    # data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/1003_input13.npy"
-    data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/subject36_input9.npy"
+    # ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch19.pth"
+    ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch26.pth"
+    data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/1003_input13.npy"
+    label_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/1003_label3.npy"
+    # data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/subject36_input9.npy"
 
     # duration = 8
     # fs = 25
@@ -600,7 +603,11 @@ if __name__ == "__main__":
     # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
     # test_data = torch.rand(batch_size, data_channels, frames + 1, height, width).to(device)
     np_data = np.load(data_path)
+    np_label = np.load(label_path)
+    np_label = np.expand_dims(np_label, 0)
+
     print("Chunk data shape", np_data.shape)
+    print("Chunk label shape", np_label.shape)
     print("Min Max of input data:", np.min(np_data), np.max(np_data))
     # exit()
 
@@ -635,8 +642,13 @@ if __name__ == "__main__":
     # print(net)
     # print("-"*100)
 
+    test_data.detach().numpy()
     vox_embed = vox_embed.detach().numpy()
     factorized_embed = factorized_embed.detach().numpy()
+
+    # print(test_data.shape, vox_embed.shape, factorized_embed.shape)
+    b, ch, enc_frames, enc_height, enc_width = vox_embed.shape
+    # exit()
 
     for ch in range(vox_embed.shape[1]):
         fig, ax = plt.subplots(9, 3, layout="tight")
