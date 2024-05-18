@@ -34,7 +34,7 @@ class _MatrixDecompositionBase(nn.Module):
         # self.R = (BN // factor) if (BN // factor) % 2 == 0 else (BN // factor) + 1
         # # self.R = 2 * frame_depth
         # self.R = 4 * batch_size
-        self.R = 4
+        # self.R = 4
 
         self.train_steps = model_config["TRAIN_STEPS"]
         self.eval_steps = model_config["EVAL_STEPS"]
@@ -115,11 +115,11 @@ class _MatrixDecompositionBase(nn.Module):
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
             # D = C * self.frame_depth
             # N = H * W
-            D = self.frame_depth
-            N = C * H * W
+            D = C * self.frame_depth
+            N = H * W
             # B = 1
             # self.R = min(D, N) // max(C, self.frame_depth)   #since we need to have a rank lower than frame-depth and C
-            # self.R = min(D, N) // 16   #since we need to have a rank lower than frame-depth and C
+            self.R = min(D, N) // 8   #since we need to have a rank lower than frame-depth and C
             x = x.view(B * self.S, D, N)
 
             # print("---")
@@ -302,6 +302,7 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.post_conv_block(x)
 
         x = F.tanh(shortcut + torch.multiply(shortcut, x))
+        # x = F.tanh(torch.multiply(shortcut, x))
 
         return x
 
@@ -436,13 +437,13 @@ class EfficientPhysFM(nn.Module):
         d5 = self.avg_pooling_2(d5)
         d5 = self.dropout_2(d5)
 
+        d5 = self.feature_factorizer(d5)
+
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
 
         d7 = self.avg_pooling_4(d6)
         d8 = self.dropout_3(d7)
-
-        d8 = self.feature_factorizer(d8)
 
         d9 = d8.view(d8.size(0), -1)
 

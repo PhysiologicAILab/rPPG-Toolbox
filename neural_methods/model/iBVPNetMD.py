@@ -388,7 +388,7 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.pre_conv_block(x)
         att = self.md_block(x)
         att = self.post_conv_block(att)
-        x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        x = F.elu(shortcut + torch.multiply(shortcut, att))
         # x = F.tanh(torch.multiply(shortcut, att))
 
         return x, att
@@ -405,7 +405,7 @@ class ConvBlock3D(nn.Module):
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
             nn.BatchNorm3d(out_channel),
-            nn.Tanh()
+            nn.ELU(inplace=True)
         )
 
     def forward(self, x):
@@ -424,26 +424,28 @@ class encoder_block(nn.Module):
 
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [1, 5, 5], [1, 1, 1], [0, 2, 2]),
-            ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
+            ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            # nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
 
+            ConvBlock3D(nf[0], nf[0], [5, 1, 1], [1, 1, 1], [2, 0, 0]),
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            nn.MaxPool3d((2, 2, 2), stride=(2, 2, 2)),
+            ConvBlock3D(nf[0], nf[1], [3, 3, 3], [2, 2, 2], [1, 1, 1]),
+            # nn.MaxPool3d((2, 2, 2), stride=(2, 2, 2)),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
+            ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            # nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
             nn.Dropout3d(p=dropout_rate),
 
+            ConvBlock3D(nf[2], nf[2], [5, 1, 1], [1, 1, 1], [2, 1, 1]),
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            nn.MaxPool3d((2, 2, 2), stride=(2, 1, 1)),
+            ConvBlock3D(nf[2], nf[3], [3, 3, 3], [2, 1, 1], [1, 1, 1]),
+            # nn.MaxPool3d((2, 2, 2), stride=(2, 1, 1)),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1])
+            ConvBlock3D(nf[3], nf[3], [2, 4, 4], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [4, 3, 3], [1, 1, 1], [1, 0, 0])
         )
 
     def forward(self, x):
@@ -465,17 +467,25 @@ class decoder_block(nn.Module):
         self.conv_decoder = nn.Sequential(
             nn.ConvTranspose3d(nf[4], nf[3], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(nf[3]),
-            nn.Tanh(),
-            nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
-            nn.Dropout3d(p=dropout_rate),
-            nn.ConvTranspose3d(nf[3], nf[2], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.ELU(),
+            nn.Conv3d(nf[3], nf[2], (3, 3, 3), stride=(1, 2, 2), padding=(1, 1, 1)),
             nn.BatchNorm3d(nf[2]),
-            nn.Tanh(),
-            nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
+            nn.ELU(),
+
+            # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
             nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[2], nf[1], (3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1)),
+
+            nn.ConvTranspose3d(nf[2], nf[2], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.BatchNorm3d(nf[2]),
+            nn.ELU(),
+
+            nn.Conv3d(nf[2], nf[1], (3, 3, 3), stride=(1, 2, 2), padding=(1, 1, 1)),
             nn.BatchNorm3d(nf[1]),
-            nn.Tanh(),
+            nn.ELU(),
+
+            # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
+            nn.Dropout3d(p=dropout_rate),
+
             nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
             nn.Conv3d(nf[1], 1, (1, 1, 1), (1, 1, 1), (0, 0, 0)),
         )
@@ -594,6 +604,7 @@ if __name__ == "__main__":
     width = 72
     debug = True
     assess_latency = False
+    visualize = False
 
     if torch.cuda.is_available():
         device = torch.device(0)
@@ -621,7 +632,7 @@ if __name__ == "__main__":
     # print(test_data.shape)
     # exit()
     net = nn.DataParallel(iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=debug)).to(device)
-    net.load_state_dict(torch.load(ckpt_path, map_location=device))
+    # net.load_state_dict(torch.load(ckpt_path, map_location=device))
     net.eval()
 
     if assess_latency:
@@ -651,101 +662,102 @@ if __name__ == "__main__":
     b, ch, enc_frames, enc_height, enc_width = vox_embed.shape
     # exit()
 
-    for ch in range(vox_embed.shape[1]):
-        fig, ax = plt.subplots(9, 4, layout="tight")
+    if visualize:
+        for ch in range(vox_embed.shape[1]):
+            fig, ax = plt.subplots(9, 4, layout="tight")
 
-        frame = 0
-        ax[0, 0].imshow(np_data[frame, ...].astype(np.uint8))
-        ax[0, 0].axis('off')
-        ax[0, 1].imshow(vox_embed[0, ch, frame, :, :])
-        ax[0, 1].axis('off')
-        ax[0, 2].imshow(factorized_embed[0, ch, frame, :, :])
-        ax[0, 2].axis('off')
-        ax[0, 3].imshow(att_mask[0, ch, frame, :, :])
-        ax[0, 3].axis('off')
+            frame = 0
+            ax[0, 0].imshow(np_data[frame, ...].astype(np.uint8))
+            ax[0, 0].axis('off')
+            ax[0, 1].imshow(vox_embed[0, ch, frame, :, :])
+            ax[0, 1].axis('off')
+            ax[0, 2].imshow(factorized_embed[0, ch, frame, :, :])
+            ax[0, 2].axis('off')
+            ax[0, 3].imshow(att_mask[0, ch, frame, :, :])
+            ax[0, 3].axis('off')
 
-        frame = 20
-        ax[1, 0].imshow(np_data[frame, ...].astype(np.uint8))
-        ax[1, 0].axis('off')
-        ax[1, 1].imshow(vox_embed[0, ch, frame//4, :, :])
-        ax[1, 1].axis('off')
-        ax[1, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-        ax[1, 2].axis('off')
-        ax[1, 3].imshow(att_mask[0, ch, frame//4, :, :])
-        ax[1, 3].axis('off')
+            frame = 20
+            ax[1, 0].imshow(np_data[frame, ...].astype(np.uint8))
+            ax[1, 0].axis('off')
+            ax[1, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+            ax[1, 1].axis('off')
+            ax[1, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+            ax[1, 2].axis('off')
+            ax[1, 3].imshow(att_mask[0, ch, frame//4, :, :])
+            ax[1, 3].axis('off')
 
-        frame = 40
-        ax[2, 0].imshow(np_data[frame, ...].astype(np.uint8))
-        ax[2, 0].axis('off')
-        ax[2, 1].imshow(vox_embed[0, ch, frame//4, :, :])
-        ax[2, 1].axis('off')
-        ax[2, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-        ax[2, 2].axis('off')
-        ax[2, 3].imshow(att_mask[0, ch, frame//4, :, :])
-        ax[2, 3].axis('off')
+            frame = 40
+            ax[2, 0].imshow(np_data[frame, ...].astype(np.uint8))
+            ax[2, 0].axis('off')
+            ax[2, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+            ax[2, 1].axis('off')
+            ax[2, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+            ax[2, 2].axis('off')
+            ax[2, 3].imshow(att_mask[0, ch, frame//4, :, :])
+            ax[2, 3].axis('off')
 
-        frame = 60
-        ax[3, 0].imshow(np_data[frame, ...].astype(np.uint8))
-        ax[3, 0].axis('off')
-        ax[3, 1].imshow(vox_embed[0, ch, frame//4, :, :])
-        ax[3, 1].axis('off')
-        ax[3, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-        ax[3, 2].axis('off')
-        ax[3, 3].imshow(att_mask[0, ch, frame//4, :, :])
-        ax[3, 3].axis('off')
+            frame = 60
+            ax[3, 0].imshow(np_data[frame, ...].astype(np.uint8))
+            ax[3, 0].axis('off')
+            ax[3, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+            ax[3, 1].axis('off')
+            ax[3, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+            ax[3, 2].axis('off')
+            ax[3, 3].imshow(att_mask[0, ch, frame//4, :, :])
+            ax[3, 3].axis('off')
 
-        frame = 80
-        ax[4, 0].imshow(np_data[frame, ...].astype(np.uint8))
-        ax[4, 0].axis('off')
-        ax[4, 1].imshow(vox_embed[0, ch, frame//4, :, :])
-        ax[4, 1].axis('off')
-        ax[4, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-        ax[4, 2].axis('off')
-        ax[4, 3].imshow(att_mask[0, ch, frame//4, :, :])
-        ax[4, 3].axis('off')
+            frame = 80
+            ax[4, 0].imshow(np_data[frame, ...].astype(np.uint8))
+            ax[4, 0].axis('off')
+            ax[4, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+            ax[4, 1].axis('off')
+            ax[4, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+            ax[4, 2].axis('off')
+            ax[4, 3].imshow(att_mask[0, ch, frame//4, :, :])
+            ax[4, 3].axis('off')
 
-        frame = 100
-        ax[5, 0].imshow(np_data[frame, ...].astype(np.uint8))
-        ax[5, 0].axis('off')
-        ax[5, 1].imshow(vox_embed[0, ch, frame//4, :, :])
-        ax[5, 1].axis('off')
-        ax[5, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-        ax[5, 2].axis('off')
-        ax[5, 3].imshow(att_mask[0, ch, frame//4, :, :])
-        ax[5, 3].axis('off')
+            frame = 100
+            ax[5, 0].imshow(np_data[frame, ...].astype(np.uint8))
+            ax[5, 0].axis('off')
+            ax[5, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+            ax[5, 1].axis('off')
+            ax[5, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+            ax[5, 2].axis('off')
+            ax[5, 3].imshow(att_mask[0, ch, frame//4, :, :])
+            ax[5, 3].axis('off')
 
-        frame = 120
-        ax[6, 0].imshow(np_data[frame, ...].astype(np.uint8))
-        ax[6, 0].axis('off')
-        ax[6, 1].imshow(vox_embed[0, ch, frame//4, :, :])
-        ax[6, 1].axis('off')
-        ax[6, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-        ax[6, 2].axis('off')
-        ax[6, 3].imshow(att_mask[0, ch, frame//4, :, :])
-        ax[6, 3].axis('off')
+            frame = 120
+            ax[6, 0].imshow(np_data[frame, ...].astype(np.uint8))
+            ax[6, 0].axis('off')
+            ax[6, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+            ax[6, 1].axis('off')
+            ax[6, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+            ax[6, 2].axis('off')
+            ax[6, 3].imshow(att_mask[0, ch, frame//4, :, :])
+            ax[6, 3].axis('off')
 
-        frame = 140
-        ax[7, 0].imshow(np_data[frame, ...].astype(np.uint8))
-        ax[7, 0].axis('off')
-        ax[7, 1].imshow(vox_embed[0, ch, frame//4, :, :])
-        ax[7, 1].axis('off')
-        ax[7, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-        ax[7, 2].axis('off')
-        ax[7, 3].imshow(att_mask[0, ch, frame//4, :, :])
-        ax[7, 3].axis('off')
+            frame = 140
+            ax[7, 0].imshow(np_data[frame, ...].astype(np.uint8))
+            ax[7, 0].axis('off')
+            ax[7, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+            ax[7, 1].axis('off')
+            ax[7, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+            ax[7, 2].axis('off')
+            ax[7, 3].imshow(att_mask[0, ch, frame//4, :, :])
+            ax[7, 3].axis('off')
 
-        frame = 159
-        ax[8, 0].imshow(np_data[frame, ...].astype(np.uint8))
-        ax[8, 0].axis('off')
-        ax[8, 1].imshow(vox_embed[0, ch, frame//4, :, :])
-        ax[8, 1].axis('off')
-        ax[8, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-        ax[8, 2].axis('off')
-        ax[8, 3].imshow(att_mask[0, ch, frame//4, :, :])
-        ax[8, 3].axis('off')
+            frame = 159
+            ax[8, 0].imshow(np_data[frame, ...].astype(np.uint8))
+            ax[8, 0].axis('off')
+            ax[8, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+            ax[8, 1].axis('off')
+            ax[8, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+            ax[8, 2].axis('off')
+            ax[8, 3].imshow(att_mask[0, ch, frame//4, :, :])
+            ax[8, 3].axis('off')
 
-        plt.show()
-        plt.close(fig)
+            plt.show()
+            plt.close(fig)
 
     print("pred.shape", pred.shape)
 
