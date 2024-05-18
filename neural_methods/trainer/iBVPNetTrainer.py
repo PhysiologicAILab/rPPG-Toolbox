@@ -87,6 +87,7 @@ class iBVPNetTrainer(BaseTrainer):
 
                 # labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
 
+                print("data.shape", data.shape)
                 last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
                 data = torch.cat((data, last_frame), 2)
 
