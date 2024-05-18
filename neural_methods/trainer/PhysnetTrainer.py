@@ -80,7 +80,7 @@ class PhysnetTrainer(BaseTrainer):
                 data = batch[0].to(torch.float32).to(self.device)
 
                 # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
-                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, max(self.num_of_gpu, 1), 1, 1)
                 data = torch.cat((data, last_frame), 2)
 
                 rPPG, x_visual, x_visual3232, x_visual1616 = self.model(data)
@@ -151,7 +151,7 @@ class PhysnetTrainer(BaseTrainer):
 
                 # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
                 last_frame = torch.unsqueeze(
-                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                    data[:, :, -1, :, :], 2).repeat(1, 1, max(self.num_of_gpu, 1), 1, 1)
                 data = torch.cat((data, last_frame), 2)
 
                 rPPG, x_visual, x_visual3232, x_visual1616 = self.model(data)
@@ -208,7 +208,7 @@ class PhysnetTrainer(BaseTrainer):
 
                 # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
                 last_frame = torch.unsqueeze(
-                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                    data[:, :, -1, :, :], 2).repeat(1, 1, max(self.num_of_gpu, 1), 1, 1)
                 data = torch.cat((data, last_frame), 2)
 
                 pred_ppg_test, _, _, _ = self.model(data)

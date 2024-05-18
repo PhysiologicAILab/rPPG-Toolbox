@@ -126,7 +126,7 @@ class PhysFormerTrainer(BaseTrainer):
 
                 # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
                 last_frame = torch.unsqueeze(
-                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                    data[:, :, -1, :, :], 2).repeat(1, 1, max(self.num_of_gpu, 1), 1, 1)
                 data = torch.cat((data, last_frame), 2)
 
                 self.optimizer.zero_grad()
@@ -221,7 +221,7 @@ class PhysFormerTrainer(BaseTrainer):
 
                 # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
                 last_frame = torch.unsqueeze(
-                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                    data[:, :, -1, :, :], 2).repeat(1, 1, max(self.num_of_gpu, 1), 1, 1)
                 data = torch.cat((data, last_frame), 2)
 
                 rPPG, _, _, _ = self.model(data, gra_sharp)
@@ -273,7 +273,7 @@ class PhysFormerTrainer(BaseTrainer):
 
                 # Using data prepared with raw frames, but providing Diff Norm inputs uniformly to all models
                 last_frame = torch.unsqueeze(
-                    data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                    data[:, :, -1, :, :], 2).repeat(1, 1, max(self.num_of_gpu, 1), 1, 1)
                 data = torch.cat((data, last_frame), 2)
 
                 pred_ppg_test, _, _, _ = self.model(data, gra_sharp)

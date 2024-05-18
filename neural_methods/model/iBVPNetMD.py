@@ -576,7 +576,8 @@ if __name__ == "__main__":
     # writer = SummaryWriter('runs/iBVPNetMD')
 
     # ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch6.pth"
-    ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch12.pth"
+    # ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch12.pth"
+    ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch19.pth"
     # data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/1003_input13.npy"
     data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/subject36_input9.npy"
 
@@ -637,81 +638,83 @@ if __name__ == "__main__":
     vox_embed = vox_embed.detach().numpy()
     factorized_embed = factorized_embed.detach().numpy()
 
-    fig, ax = plt.subplots(9, 3, layout="tight")
+    for ch in range(vox_embed.shape[1]):
+        fig, ax = plt.subplots(9, 3, layout="tight")
 
-    frame = 0
-    ax[0, 0].imshow(np_data[frame, ...].astype(np.uint8))
-    ax[0, 0].axis('off')
-    ax[0, 1].imshow(vox_embed[0, 0, frame, :, :])
-    ax[0, 1].axis('off')
-    ax[0, 2].imshow(factorized_embed[0, 0, frame, :, :])
-    ax[0, 2].axis('off')
+        frame = 0
+        ax[0, 0].imshow(np_data[frame, ...].astype(np.uint8))
+        ax[0, 0].axis('off')
+        ax[0, 1].imshow(vox_embed[0, ch, frame, :, :])
+        ax[0, 1].axis('off')
+        ax[0, 2].imshow(factorized_embed[0, ch, frame, :, :])
+        ax[0, 2].axis('off')
 
-    frame = 20
-    ax[1, 0].imshow(np_data[frame, ...].astype(np.uint8))
-    ax[1, 0].axis('off')
-    ax[1, 1].imshow(vox_embed[0, 0, frame//4, :, :])
-    ax[1, 1].axis('off')
-    ax[1, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
-    ax[1, 2].axis('off')
+        frame = 20
+        ax[1, 0].imshow(np_data[frame, ...].astype(np.uint8))
+        ax[1, 0].axis('off')
+        ax[1, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+        ax[1, 1].axis('off')
+        ax[1, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+        ax[1, 2].axis('off')
 
-    frame = 40
-    ax[2, 0].imshow(np_data[frame, ...].astype(np.uint8))
-    ax[2, 0].axis('off')
-    ax[2, 1].imshow(vox_embed[0, 0, frame//4, :, :])
-    ax[2, 1].axis('off')
-    ax[2, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
-    ax[2, 2].axis('off')
+        frame = 40
+        ax[2, 0].imshow(np_data[frame, ...].astype(np.uint8))
+        ax[2, 0].axis('off')
+        ax[2, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+        ax[2, 1].axis('off')
+        ax[2, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+        ax[2, 2].axis('off')
 
-    frame = 60
-    ax[3, 0].imshow(np_data[frame, ...].astype(np.uint8))
-    ax[3, 0].axis('off')
-    ax[3, 1].imshow(vox_embed[0, 0, frame//4, :, :])
-    ax[3, 1].axis('off')
-    ax[3, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
-    ax[3, 2].axis('off')
+        frame = 60
+        ax[3, 0].imshow(np_data[frame, ...].astype(np.uint8))
+        ax[3, 0].axis('off')
+        ax[3, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+        ax[3, 1].axis('off')
+        ax[3, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+        ax[3, 2].axis('off')
 
-    frame = 80
-    ax[4, 0].imshow(np_data[frame, ...].astype(np.uint8))
-    ax[4, 0].axis('off')
-    ax[4, 1].imshow(vox_embed[0, 0, frame//4, :, :])
-    ax[4, 1].axis('off')
-    ax[4, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
-    ax[4, 2].axis('off')
+        frame = 80
+        ax[4, 0].imshow(np_data[frame, ...].astype(np.uint8))
+        ax[4, 0].axis('off')
+        ax[4, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+        ax[4, 1].axis('off')
+        ax[4, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+        ax[4, 2].axis('off')
 
-    frame = 100
-    ax[5, 0].imshow(np_data[frame, ...].astype(np.uint8))
-    ax[5, 0].axis('off')
-    ax[5, 1].imshow(vox_embed[0, 0, frame//4, :, :])
-    ax[5, 1].axis('off')
-    ax[5, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
-    ax[5, 2].axis('off')
+        frame = 100
+        ax[5, 0].imshow(np_data[frame, ...].astype(np.uint8))
+        ax[5, 0].axis('off')
+        ax[5, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+        ax[5, 1].axis('off')
+        ax[5, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+        ax[5, 2].axis('off')
 
-    frame = 120
-    ax[6, 0].imshow(np_data[frame, ...].astype(np.uint8))
-    ax[6, 0].axis('off')
-    ax[6, 1].imshow(vox_embed[0, 0, frame//4, :, :])
-    ax[6, 1].axis('off')
-    ax[6, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
-    ax[6, 2].axis('off')
+        frame = 120
+        ax[6, 0].imshow(np_data[frame, ...].astype(np.uint8))
+        ax[6, 0].axis('off')
+        ax[6, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+        ax[6, 1].axis('off')
+        ax[6, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+        ax[6, 2].axis('off')
 
-    frame = 140
-    ax[7, 0].imshow(np_data[frame, ...].astype(np.uint8))
-    ax[7, 0].axis('off')
-    ax[7, 1].imshow(vox_embed[0, 0, frame//4, :, :])
-    ax[7, 1].axis('off')
-    ax[7, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
-    ax[7, 2].axis('off')
+        frame = 140
+        ax[7, 0].imshow(np_data[frame, ...].astype(np.uint8))
+        ax[7, 0].axis('off')
+        ax[7, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+        ax[7, 1].axis('off')
+        ax[7, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+        ax[7, 2].axis('off')
 
-    frame = 159
-    ax[8, 0].imshow(np_data[frame, ...].astype(np.uint8))
-    ax[8, 0].axis('off')
-    ax[8, 1].imshow(vox_embed[0, 0, frame//4, :, :])
-    ax[8, 1].axis('off')
-    ax[8, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
-    ax[8, 2].axis('off')
+        frame = 159
+        ax[8, 0].imshow(np_data[frame, ...].astype(np.uint8))
+        ax[8, 0].axis('off')
+        ax[8, 1].imshow(vox_embed[0, ch, frame//4, :, :])
+        ax[8, 1].axis('off')
+        ax[8, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+        ax[8, 2].axis('off')
 
-    plt.show()
+        plt.show()
+        plt.close(fig)
 
     print("pred.shape", pred.shape)
 

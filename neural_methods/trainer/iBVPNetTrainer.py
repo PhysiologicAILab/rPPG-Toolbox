@@ -86,10 +86,10 @@ class iBVPNetTrainer(BaseTrainer):
                 data, labels = batch[0].to(self.device), batch[1].to(self.device)
 
                 # labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
-                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, max(self.num_of_gpu, 1), 1, 1)
                 data = torch.cat((data, last_frame), 2)
 
-                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(max(self.num_of_gpu, 1), 1)
                 # labels = torch.cat((labels, last_sample), 0)
                 # labels = torch.diff(labels, dim=0)
                 # labels = labels/ torch.std(labels)  # normalize
@@ -159,10 +159,10 @@ class iBVPNetTrainer(BaseTrainer):
                 
                 # labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
 
-                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, max(self.num_of_gpu, 1), 1, 1)
                 data = torch.cat((data, last_frame), 2)
 
-                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(max(self.num_of_gpu, 1), 1)
                 # labels = torch.cat((labels, last_sample), 0)
                 # labels = torch.diff(labels, dim=0)
                 # labels = labels/ torch.std(labels)  # normalize
@@ -218,10 +218,10 @@ class iBVPNetTrainer(BaseTrainer):
                 
                 # labels_test = (labels_test - torch.mean(labels_test)) / torch.std(labels_test)  # normalize
 
-                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, self.num_of_gpu, 1, 1)
+                last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, max(self.num_of_gpu, 1), 1, 1)
                 data = torch.cat((data, last_frame), 2)
 
-                # last_sample = torch.unsqueeze(labels_test[-1, :], 0).repeat(self.num_of_gpu, 1)
+                # last_sample = torch.unsqueeze(labels_test[-1, :], 0).repeat(max(self.num_of_gpu, 1), 1)
                 # labels_test = torch.cat((labels_test, last_sample), 0)
                 # labels_test = torch.diff(labels_test, dim=0)
                 # labels_test = labels_test/ torch.std(labels_test)  # normalize
