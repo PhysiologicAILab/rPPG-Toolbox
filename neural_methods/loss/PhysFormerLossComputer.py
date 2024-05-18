@@ -100,6 +100,8 @@ class TorchLossComputer(object):
     
     @staticmethod
     def cross_entropy_power_spectrum_DLDL_softmax2(inputs, target, Fs, std):
+        target = 40 if target <= 40 else target
+        target = 180 if target >= 180 else target
         target_distribution = [normal_sampling(int(target), i, std) for i in range(40, 180)]
         target_distribution = [i if i > 1e-15 else 1e-15 for i in target_distribution]
         target_distribution = torch.Tensor(target_distribution).to(torch.device('cuda'))
