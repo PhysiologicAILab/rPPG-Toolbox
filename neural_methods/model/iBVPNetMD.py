@@ -518,7 +518,6 @@ class iBVPNetMD(nn.Module):
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
         [batch, channel, length, width, height] = x.shape
-        print("Input.shape", x.shape)
         x = torch.diff(x, dim=2)
 
         if self.debug:
