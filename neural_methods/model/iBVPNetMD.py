@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [16, 16, 24, 32, 32]
+nf = [16, 32, 32, 64, 64]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -344,7 +344,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 4
+        mid_C = in_c // 8
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
         MD_R = 8
 
@@ -479,14 +479,14 @@ class decoder_block(nn.Module):
             nn.BatchNorm3d(nf[2]),
             nn.ELU(),
 
-            nn.Conv3d(nf[2], nf[1], (3, 3, 3), stride=(1, 2, 2), padding=(1, 1, 1)),
+            nn.Conv3d(nf[2], nf[1], (1, 4, 4), stride=(1, 1, 1), padding=(0, 0, 0)),
             nn.BatchNorm3d(nf[1]),
             nn.ELU(),
 
             # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
             nn.Dropout3d(p=dropout_rate),
 
-            nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
+            # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
             nn.Conv3d(nf[1], 1, (1, 1, 1), (1, 1, 1), (0, 0, 0)),
         )
 
