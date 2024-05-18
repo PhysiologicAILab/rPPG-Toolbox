@@ -441,7 +441,6 @@ class EfficientPhysFM(nn.Module):
 
         d7 = self.avg_pooling_4(d6)
         d8 = self.dropout_3(d7)
-        print("d8.shape", d8.shape)
 
         d8 = self.feature_factorizer(d8)
 
