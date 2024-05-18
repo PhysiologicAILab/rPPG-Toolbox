@@ -92,7 +92,7 @@ class _MatrixDecompositionBase(nn.Module):
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
             D = T
             N = C * H * W // self.S
-            self.R = max(4, int(0.01 * N))
+            self.R = 5
 
             # D = T * H * W // self.S
             # N = C
@@ -418,8 +418,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 3  # 3  # 5   #7
-        pad_t = 1  # 1  # 2   #3
+        k_t = 5  # 3  # 5   #7
+        pad_t = 2  # 1  # 2   #3
         self.debug = debug
 
         self.encoder = nn.Sequential(
@@ -427,11 +427,11 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
 
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -439,7 +439,7 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate)
         )
 
@@ -464,17 +464,15 @@ class decoder_block(nn.Module):
         # k_t = 3  # 3  # 5   #7
         # pad_t = 1  # 1  # 2   #3
         self.conv_decoder = nn.Sequential(
-            nn.ConvTranspose3d(nf[4], nf[3], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.ConvTranspose3d(nf[4], nf[2], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.Tanh(),
+            nn.Conv3d(nf[2], nf[2], (3, 3, 3), (1, 1, 1), (1, 1, 1)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[3], nf[2], (3, 3, 3), (1, 2, 2), (1, 0, 0)),
-            nn.Tanh(),
             nn.ConvTranspose3d(nf[2], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.Tanh(),
-            nn.Dropout3d(p=dropout_rate),
-            nn.Conv3d(nf[1], nf[0], (3, 4, 4), (1, 1, 1), (1, 0, 0)),
+            nn.Conv3d(nf[1], nf[0], (3, 4, 4), (1, 2, 2), (1, 0, 0)),
             nn.Tanh(),
-            nn.Dropout3d(p=dropout_rate),
             nn.Conv3d(nf[0], 1, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
         )
 
@@ -581,7 +579,7 @@ if __name__ == "__main__":
     # duration = 8
     # fs = 25
     batch_size = 2
-    frames = 256    #duration*fs
+    frames = 160    #duration*fs
     in_channels = 3
     data_channels = 3
     height = 72
