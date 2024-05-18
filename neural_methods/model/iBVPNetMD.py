@@ -611,23 +611,26 @@ if __name__ == "__main__":
     else:
         device = torch.device("cpu")
 
-    # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
-    # test_data = torch.rand(batch_size, data_channels, frames + 1, height, width).to(device)
-    np_data = np.load(data_path)
-    np_label = np.load(label_path)
-    np_label = np.expand_dims(np_label, 0)
+    if visualize:
+        np_data = np.load(data_path)
+        np_label = np.load(label_path)
+        np_label = np.expand_dims(np_label, 0)
 
-    print("Chunk data shape", np_data.shape)
-    print("Chunk label shape", np_label.shape)
-    print("Min Max of input data:", np.min(np_data), np.max(np_data))
-    # exit()
+        print("Chunk data shape", np_data.shape)
+        print("Chunk label shape", np_label.shape)
+        print("Min Max of input data:", np.min(np_data), np.max(np_data))
+        # exit()
 
-    test_data = np.transpose(np_data, (3, 0, 1, 2))
-    test_data = torch.from_numpy(test_data)
-    test_data = test_data.unsqueeze(0)
+        test_data = np.transpose(np_data, (3, 0, 1, 2))
+        test_data = torch.from_numpy(test_data)
+        test_data = test_data.unsqueeze(0)
 
-    last_frame = torch.unsqueeze(test_data[:, :, -1, :, :], 2).repeat(1, 1, 1, 1, 1)
-    test_data = torch.cat((test_data, last_frame), 2)
+        last_frame = torch.unsqueeze(test_data[:, :, -1, :, :], 2).repeat(1, 1, 1, 1, 1)
+        test_data = torch.cat((test_data, last_frame), 2)
+    else:
+        # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
+        test_data = torch.rand(batch_size, data_channels, frames + 1, height, width).to(device)
+
     test_data = test_data.to(torch.float32).to(device)
     # print(test_data.shape)
     # exit()
@@ -653,16 +656,15 @@ if __name__ == "__main__":
     # print(net)
     # print("-"*100)
 
-    test_data = test_data.detach().numpy()
-    vox_embed = vox_embed.detach().numpy()
-    factorized_embed = factorized_embed.detach().numpy()
-    att_mask = att_mask.detach().numpy()
-
-    # print(test_data.shape, vox_embed.shape, factorized_embed.shape)
-    b, ch, enc_frames, enc_height, enc_width = vox_embed.shape
-    # exit()
-
     if visualize:
+        test_data = test_data.detach().numpy()
+        vox_embed = vox_embed.detach().numpy()
+        factorized_embed = factorized_embed.detach().numpy()
+        att_mask = att_mask.detach().numpy()
+
+        # print(test_data.shape, vox_embed.shape, factorized_embed.shape)
+        b, ch, enc_frames, enc_height, enc_width = vox_embed.shape
+        # exit()
         for ch in range(vox_embed.shape[1]):
             fig, ax = plt.subplots(9, 4, layout="tight")
 

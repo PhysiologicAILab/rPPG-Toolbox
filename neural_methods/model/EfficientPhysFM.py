@@ -110,16 +110,16 @@ class _MatrixDecompositionBase(nn.Module):
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             BN, C, H, W = x.shape
             # print("BN, C, H, W", BN, C, H, W)
-            B = BN // self.frame_depth
+            B = BN #// self.frame_depth
             # D = C * H * W // self.S  # self.frame_depth  # C * H * W // self.S
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
             # D = C * self.frame_depth
             # N = H * W
-            D = C * self.frame_depth
+            D = C #* self.frame_depth
             N = H * W
             # B = 1
             # self.R = min(D, N) // max(C, self.frame_depth)   #since we need to have a rank lower than frame-depth and C
-            self.R = min(D, N) // 8   #since we need to have a rank lower than frame-depth and C
+            self.R = max(4, min(D, N) // 8)   #since we need to have a rank lower than frame-depth and C
             x = x.view(B * self.S, D, N)
 
             # print("---")
