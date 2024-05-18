@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32, 40]
+nf = [16, 16, 24, 32, 32]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -92,7 +92,7 @@ class _MatrixDecompositionBase(nn.Module):
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
             D = T
             N = C * H * W // self.S
-            self.R = 5
+            self.R = 8
 
             # D = T * H * W // self.S
             # N = C
@@ -403,9 +403,8 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
+            nn.BatchNorm3d(out_channel),
             nn.Tanh()
-            # nn.BatchNorm3d(out_channel),
-            # nn.ELU(inplace=True)
         )
 
     def forward(self, x):
@@ -423,24 +422,27 @@ class encoder_block(nn.Module):
         self.debug = debug
 
         self.encoder = nn.Sequential(
-            ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(inCh, nf[0], [1, 5, 5], [1, 1, 1], [0, 2, 2]),
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
 
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            nn.MaxPool3d((2, 2, 2), stride=(2, 2, 2)),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            nn.MaxPool3d((2, 2, 2), stride=(2, 1, 1)),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
-            nn.Dropout3d(p=dropout_rate)
+            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1])
         )
 
     def forward(self, x):
@@ -453,48 +455,38 @@ class encoder_block(nn.Module):
 
 
 class decoder_block(nn.Module):
-    def __init__(self, device, use_nmf, dropout_rate=0.2, debug=False):
+    def __init__(self, dropout_rate=0.2, debug=False):
         super(decoder_block, self).__init__()
         self.debug = debug
-        self.use_nmf = use_nmf
-
-        if self.use_nmf:
-            self.feature_factorizer = FeaturesFactorizationModule(device, nf[4], debug=debug)
 
         # k_t = 3  # 3  # 5   #7
         # pad_t = 1  # 1  # 2   #3
         self.conv_decoder = nn.Sequential(
-            nn.ConvTranspose3d(nf[4], nf[2], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.ConvTranspose3d(nf[4], nf[3], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.BatchNorm3d(nf[3]),
             nn.Tanh(),
-            nn.Conv3d(nf[2], nf[2], (3, 3, 3), (1, 1, 1), (1, 1, 1)),
-            nn.Tanh(),
+            nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
             nn.Dropout3d(p=dropout_rate),
-            nn.ConvTranspose3d(nf[2], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.ConvTranspose3d(nf[3], nf[2], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.BatchNorm3d(nf[2]),
             nn.Tanh(),
-            nn.Conv3d(nf[1], nf[0], (3, 4, 4), (1, 2, 2), (1, 0, 0)),
+            nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
+            nn.Dropout3d(p=dropout_rate),
+            nn.Conv3d(nf[2], nf[1], (3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1)),
+            nn.BatchNorm3d(nf[1]),
             nn.Tanh(),
-            nn.Conv3d(nf[0], 1, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
+            nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
+            nn.Conv3d(nf[1], 1, (1, 1, 1), (1, 1, 1), (0, 0, 0)),
         )
 
 
     def forward(self, x):
 
-        # short_x = self.squeeze(x)
-        if self.use_nmf:
-            factorized_x = self.feature_factorizer(x)
-        # x = self.align(x)
-
         if self.debug:
             print("Decoder")
             print("     x.shape", x.shape)
-            if self.use_nmf:
-                print("     factorized_x.shape", factorized_x.shape)
 
-        # x = self.conv_decoder(torch.concat([short_x, x], dim=1))
-        if self.use_nmf:
-            x = self.conv_decoder(factorized_x)
-        else:
-            x = self.conv_decoder(x)
+        x = self.conv_decoder(x)
         
         if self.debug:
             print("     conv_decoder_x.shape", x.shape)
@@ -507,7 +499,7 @@ class iBVPNetMD(nn.Module):
     def __init__(self, frames, device, in_channels=3, dropout=0.2, debug=False):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
-        use_nmf = True
+
         self.in_channels = in_channels
         if self.in_channels == 1 or self.in_channels == 3:
             self.norm = nn.BatchNorm3d(self.in_channels)
@@ -516,14 +508,11 @@ class iBVPNetMD(nn.Module):
             self.thermal_norm = nn.BatchNorm3d(1)
         else:
             print("Unsupported input channels")
-        self.iBVPNetMD_model = nn.Sequential(
-            encoder_block(self.in_channels, dropout_rate=dropout, debug=debug),
-            decoder_block(device, use_nmf, dropout_rate=dropout, debug=debug)
-            # spatial adaptive pooling
-            # nn.AdaptiveAvgPool3d((frames, 1, 1)),
-            # nn.Conv3d(nf[0], 1, (1, 2, 2), stride=(1, 1, 1), padding=(0, 0, 0))
-            # nn.Conv3d(nf[0], 1, (1, 2, 2), stride=(1, 1, 1), padding=(0, 0, 0))
-        )
+
+        self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[4], debug=debug)
+        self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
+
         
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
@@ -556,15 +545,24 @@ class iBVPNetMD(nn.Module):
         if self.debug:
             print("BatchNormed shape", x.shape)
 
-        feats = self.iBVPNetMD_model(x)
+        voxel_embeddings = self.voxel_embeddings(x)
+        if self.debug:
+            print("voxel_embeddings.shape", voxel_embeddings.shape)
+        
+        factorized_embeddings = self.VEFM(voxel_embeddings)
+        if self.debug:
+            print("factorized_embeddings.shape", factorized_embeddings.shape)
+
+        feats = self.decoder(factorized_embeddings)
         if self.debug:
             print("feats.shape", feats.shape)
+
         rPPG = feats.view(-1, length-1)
 
         if self.debug:
             print("rPPG.shape", rPPG.shape)
 
-        return rPPG
+        return rPPG, voxel_embeddings, factorized_embeddings
     
 
 if __name__ == "__main__":
@@ -602,7 +600,7 @@ if __name__ == "__main__":
         time_vec = []
         for passes in range(num_trials):
             t0 = time.time()
-            pred = net(test_data)
+            pred, vox_embed, factorized_embed = net(test_data)
             t1 = time.time()
             time_vec.append(t1-t0)
 
@@ -610,7 +608,7 @@ if __name__ == "__main__":
         plt.plot(time_vec)
         plt.show()
     else:
-        pred = net(test_data)
+        pred, vox_embed, factorized_embed = net(test_data)
     # print("-"*100)
     # print(net)
     # print("-"*100)
