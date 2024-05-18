@@ -1,8 +1,8 @@
 BASE: ['']
 TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test"
 TRAIN:
-  BATCH_SIZE: 8
-  EPOCHS: 50
+  BATCH_SIZE: 4
+  EPOCHS: 30
   LR: 1e-3
   MODEL_FILE_NAME: PURE_PURE_EfficientPhys_VEFM_NoDiffLabel_FD20
   PLOT_LOSSES_AND_LR: True
@@ -13,7 +13,7 @@ TRAIN:
     DATA_FORMAT: NDCHW
     DATA_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/PURE_Dataset"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "PURE_Raw_256_72x72"
+    EXP_DATA_NAME: "PURE_Raw_160_72x72"
     BEGIN: 0.0
     END: 0.8
     PREPROCESS:
@@ -21,7 +21,7 @@ TRAIN:
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Standardized
       DO_CHUNK: True
-      CHUNK_LENGTH: 256
+      CHUNK_LENGTH: 160
       CROP_FACE:
         DO_CROP_FACE: True
         BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
@@ -42,7 +42,7 @@ VALID:
     DATA_FORMAT: NDCHW
     DATA_PATH: "/mnt/sda/data/jitesh/PURE_Dataset/raw"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/PURE_Dataset"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "PURE_Raw_256_72x72"
+    EXP_DATA_NAME: "PURE_Raw_160_72x72"
     BEGIN: 0.8
     END: 1.0
     PREPROCESS:
@@ -50,7 +50,7 @@ VALID:
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Standardized
       DO_CHUNK: True
-      CHUNK_LENGTH: 256
+      CHUNK_LENGTH: 160
       CROP_FACE:
         DO_CROP_FACE: True
         BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
@@ -73,14 +73,14 @@ TEST:
     DATA_FORMAT: NDCHW
     DATA_PATH: "/mnt/sda/data/jitesh/iBVP_Dataset/raw"   # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/iBVP_Dataset"    # Processed dataset save path, need to be updated
-    EXP_DATA_NAME: "iBVP_RGBT_256_72x72"
+    EXP_DATA_NAME: "iBVP_RGBT_160_72x72"
     BEGIN: 0.0
     END: 1.0
     PREPROCESS:
       DATA_TYPE: ['Raw']         #if use EfficientPhys, Data_Type should be Raw and Label_Type should be Standardized
       LABEL_TYPE: Standardized
       DO_CHUNK: True
-      CHUNK_LENGTH: 256
+      CHUNK_LENGTH: 160
       CROP_FACE:
         DO_CROP_FACE: True
         BACKEND: 'Y5F'    # HC for Haar Cascade, RF for RetinaFace, Y5F for YOLO5Face
@@ -95,7 +95,7 @@ TEST:
       RESIZE:
         H: 72
         W: 72
-DEVICE: cuda:1
+DEVICE: cuda:3
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp

@@ -629,7 +629,7 @@ if __name__ == "__main__":
         time_vec = []
         for passes in range(num_trials):
             t0 = time.time()
-            pred, vox_embed, factorized_embed = net(test_data)
+            pred, vox_embed, factorized_embed, att_mask = net(test_data)
             t1 = time.time()
             time_vec.append(t1-t0)
 
@@ -637,21 +637,22 @@ if __name__ == "__main__":
         plt.plot(time_vec)
         plt.show()
     else:
-        pred, vox_embed, factorized_embed = net(test_data)
+        pred, vox_embed, factorized_embed, att_mask = net(test_data)
     # print("-"*100)
     # print(net)
     # print("-"*100)
 
-    test_data.detach().numpy()
+    test_data = test_data.detach().numpy()
     vox_embed = vox_embed.detach().numpy()
     factorized_embed = factorized_embed.detach().numpy()
+    att_mask = att_mask.detach().numpy()
 
     # print(test_data.shape, vox_embed.shape, factorized_embed.shape)
     b, ch, enc_frames, enc_height, enc_width = vox_embed.shape
     # exit()
 
     for ch in range(vox_embed.shape[1]):
-        fig, ax = plt.subplots(9, 3, layout="tight")
+        fig, ax = plt.subplots(9, 4, layout="tight")
 
         frame = 0
         ax[0, 0].imshow(np_data[frame, ...].astype(np.uint8))
@@ -660,6 +661,8 @@ if __name__ == "__main__":
         ax[0, 1].axis('off')
         ax[0, 2].imshow(factorized_embed[0, ch, frame, :, :])
         ax[0, 2].axis('off')
+        ax[0, 3].imshow(att_mask[0, ch, frame, :, :])
+        ax[0, 3].axis('off')
 
         frame = 20
         ax[1, 0].imshow(np_data[frame, ...].astype(np.uint8))
@@ -668,6 +671,8 @@ if __name__ == "__main__":
         ax[1, 1].axis('off')
         ax[1, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
         ax[1, 2].axis('off')
+        ax[1, 3].imshow(att_mask[0, ch, frame//4, :, :])
+        ax[1, 3].axis('off')
 
         frame = 40
         ax[2, 0].imshow(np_data[frame, ...].astype(np.uint8))
@@ -676,6 +681,8 @@ if __name__ == "__main__":
         ax[2, 1].axis('off')
         ax[2, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
         ax[2, 2].axis('off')
+        ax[2, 3].imshow(att_mask[0, ch, frame//4, :, :])
+        ax[2, 3].axis('off')
 
         frame = 60
         ax[3, 0].imshow(np_data[frame, ...].astype(np.uint8))
@@ -684,6 +691,8 @@ if __name__ == "__main__":
         ax[3, 1].axis('off')
         ax[3, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
         ax[3, 2].axis('off')
+        ax[3, 3].imshow(att_mask[0, ch, frame//4, :, :])
+        ax[3, 3].axis('off')
 
         frame = 80
         ax[4, 0].imshow(np_data[frame, ...].astype(np.uint8))
@@ -692,6 +701,8 @@ if __name__ == "__main__":
         ax[4, 1].axis('off')
         ax[4, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
         ax[4, 2].axis('off')
+        ax[4, 3].imshow(att_mask[0, ch, frame//4, :, :])
+        ax[4, 3].axis('off')
 
         frame = 100
         ax[5, 0].imshow(np_data[frame, ...].astype(np.uint8))
@@ -700,6 +711,8 @@ if __name__ == "__main__":
         ax[5, 1].axis('off')
         ax[5, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
         ax[5, 2].axis('off')
+        ax[5, 3].imshow(att_mask[0, ch, frame//4, :, :])
+        ax[5, 3].axis('off')
 
         frame = 120
         ax[6, 0].imshow(np_data[frame, ...].astype(np.uint8))
@@ -708,6 +721,8 @@ if __name__ == "__main__":
         ax[6, 1].axis('off')
         ax[6, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
         ax[6, 2].axis('off')
+        ax[6, 3].imshow(att_mask[0, ch, frame//4, :, :])
+        ax[6, 3].axis('off')
 
         frame = 140
         ax[7, 0].imshow(np_data[frame, ...].astype(np.uint8))
@@ -716,6 +731,8 @@ if __name__ == "__main__":
         ax[7, 1].axis('off')
         ax[7, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
         ax[7, 2].axis('off')
+        ax[7, 3].imshow(att_mask[0, ch, frame//4, :, :])
+        ax[7, 3].axis('off')
 
         frame = 159
         ax[8, 0].imshow(np_data[frame, ...].astype(np.uint8))
@@ -724,6 +741,8 @@ if __name__ == "__main__":
         ax[8, 1].axis('off')
         ax[8, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
         ax[8, 2].axis('off')
+        ax[8, 3].imshow(att_mask[0, ch, frame//4, :, :])
+        ax[8, 3].axis('off')
 
         plt.show()
         plt.close(fig)
