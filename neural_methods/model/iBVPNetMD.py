@@ -388,7 +388,8 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.pre_conv_block(x)
         x = self.md_block(x)
         x = self.post_conv_block(x)
-        x = F.tanh(shortcut + torch.multiply(shortcut, x))
+        # x = F.tanh(shortcut + torch.multiply(shortcut, x))
+        x = F.tanh(torch.multiply(shortcut, x))
 
         return x
 
@@ -574,6 +575,11 @@ if __name__ == "__main__":
     # default `log_dir` is "runs" - we'll be more specific here
     # writer = SummaryWriter('runs/iBVPNetMD')
 
+    # ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch6.pth"
+    ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch12.pth"
+    # data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/1003_input13.npy"
+    data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/subject36_input9.npy"
+
     # duration = 8
     # fs = 25
     batch_size = 2
@@ -591,8 +597,23 @@ if __name__ == "__main__":
         device = torch.device("cpu")
 
     # test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
-    test_data = torch.rand(batch_size, data_channels, frames + 1, height, width).to(device)
-    net = iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=debug).to(device)
+    # test_data = torch.rand(batch_size, data_channels, frames + 1, height, width).to(device)
+    np_data = np.load(data_path)
+    print("Chunk data shape", np_data.shape)
+    print("Min Max of input data:", np.min(np_data), np.max(np_data))
+    # exit()
+
+    test_data = np.transpose(np_data, (3, 0, 1, 2))
+    test_data = torch.from_numpy(test_data)
+    test_data = test_data.unsqueeze(0)
+
+    last_frame = torch.unsqueeze(test_data[:, :, -1, :, :], 2).repeat(1, 1, 1, 1, 1)
+    test_data = torch.cat((test_data, last_frame), 2)
+    test_data = test_data.to(torch.float32).to(device)
+    # print(test_data.shape)
+    # exit()
+    net = nn.DataParallel(iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=debug)).to(device)
+    net.load_state_dict(torch.load(ckpt_path, map_location=device))
     net.eval()
 
     if assess_latency:
@@ -612,6 +633,85 @@ if __name__ == "__main__":
     # print("-"*100)
     # print(net)
     # print("-"*100)
+
+    vox_embed = vox_embed.detach().numpy()
+    factorized_embed = factorized_embed.detach().numpy()
+
+    fig, ax = plt.subplots(9, 3, layout="tight")
+
+    frame = 0
+    ax[0, 0].imshow(np_data[frame, ...].astype(np.uint8))
+    ax[0, 0].axis('off')
+    ax[0, 1].imshow(vox_embed[0, 0, frame, :, :])
+    ax[0, 1].axis('off')
+    ax[0, 2].imshow(factorized_embed[0, 0, frame, :, :])
+    ax[0, 2].axis('off')
+
+    frame = 20
+    ax[1, 0].imshow(np_data[frame, ...].astype(np.uint8))
+    ax[1, 0].axis('off')
+    ax[1, 1].imshow(vox_embed[0, 0, frame//4, :, :])
+    ax[1, 1].axis('off')
+    ax[1, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
+    ax[1, 2].axis('off')
+
+    frame = 40
+    ax[2, 0].imshow(np_data[frame, ...].astype(np.uint8))
+    ax[2, 0].axis('off')
+    ax[2, 1].imshow(vox_embed[0, 0, frame//4, :, :])
+    ax[2, 1].axis('off')
+    ax[2, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
+    ax[2, 2].axis('off')
+
+    frame = 60
+    ax[3, 0].imshow(np_data[frame, ...].astype(np.uint8))
+    ax[3, 0].axis('off')
+    ax[3, 1].imshow(vox_embed[0, 0, frame//4, :, :])
+    ax[3, 1].axis('off')
+    ax[3, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
+    ax[3, 2].axis('off')
+
+    frame = 80
+    ax[4, 0].imshow(np_data[frame, ...].astype(np.uint8))
+    ax[4, 0].axis('off')
+    ax[4, 1].imshow(vox_embed[0, 0, frame//4, :, :])
+    ax[4, 1].axis('off')
+    ax[4, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
+    ax[4, 2].axis('off')
+
+    frame = 100
+    ax[5, 0].imshow(np_data[frame, ...].astype(np.uint8))
+    ax[5, 0].axis('off')
+    ax[5, 1].imshow(vox_embed[0, 0, frame//4, :, :])
+    ax[5, 1].axis('off')
+    ax[5, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
+    ax[5, 2].axis('off')
+
+    frame = 120
+    ax[6, 0].imshow(np_data[frame, ...].astype(np.uint8))
+    ax[6, 0].axis('off')
+    ax[6, 1].imshow(vox_embed[0, 0, frame//4, :, :])
+    ax[6, 1].axis('off')
+    ax[6, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
+    ax[6, 2].axis('off')
+
+    frame = 140
+    ax[7, 0].imshow(np_data[frame, ...].astype(np.uint8))
+    ax[7, 0].axis('off')
+    ax[7, 1].imshow(vox_embed[0, 0, frame//4, :, :])
+    ax[7, 1].axis('off')
+    ax[7, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
+    ax[7, 2].axis('off')
+
+    frame = 159
+    ax[8, 0].imshow(np_data[frame, ...].astype(np.uint8))
+    ax[8, 0].axis('off')
+    ax[8, 1].imshow(vox_embed[0, 0, frame//4, :, :])
+    ax[8, 1].axis('off')
+    ax[8, 2].imshow(factorized_embed[0, 0, frame//4, :, :])
+    ax[8, 2].axis('off')
+
+    plt.show()
 
     print("pred.shape", pred.shape)
 
