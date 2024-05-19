@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [16, 32, 32, 64, 64]
+nf = [16, 24, 32, 32, 32]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -92,7 +92,7 @@ class _MatrixDecompositionBase(nn.Module):
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
             D = T
             N = C * H * W // self.S
-            self.R = 8
+            self.R = 5
 
             # D = T * H * W // self.S
             # N = C
@@ -344,7 +344,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 8
+        mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
         MD_R = 8
 
@@ -473,21 +473,21 @@ class decoder_block(nn.Module):
             nn.ELU(),
 
             # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
-            nn.Dropout3d(p=dropout_rate),
+            # nn.Dropout3d(p=dropout_rate),
 
-            nn.ConvTranspose3d(nf[2], nf[2], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
-            nn.BatchNorm3d(nf[2]),
-            nn.ELU(),
-
-            nn.Conv3d(nf[2], nf[1], (1, 4, 4), stride=(1, 1, 1), padding=(0, 0, 0)),
+            nn.ConvTranspose3d(nf[2], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(nf[1]),
             nn.ELU(),
 
-            # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
-            nn.Dropout3d(p=dropout_rate),
+            nn.Conv3d(nf[1], nf[0], (3, 4, 4), stride=(1, 1, 1), padding=(1, 0, 0)),
+            nn.BatchNorm3d(nf[0]),
+            nn.ELU(),
 
             # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
-            nn.Conv3d(nf[1], 1, (1, 1, 1), (1, 1, 1), (0, 0, 0)),
+            # nn.Dropout3d(p=dropout_rate),
+
+            # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
+            nn.Conv3d(nf[0], 1, (5, 1, 1), (1, 1, 1), (2, 0, 0)),
         )
 
 
