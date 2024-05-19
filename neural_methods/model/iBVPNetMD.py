@@ -434,7 +434,6 @@ class encoder_block(nn.Module):
             # nn.MaxPool3d((2, 2, 2), stride=(2, 2, 2)),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[1], nf[1], [5, 1, 1], [1, 1, 1], [2, 0, 0]),
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
             # nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
@@ -446,9 +445,8 @@ class encoder_block(nn.Module):
             # nn.MaxPool3d((2, 2, 2), stride=(2, 1, 1)),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[3], nf[3], [5, 1, 1], [1, 1, 1], [2, 0, 0]),
-            ConvBlock3D(nf[3], nf[3], [3, 4, 4], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1])
+            ConvBlock3D(nf[3], nf[3], [2, 4, 4], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [4, 3, 3], [1, 1, 1], [1, 1, 1])
         )
 
     def forward(self, x):
