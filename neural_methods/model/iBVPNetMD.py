@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [16, 24, 32, 48, 64]
+nf = [16, 24, 32, 32, 32]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -92,7 +92,7 @@ class _MatrixDecompositionBase(nn.Module):
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
             D = T
             N = C * H * W // self.S
-            self.R = 10
+            self.R = max(8, min(D, N) // 8)
 
             # D = T * H * W // self.S
             # N = C
@@ -344,7 +344,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 8
+        mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
         MD_R = 8
 
@@ -388,8 +388,8 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.pre_conv_block(x)
         att = self.md_block(x)
         att = self.post_conv_block(att)
-        x = F.tanh(shortcut + torch.multiply(shortcut, att))
-        # x = F.tanh(torch.multiply(shortcut, att))
+        # x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        x = F.tanh(torch.multiply(shortcut, att))
 
         return x, att
 
@@ -445,8 +445,8 @@ class encoder_block(nn.Module):
             # nn.MaxPool3d((2, 2, 2), stride=(2, 1, 1)),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[3], nf[3], [2, 4, 4], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [4, 3, 3], [1, 1, 1], [1, 1, 1])
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 0, 0])
         )
 
     def forward(self, x):
@@ -470,7 +470,7 @@ class decoder_block(nn.Module):
             # nn.BatchNorm3d(nf[3]),
             # nn.ELU(),
             nn.Tanh(),
-            nn.Conv3d(nf[3], nf[2], (3, 3, 3), stride=(1, 2, 2), padding=(1, 1, 1)),
+            nn.Conv3d(nf[3], nf[2], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
             # nn.BatchNorm3d(nf[2]),
             # nn.ELU(),
             nn.Tanh(),
@@ -483,7 +483,7 @@ class decoder_block(nn.Module):
             # nn.ELU(),
             nn.Tanh(),
 
-            nn.Conv3d(nf[1], nf[0], (3, 4, 4), stride=(1, 1, 1), padding=(1, 0, 0)),
+            nn.Conv3d(nf[1], nf[0], (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
             # nn.BatchNorm3d(nf[0]),
             # nn.ELU(),
             nn.Tanh(),
