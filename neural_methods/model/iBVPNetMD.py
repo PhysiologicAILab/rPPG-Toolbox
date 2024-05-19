@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32, 48]
+nf = [8, 24, 32, 32, 32]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -92,7 +92,7 @@ class _MatrixDecompositionBase(nn.Module):
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
             D = T
             N = C * H * W // self.S
-            self.R = max(3, min(3, D//8, int(0.01 * N)))
+            # self.R = max(4, min(D//8, N // 32))
             # self.R = max(4, min(D, N) // 8)
 
             # D = T * H * W // self.S
@@ -307,14 +307,13 @@ class ConvBNReLU(nn.Module):
 
 
 class FeaturesFactorizationModule(nn.Module):
-    def __init__(self, device, in_c, debug=False):
+    def __init__(self, device, in_c, MD_R, debug=False):
         super().__init__()
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 8
+        mid_C = in_c // 4
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
-        MD_R = 8
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
@@ -356,8 +355,8 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.pre_conv_block(x)
         att = self.md_block(x)
         att = self.post_conv_block(att)
-        x = F.tanh(shortcut + torch.multiply(shortcut, att))
-        # x = F.tanh(torch.multiply(shortcut, att))
+        # x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        x = F.tanh(torch.multiply(shortcut, att))
 
         return x, att
 
@@ -472,7 +471,7 @@ class iBVPNetMD(nn.Module):
             print("Unsupported input channels")
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[4], debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=4, debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
