@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [16, 24, 32, 32, 32]
+nf = [8, 16, 24, 32, 40]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -92,7 +92,8 @@ class _MatrixDecompositionBase(nn.Module):
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
             D = T
             N = C * H * W // self.S
-            self.R = max(10, min(D, N) // 8)
+            self.R = max(4, min(D//8, int(0.01 * N)))
+            # self.R = max(4, min(D, N) // 8)
 
             # D = T * H * W // self.S
             # N = C
@@ -388,8 +389,8 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.pre_conv_block(x)
         att = self.md_block(x)
         att = self.post_conv_block(att)
-        # x = F.tanh(shortcut + torch.multiply(shortcut, att))
-        x = F.tanh(torch.multiply(shortcut, att))
+        x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        # x = F.tanh(torch.multiply(shortcut, att))
 
         return x, att
 
@@ -404,8 +405,6 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            # nn.BatchNorm3d(out_channel),
-            # nn.ELU(inplace=True)
             nn.Tanh()
         )
 
@@ -425,28 +424,23 @@ class encoder_block(nn.Module):
 
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
-            # nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
-
-            # ConvBlock3D(nf[0], nf[0], [5, 1, 1], [1, 1, 1], [2, 0, 0]),
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [3, 3, 3], [2, 2, 2], [1, 1, 1]),
-            # nn.MaxPool3d((2, 2, 2), stride=(2, 2, 2)),
+
+            ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
-            # nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
+            ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
-            # ConvBlock3D(nf[2], nf[2], [5, 1, 1], [1, 1, 1], [2, 0, 0]),
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [3, 3, 3], [2, 1, 1], [1, 1, 1]),
-            # nn.MaxPool3d((2, 2, 2), stride=(2, 1, 1)),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1])
+            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            nn.Dropout3d(p=dropout_rate)
         )
 
     def forward(self, x):
@@ -466,18 +460,17 @@ class decoder_block(nn.Module):
         # k_t = 3  # 3  # 5   #7
         # pad_t = 1  # 1  # 2   #3
         self.conv_decoder = nn.Sequential(
-            nn.ConvTranspose3d(nf[4], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.ConvTranspose3d(nf[4], nf[3], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.Tanh(),
-
-            nn.Conv3d(nf[1], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
+            nn.Dropout3d(p=dropout_rate),
+            nn.Conv3d(nf[3], nf[2], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
             nn.Tanh(),
-
-            nn.ConvTranspose3d(nf[0], nf[0], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.ConvTranspose3d(nf[2], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.Tanh(),
-
-            nn.Conv3d(nf[0], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
+            nn.Dropout3d(p=dropout_rate),
+            nn.Conv3d(nf[1], nf[0], (3, 4, 4), stride=(1, 1, 1), padding=(1, 0, 0)),
             nn.Tanh(),
-
+            nn.Dropout3d(p=dropout_rate),
             nn.Conv3d(nf[0], 1, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
         )
 

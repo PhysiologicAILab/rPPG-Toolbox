@@ -301,8 +301,8 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.md_block(x)
         x = self.post_conv_block(x)
 
-        # x = F.tanh(shortcut + torch.multiply(shortcut, x))
-        x = F.tanh(torch.multiply(shortcut, x))
+        x = F.tanh(shortcut + torch.multiply(shortcut, x))
+        # x = F.tanh(torch.multiply(shortcut, x))
 
         return x
 
@@ -438,12 +438,9 @@ class EfficientPhysFM(nn.Module):
         d5 = self.avg_pooling_2(d5)
         d5 = self.dropout_2(d5)
 
-        # print("d5.shape", d5.shape)
-        d5 = self.feature_factorizer(d5)
-
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
-        # print("d6.shape", d6.shape)
+        d6 = self.feature_factorizer(d6)
 
         d7 = self.avg_pooling_4(d6)
         d8 = self.dropout_3(d7)
