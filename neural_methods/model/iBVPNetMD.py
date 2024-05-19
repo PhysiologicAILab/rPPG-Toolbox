@@ -388,7 +388,7 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.pre_conv_block(x)
         att = self.md_block(x)
         att = self.post_conv_block(att)
-        x = F.elu(shortcut + torch.multiply(shortcut, att))
+        x = F.tanh(shortcut + torch.multiply(shortcut, att))
         # x = F.tanh(torch.multiply(shortcut, att))
 
         return x, att
@@ -405,7 +405,8 @@ class ConvBlock3D(nn.Module):
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
             nn.BatchNorm3d(out_channel),
-            nn.ELU(inplace=True)
+            # nn.ELU(inplace=True)
+            nn.Tanh()
         )
 
     def forward(self, x):
@@ -467,21 +468,25 @@ class decoder_block(nn.Module):
         self.conv_decoder = nn.Sequential(
             nn.ConvTranspose3d(nf[4], nf[3], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(nf[3]),
-            nn.ELU(),
+            # nn.ELU(),
+            nn.Tanh(),
             nn.Conv3d(nf[3], nf[2], (3, 3, 3), stride=(1, 2, 2), padding=(1, 1, 1)),
             nn.BatchNorm3d(nf[2]),
-            nn.ELU(),
+            # nn.ELU(),
+            nn.Tanh(),
 
             # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
             # nn.Dropout3d(p=dropout_rate),
 
             nn.ConvTranspose3d(nf[2], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
             nn.BatchNorm3d(nf[1]),
-            nn.ELU(),
+            # nn.ELU(),
+            nn.Tanh(),
 
             nn.Conv3d(nf[1], nf[0], (3, 4, 4), stride=(1, 1, 1), padding=(1, 0, 0)),
             nn.BatchNorm3d(nf[0]),
-            nn.ELU(),
+            # nn.ELU(),
+            nn.Tanh(),
 
             # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
             # nn.Dropout3d(p=dropout_rate),
