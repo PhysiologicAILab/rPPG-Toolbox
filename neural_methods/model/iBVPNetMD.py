@@ -434,19 +434,21 @@ class encoder_block(nn.Module):
             # nn.MaxPool3d((2, 2, 2), stride=(2, 2, 2)),
             nn.Dropout3d(p=dropout_rate),
 
+            ConvBlock3D(nf[1], nf[1], [5, 1, 1], [1, 1, 1], [2, 0, 0]),
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
             # nn.MaxPool3d((1, 2, 2), stride=(1, 2, 2)),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[2], nf[2], [5, 1, 1], [1, 1, 1], [2, 1, 1]),
+            ConvBlock3D(nf[2], nf[2], [5, 1, 1], [1, 1, 1], [2, 0, 0]),
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[2], nf[3], [3, 3, 3], [2, 1, 1], [1, 1, 1]),
             # nn.MaxPool3d((2, 2, 2), stride=(2, 1, 1)),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[3], nf[3], [2, 4, 4], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [4, 3, 3], [1, 1, 1], [1, 0, 0])
+            ConvBlock3D(nf[3], nf[3], [5, 1, 1], [1, 1, 1], [2, 0, 0]),
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 1, 1])
         )
 
     def forward(self, x):
@@ -483,7 +485,7 @@ class decoder_block(nn.Module):
             # nn.ELU(),
             nn.Tanh(),
 
-            nn.Conv3d(nf[1], nf[0], (3, 4, 4), stride=(1, 1, 1), padding=(1, 0, 0)),
+            nn.Conv3d(nf[1], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
             # nn.BatchNorm3d(nf[0]),
             # nn.ELU(),
             nn.Tanh(),
@@ -492,7 +494,7 @@ class decoder_block(nn.Module):
             # nn.Dropout3d(p=dropout_rate),
 
             # nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2)),
-            nn.Conv3d(nf[0], 1, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
+            nn.Conv3d(nf[0], 1, (3, 2, 2), (1, 1, 1), (1, 0, 0)),
         )
 
 
