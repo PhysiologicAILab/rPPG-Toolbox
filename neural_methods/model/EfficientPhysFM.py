@@ -115,11 +115,11 @@ class _MatrixDecompositionBase(nn.Module):
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
             # D = C * self.frame_depth
             # N = H * W
-            D = C #* self.frame_depth
-            N = H * W
-            # B = 1
+            D = BN #* self.frame_depth
+            N = C * H * W
+            B = 1
             # self.R = min(D, N) // max(C, self.frame_depth)   #since we need to have a rank lower than frame-depth and C
-            self.R = max(4, min(D, N) // 8)   #since we need to have a rank lower than frame-depth and C
+            self.R = max(8, min(D, N) // 8)   #since we need to have a rank lower than frame-depth and C
             x = x.view(B * self.S, D, N)
 
             # print("---")
@@ -234,7 +234,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c,
                  kernel_size=(1, 1), stride=(1, 1), padding='same',
-                 dilation=(1, 1), groups=1, act='relu', apply_bn=True):
+                 dilation=(1, 1), groups=1, act='relu', apply_bn=False):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -463,7 +463,7 @@ if __name__ == "__main__":
     # default `log_dir` is "runs" - we'll be more specific here
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
-    batch_size = 8
+    batch_size = 4
     frames = 20    #duration*fs
     in_channels = 3
     height = 72
