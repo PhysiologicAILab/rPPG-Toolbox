@@ -427,6 +427,7 @@ class EfficientPhysFM(nn.Module):
         d1 = torch.tanh(self.motion_conv1(network_input))
         d1 = self.TSM_2(d1)
         d2 = torch.tanh(self.motion_conv2(d1))
+        # print("d2.shape", d2.shape)
 
         d3 = self.avg_pooling_1(d2)
         d4 = self.dropout_1(d3)
@@ -437,10 +438,12 @@ class EfficientPhysFM(nn.Module):
         d5 = self.avg_pooling_2(d5)
         d5 = self.dropout_2(d5)
 
+        # print("d5.shape", d5.shape)
         d5 = self.feature_factorizer(d5)
 
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
+        # print("d6.shape", d6.shape)
 
         d7 = self.avg_pooling_4(d6)
         d8 = self.dropout_3(d7)
@@ -480,11 +483,11 @@ if __name__ == "__main__":
 
     # test_data = torch.rand(batch_size, frames, in_channels, height, width).to(device)
     test_data = torch.rand(batch_size, in_channels, frames, height, width).to(device)
-    print("Before: test_data.shape", test_data.shape)
+    print("test_data.shape", test_data.shape)
     labels = torch.rand(batch_size, frames)
-    print("org labels.shape", labels.shape)
+    # print("org labels.shape", labels.shape)
     labels = labels.view(-1, 1)
-    print("view labels.shape", labels.shape)
+    # print("view labels.shape", labels.shape)
 
     N, C, D, H, W = test_data.shape
     print(test_data.shape)
@@ -497,17 +500,17 @@ if __name__ == "__main__":
     test_data = torch.cat((test_data, last_frame), 0)
 
     labels = labels[:(N * D) // base_len * base_len]
-    print("s1 labels.shape", labels.shape)
+    # print("s1 labels.shape", labels.shape)
     last_sample = torch.unsqueeze(labels[-1, :], 0).repeat(num_of_gpu, 1)
-    print("s2 labels.shape", labels.shape)
+    # print("s2 labels.shape", labels.shape)
 
     labels = torch.cat((labels, last_sample), 0)
-    print("s3 labels.shape", labels.shape)
+    # print("s3 labels.shape", labels.shape)
     labels = torch.diff(labels, dim=0)
-    print("s4 labels.shape", labels.shape)
+    # print("s4 labels.shape", labels.shape)
     labels = labels / torch.std(labels)  # normalize
     labels[torch.isnan(labels)] = 0
-    print("s5 labels.shape", labels.shape)
+    # print("s5 labels.shape", labels.shape)
 
     # print("After: test_data.shape", test_data.shape)
     # exit()
