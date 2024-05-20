@@ -363,10 +363,10 @@ class EfficientPhysFM(nn.Module):
                                   bias=True)
         self.motion_conv4 = nn.Conv2d(self.nb_filters2, self.nb_filters2, kernel_size=self.kernel_size, bias=True)
 
-        self.feature_factorizer_1 = FeaturesFactorizationModule(
-            self.device, frame_depth, batch_size, self.nb_filters1, MD_R=20)
+        # self.feature_factorizer_1 = FeaturesFactorizationModule(
+        #     self.device, frame_depth, batch_size, self.nb_filters1, MD_R=20)
         self.feature_factorizer_2 = FeaturesFactorizationModule(
-            self.device, frame_depth, batch_size, self.nb_filters2, MD_R=5)
+            self.device, frame_depth, batch_size, self.nb_filters2, MD_R=4)
 
         # Avg pooling
         self.avg_pooling_1 = nn.AvgPool2d(self.pool_size)
@@ -382,8 +382,8 @@ class EfficientPhysFM(nn.Module):
         if img_size == 36:
             self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
         elif img_size == 72:
-            # self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
-            self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
+            self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
+            # self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
             # self.final_dense_1 = nn.Linear(576, self.nb_dense, bias=True)
         elif img_size == 96:
             self.final_dense_1 = nn.Linear(30976, self.nb_dense, bias=True)
@@ -432,7 +432,7 @@ class EfficientPhysFM(nn.Module):
         d2 = torch.tanh(self.motion_conv2(d1))
         # print("d2.shape", d2.shape)
 
-        d2 = self.feature_factorizer_1(d2)
+        # d2 = self.feature_factorizer_1(d2)
 
         d3 = self.avg_pooling_1(d2)
         d4 = self.dropout_1(d3)
@@ -440,8 +440,8 @@ class EfficientPhysFM(nn.Module):
         d4 = self.TSM_3(d4)
         d5 = torch.tanh(self.motion_conv3(d4))
 
-        d5 = self.avg_pooling_2(d5)
-        d5 = self.dropout_2(d5)
+        # d5 = self.avg_pooling_2(d5)
+        # d5 = self.dropout_2(d5)
 
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
