@@ -277,7 +277,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c,
                  kernel_size=(1, 1, 1), stride=(1, 1, 1), padding='same',
-                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=False):
+                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=True):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -355,7 +355,7 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.pre_conv_block(x)
         att = self.md_block(x)
         att = self.post_conv_block(att)
-        x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        x = F.relu(shortcut + torch.multiply(shortcut, att))
         # x = F.tanh(torch.multiply(shortcut, att))
 
         return x, att
@@ -371,7 +371,8 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            nn.Tanh()
+            nn.BatchNorm3d(out_channel),
+            nn.ReLU()
         )
 
     def forward(self, x):
@@ -427,16 +428,27 @@ class decoder_block(nn.Module):
         # pad_t = 1  # 1  # 2   #3
         self.conv_decoder = nn.Sequential(
             nn.ConvTranspose3d(nf[4], nf[3], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
-            nn.Tanh(),
+            nn.BatchNorm3d(nf[3]),
+            nn.ReLU(),
+
             nn.Dropout3d(p=dropout_rate),
+
             nn.Conv3d(nf[3], nf[2], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            nn.Tanh(),
+            nn.BatchNorm3d(nf[2]),
+            nn.ReLU(),
+
             nn.ConvTranspose3d(nf[2], nf[1], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
-            nn.Tanh(),
+            nn.BatchNorm3d(nf[1]),
+            nn.ReLU(),
+
             nn.Dropout3d(p=dropout_rate),
+            
             nn.Conv3d(nf[1], nf[0], (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
-            nn.Tanh(),
+            nn.BatchNorm3d(nf[0]),
+            nn.ReLU(),
+
             nn.Dropout3d(p=dropout_rate),
+            
             nn.Conv3d(nf[0], 1, (3, 1, 1), (1, 1, 1), (1, 0, 0)),
         )
 
