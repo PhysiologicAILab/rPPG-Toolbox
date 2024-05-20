@@ -109,24 +109,24 @@ class _MatrixDecompositionBase(nn.Module):
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             BN, C, H, W = x.shape
-            # print("BN, C, H, W", BN, C, H, W)
+            print("BN, C, H, W", BN, C, H, W)
             B = BN // self.frame_depth
             # D = C * H * W // self.S  # self.frame_depth  # C * H * W // self.S
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
             # D = C * self.frame_depth
             # N = H * W
-            D = C * self.frame_depth
-            N = H * W
+            D = self.frame_depth
+            N = C * H * W
             # B = 1
             # self.R = min(D, N) // max(C, self.frame_depth)   #since we need to have a rank lower than frame-depth and C
             # self.R = min(D, N) // 8   #since we need to have a rank lower than frame-depth and C
             x = x.view(B * self.S, D, N)
 
-            # print("---")
-            # print("D", D)
-            # print("R", self.R)
-            # print("N", N)
-            # print("x.shape", x.shape)
+            print("---")
+            print("D", D)
+            print("R", self.R)
+            print("N", N)
+            print("x.shape", x.shape)
 
         else:                       # (B, C, L) -> (B * S, D, N)
             B, C, L = x.shape
@@ -382,9 +382,9 @@ class EfficientPhysFM(nn.Module):
         if img_size == 36:
             self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
         elif img_size == 72:
-            self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
+            # self.final_dense_1 = nn.Linear(16384, self.nb_dense, bias=True)
             # self.final_dense_1 = nn.Linear(3136, self.nb_dense, bias=True)
-            # self.final_dense_1 = nn.Linear(576, self.nb_dense, bias=True)
+            self.final_dense_1 = nn.Linear(576, self.nb_dense, bias=True)
         elif img_size == 96:
             self.final_dense_1 = nn.Linear(30976, self.nb_dense, bias=True)
         else:
@@ -440,11 +440,14 @@ class EfficientPhysFM(nn.Module):
         d4 = self.TSM_3(d4)
         d5 = torch.tanh(self.motion_conv3(d4))
 
-        # d5 = self.avg_pooling_2(d5)
-        # d5 = self.dropout_2(d5)
+        d5 = self.avg_pooling_2(d5)
+        d5 = self.dropout_2(d5)
 
         d5 = self.TSM_4(d5)
         d6 = torch.tanh(self.motion_conv4(d5))
+
+        d6 = self.avg_pooling_3(d6)
+        d6 = self.dropout_3(d6)
 
         d6 = self.feature_factorizer_2(d6)
 
@@ -470,7 +473,7 @@ if __name__ == "__main__":
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
     batch_size = 4
-    frames = 20    #duration*fs
+    frames = 40    #duration*fs
     in_channels = 3
     height = 72
     width = 72
