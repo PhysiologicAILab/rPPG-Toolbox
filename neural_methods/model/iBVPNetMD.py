@@ -355,8 +355,8 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.pre_conv_block(x)
         att = self.md_block(x)
         att = self.post_conv_block(att)
-        # x = F.tanh(shortcut + torch.multiply(shortcut, att))
-        x = F.tanh(torch.multiply(shortcut, att))
+        x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        # x = F.tanh(torch.multiply(shortcut, att))
 
         return x, att
 
@@ -384,8 +384,8 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 5  # 3  # 5   #7
-        pad_t = 2  # 1  # 2   #3
+        k_t = 3  # 3  # 5   #7
+        pad_t = 1  # 1  # 2   #3
         self.debug = debug
 
         self.encoder = nn.Sequential(
@@ -471,7 +471,7 @@ class iBVPNetMD(nn.Module):
             print("Unsupported input channels")
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=4, debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=1, debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         

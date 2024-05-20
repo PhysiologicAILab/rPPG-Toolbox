@@ -301,8 +301,8 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.md_block(x)
         x = self.post_conv_block(x)
 
-        # x = F.tanh(shortcut + torch.multiply(shortcut, x))
-        x = F.tanh(torch.multiply(shortcut, x))
+        x = F.tanh(shortcut + torch.multiply(shortcut, x))
+        # x = F.tanh(torch.multiply(shortcut, x))
 
         return x
 
@@ -366,7 +366,7 @@ class EfficientPhysFM(nn.Module):
         # self.feature_factorizer_1 = FeaturesFactorizationModule(
         #     self.device, frame_depth, batch_size, self.nb_filters1, MD_R=20)
         self.feature_factorizer_2 = FeaturesFactorizationModule(
-            self.device, frame_depth, batch_size, self.nb_filters2, MD_R=4)
+            self.device, frame_depth, batch_size, self.nb_filters2, MD_R=1)
 
         # Avg pooling
         self.avg_pooling_1 = nn.AvgPool2d(self.pool_size)
