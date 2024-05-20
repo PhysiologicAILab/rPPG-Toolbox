@@ -392,15 +392,15 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
 
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [2, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -425,20 +425,8 @@ class decoder_block(nn.Module):
         # k_t = 3  # 3  # 5   #7
         # pad_t = 1  # 1  # 2   #3
         self.conv_decoder = nn.Sequential(
-            nn.ConvTranspose3d(nf[4], nf[3], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
-            nn.Tanh(),
 
-            nn.Dropout3d(p=dropout_rate),
-
-            nn.ConvTranspose3d(nf[3], nf[2], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
-            nn.Tanh(),
-
-            nn.Dropout3d(p=dropout_rate),
-
-            nn.Conv3d(nf[2], nf[1], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            nn.Tanh(),
-
-            nn.ConvTranspose3d(nf[1], nf[0], (4, 1, 1), (2, 1, 1), (1, 0, 0)),
+            nn.Conv3d(nf[4], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
             nn.Tanh(),
 
             nn.Dropout3d(p=dropout_rate),
