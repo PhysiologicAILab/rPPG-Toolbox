@@ -109,14 +109,14 @@ class _MatrixDecompositionBase(nn.Module):
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             BN, C, H, W = x.shape
-            # print("BN, C, H, W", BN, C, H, W)
-            B = BN // self.frame_depth
+            print("BN, C, H, W", BN, C, H, W)
+            B = BN #// self.frame_depth
             # D = C * H * W // self.S  # self.frame_depth  # C * H * W // self.S
             # N = self.frame_depth  # C * H * W // self.S  # self.frame_depth
             # D = C * self.frame_depth
             # N = H * W
-            D = self.frame_depth
-            N = C * H * W
+            D = C   #self.frame_depth
+            N = H * W
             # B = 1
             # self.R = min(D, N) // max(C, self.frame_depth)   #since we need to have a rank lower than frame-depth and C
             # self.R = min(D, N) // 8   #since we need to have a rank lower than frame-depth and C
@@ -473,7 +473,7 @@ if __name__ == "__main__":
     # writer = SummaryWriter('runs/EfficientPhysFM')
 
     batch_size = 4
-    frames = 40    #duration*fs
+    frames = 20    #duration*fs
     in_channels = 3
     height = 72
     width = 72
