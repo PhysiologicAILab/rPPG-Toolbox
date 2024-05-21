@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 24, 24]
+nf = [8, 8, 8, 8, 8]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -312,7 +312,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 3
+        mid_C = in_c    #// 3
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
 
         if "nmf" in md_type.lower():
@@ -333,7 +333,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.post_conv_block = nn.Sequential(
             ConvBNReLU(mid_C, mid_C, kernel_size=(1, 1, 1)),
-            nn.Conv3d(mid_C, in_c, (1, 1, 1), bias=False)
+            # nn.Conv3d(mid_C, in_c, (1, 1, 1), bias=False)
         )
         self.shortcut = nn.Sequential()
         self._init_weight()
@@ -465,7 +465,7 @@ class iBVPNetMD(nn.Module):
             print("Unsupported input channels")
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=4, debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=1, debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
