@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: iBVP_iBVP_EfficientPhysFM_V12_FD40
+  MODEL_FILE_NAME: iBVP_iBVP_EfficientPhysFM_FSAM_FD20_V14
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -97,7 +97,7 @@ TEST:
       RESIZE:
         H: 72
         W: 72
-DEVICE: cuda:3
+DEVICE: cuda:0
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
@@ -106,7 +106,7 @@ MODEL:
   NAME: EfficientPhysFM
   EFFICIENTPHYS:
     CHANNELS: 3
-    FRAME_DEPTH: 40
+    FRAME_DEPTH: 20
 INFERENCE:
   BATCH_SIZE: 4
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
