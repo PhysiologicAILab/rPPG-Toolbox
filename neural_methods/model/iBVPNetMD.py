@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 24, 32, 48, 64]
+nf = [8, 16, 16, 16, 16]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -312,7 +312,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 8
+        mid_C = in_c #// 8
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
 
         if "nmf" in md_type.lower():
@@ -400,7 +400,7 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -426,11 +426,14 @@ class decoder_block(nn.Module):
         # pad_t = 1  # 1  # 2   #3
         self.conv_decoder = nn.Sequential(
 
-            nn.Conv3d(nf[4], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
+            nn.Conv3d(nf[4], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 1, 1)),
             nn.Tanh(),
-
             nn.Dropout3d(p=dropout_rate),
-            
+
+            nn.Conv3d(nf[0], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
+            nn.Tanh(),
+            nn.Dropout3d(p=dropout_rate),            
+
             nn.Conv3d(nf[0], 1, (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
         )
 
