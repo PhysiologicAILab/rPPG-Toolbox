@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 16, 16, 16]
+nf = [8, 8, 8, 8, 8]
 
 model_config = {
     "INPUT_CHANNELS": 1,
@@ -400,7 +400,7 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -426,11 +426,11 @@ class decoder_block(nn.Module):
         # pad_t = 1  # 1  # 2   #3
         self.conv_decoder = nn.Sequential(
 
-            nn.Conv3d(nf[4], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 1, 1)),
-            nn.Tanh(),
-            nn.Dropout3d(p=dropout_rate),
+            # nn.Conv3d(nf[4], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 1, 1)),
+            # nn.Tanh(),
+            # nn.Dropout3d(p=dropout_rate),
 
-            nn.Conv3d(nf[0], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
+            nn.Conv3d(nf[4], nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),            
 
@@ -468,7 +468,7 @@ class iBVPNetMD(nn.Module):
             print("Unsupported input channels")
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=2, debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=4, debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
