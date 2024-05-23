@@ -9,7 +9,7 @@ TRAIN:
   DATA:
     FS: 30
     DATASET: SCAMPS
-    DO_PREPROCESS: True               # if first time, should be true
+    DO_PREPROCESS: False               # if first time, should be true
     DATA_FORMAT: NDCHW
     DATA_PATH: "/mnt/sda/data/jitesh/SCAMPS/scamps_videos"          # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/SCAMPS"    # Processed dataset save path, need to be updated
@@ -37,7 +37,7 @@ VALID:
   DATA:
     FS: 30
     DATASET: SCAMPS
-    DO_PREPROCESS: True               # if first time, should be true
+    DO_PREPROCESS: False               # if first time, should be true
     DATA_FORMAT: NDCHW
     DATA_PATH: "/mnt/sda/data/jitesh/SCAMPS/scamps_videos"          # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/SCAMPS"    # Processed dataset save path, need to be updated
@@ -67,7 +67,7 @@ TEST:
   DATA:
     FS: 30
     DATASET: UBFC-rPPG
-    DO_PREPROCESS: True                    # if first time, should be true
+    DO_PREPROCESS: False                    # if first time, should be true
     DATA_FORMAT: NDCHW
     DATA_PATH: "/mnt/sda/data/jitesh/UBFC-rPPG/data/"                     # Raw dataset path, need to be updated
     CACHED_PATH: "/home/jitesh/data/UBFC-rPPG/"    # Processed dataset save path, need to be updated
@@ -103,7 +103,7 @@ MODEL:
     FRAME_DEPTH: 20
 INFERENCE:
   BATCH_SIZE: 4
-  EVALUATION_METHOD: FFT        # "FFT" or "peak detection"
+  EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
