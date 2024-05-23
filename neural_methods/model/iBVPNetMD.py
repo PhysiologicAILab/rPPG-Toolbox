@@ -18,8 +18,8 @@ nf = [8, 8, 8, 8, 8]
 model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
-    "TRAIN_STEPS": 20,
-    "EVAL_STEPS": 20,
+    "TRAIN_STEPS": 30,
+    "EVAL_STEPS": 30,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -392,7 +392,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
 
             ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
@@ -404,7 +404,7 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
+            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 2, 2], [1, 0, 0]),
             nn.Dropout3d(p=dropout_rate)
         )
 
@@ -468,7 +468,7 @@ class iBVPNetMD(nn.Module):
             print("Unsupported input channels")
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=4, debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=1, debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
