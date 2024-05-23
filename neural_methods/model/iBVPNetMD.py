@@ -18,8 +18,8 @@ nf = [8, 16, 16, 16, 16]
 model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 1,
-    "TRAIN_STEPS": 6,
-    "EVAL_STEPS": 6,
+    "TRAIN_STEPS": 1,
+    "EVAL_STEPS": 1,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -468,7 +468,7 @@ class iBVPNetMD(nn.Module):
             print("Unsupported input channels")
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=8, debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=1, debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
