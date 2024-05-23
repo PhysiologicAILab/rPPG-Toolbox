@@ -1,7 +1,7 @@
 BASE: ['']
 TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test"
 TRAIN:
-  BATCH_SIZE: 8
+  BATCH_SIZE: 4
   EPOCHS: 50
   LR: 1e-3
   MODEL_FILE_NAME: iBVP_iBVP_iBVP_iBVPNetMD_FactorizePhys_T_v34_R4_S30
