@@ -476,7 +476,10 @@ class iBVPNetMD(nn.Module):
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
         [batch, channel, length, width, height] = x.shape
-        x = torch.diff(x, dim=2)
+        if self.in_channels == 1:
+            x = x[:, :, :-1, :, :]
+        else:
+            x = torch.diff(x, dim=2)
 
         if self.debug:
             print("Input.shape", x.shape)
@@ -546,8 +549,8 @@ if __name__ == "__main__":
     # fs = 25
     batch_size = 2
     frames = 160    #duration*fs
-    in_channels = 3
-    data_channels = 3
+    in_channels = 1
+    data_channels = 1
     height = 72
     width = 72
     debug = True
