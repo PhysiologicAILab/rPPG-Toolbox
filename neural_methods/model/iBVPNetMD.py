@@ -13,11 +13,11 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 8, 8, 8, 8]
+nf = [8, 16, 16, 16, 16]
 
 model_config = {
     "INPUT_CHANNELS": 1,
-    "MD_S": 4,
+    "MD_S": 2,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -313,7 +313,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c #// 8
+        mid_C = 8   #in_c // 2 #// 8
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
 
         if "nmf" in md_type.lower():
@@ -334,7 +334,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.post_conv_block = nn.Sequential(
             ConvBNReLU(mid_C, mid_C, kernel_size=(1, 1, 1)),
-            # nn.Conv3d(mid_C, in_c, (1, 1, 1), bias=False)
+            nn.Conv3d(mid_C, in_c, (1, 1, 1), bias=False)
         )
         self.shortcut = nn.Sequential()
         self._init_weight()
