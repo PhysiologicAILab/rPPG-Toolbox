@@ -10,6 +10,9 @@ from unsupervised_methods.methods.POS_WANG import *
 from unsupervised_methods.methods.OMIT import *
 from tqdm import tqdm
 from evaluation.BlandAltmanPy import BlandAltman
+import torch
+import torch.nn.functional as F
+
 
 def unsupervised_predict(config, data_loader, method_name):
     """ Model evaluation on the testing dataset."""
@@ -26,8 +29,20 @@ def unsupervised_predict(config, data_loader, method_name):
     for _, test_batch in enumerate(sbar):
         batch_size = test_batch[0].shape[0]
         for idx in range(batch_size):
-            data_input, labels_input = test_batch[0][idx].cpu().numpy(), test_batch[1][idx].cpu().numpy()
-            data_input = data_input[..., :3]    #to handle iBVP dataset that can be stored as RGBT instead of RGB
+            
+            data_input = test_batch[0][idx][..., :3]    #to handle iBVP dataset that can be stored as RGBT instead of RGB
+
+            data_input = torch.permute(data_input, [0, 3, 1, 2])
+            n_chans = data_input.shape[1]
+            reshaped_inp = data_input.permute(1,0,2,3).contiguous().view(n_chans, -1) # shape (C, N*W*H)
+            mu = reshaped_inp.mean(-1)
+            stddev = reshaped_inp.std(-1)
+            data_input = F.batch_norm(data_input, mu, stddev, training=False)
+            data_input = data_input.permute((0, 2, 3, 1))
+
+            data_input = data_input.cpu().numpy()
+            labels_input = test_batch[1][idx].cpu().numpy()
+
             if method_name == "POS":
                 BVP = POS_WANG(data_input, config.UNSUPERVISED.DATA.FS)
             elif method_name == "CHROM":
