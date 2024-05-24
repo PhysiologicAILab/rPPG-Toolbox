@@ -17,9 +17,9 @@ nf = [8, 8, 8, 8, 8]
 
 model_config = {
     "INPUT_CHANNELS": 1,
-    "MD_S": 1,
-    "TRAIN_STEPS": 30,
-    "EVAL_STEPS": 30,
+    "MD_S": 4,
+    "TRAIN_STEPS": 6,
+    "EVAL_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -90,8 +90,8 @@ class _MatrixDecompositionBase(nn.Module):
 
             # # dimension of vector of our interest is T (rPPG signal as T dimension), so forming this as vector
             # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
-            D = T
-            N = C * H * W // self.S
+            D = T // self.S
+            N = C * H * W 
             # self.R = max(4, min(D//8, N // 32))
             # self.R = max(4, min(D, N) // 8)
 
@@ -108,10 +108,11 @@ class _MatrixDecompositionBase(nn.Module):
 
             if self.debug:
                 print("C, T, H, W", C, T, H, W)
-                print("D", D)
-                print("R", self.R)
-                print("N", N)
-                print("x.shape", x.shape)
+                print("MD_D", D)
+                print("MD_S", self.S)
+                print("MD_R", self.R)
+                print("MD_N", N)
+                print("x.view(B * self.S, D, N)", x.shape)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             B, C, H, W = x.shape
@@ -468,7 +469,7 @@ class iBVPNetMD(nn.Module):
             print("Unsupported input channels")
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=4, debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=1, debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
