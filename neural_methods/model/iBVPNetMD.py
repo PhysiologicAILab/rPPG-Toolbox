@@ -17,7 +17,7 @@ nf = [8, 8, 8, 8, 8]
 
 model_config = {
     "INPUT_CHANNELS": 1,
-    "MD_S": 8,
+    "MD_S": 4,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -552,8 +552,8 @@ if __name__ == "__main__":
     # fs = 25
     batch_size = 2
     frames = 160    #duration*fs
-    in_channels = 1
-    data_channels = 1
+    in_channels = 3
+    data_channels = 4
     height = 72
     width = 72
     debug = True
