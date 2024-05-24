@@ -17,7 +17,7 @@ nf = [8, 8, 8, 8, 8]
 
 model_config = {
     "INPUT_CHANNELS": 1,
-    "MD_S": 4,
+    "MD_S": 16,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -551,8 +551,8 @@ if __name__ == "__main__":
     height = 72
     width = 72
     debug = True
-    assess_latency = False
-    # assess_latency = True
+    # assess_latency = False
+    assess_latency = True
     visualize = False
 
     if torch.cuda.is_available():
