@@ -17,7 +17,7 @@ nf = [8, 8, 8, 8, 8]
 
 model_config = {
     "INPUT_CHANNELS": 1,
-    "MD_S": 16,
+    "MD_S": 8,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -334,7 +334,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.post_conv_block = nn.Sequential(
             ConvBNReLU(mid_C, mid_C, kernel_size=(1, 1, 1)),
-            nn.Conv3d(mid_C, in_c, (1, 1, 1), bias=False)
+            # nn.Conv3d(mid_C, in_c, (1, 1, 1), bias=False)
         )
         self.shortcut = nn.Sequential()
         self._init_weight()
@@ -551,8 +551,8 @@ if __name__ == "__main__":
     height = 72
     width = 72
     debug = True
-    # assess_latency = False
-    assess_latency = True
+    assess_latency = False
+    # assess_latency = True
     visualize = False
 
     if torch.cuda.is_available():
