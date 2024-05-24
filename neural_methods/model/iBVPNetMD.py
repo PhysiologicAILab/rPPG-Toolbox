@@ -13,11 +13,11 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 16, 16, 16]
+nf = [8, 8, 8, 8, 8]
 
 model_config = {
     "INPUT_CHANNELS": 1,
-    "MD_S": 4,
+    "MD_S": 8,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
@@ -313,7 +313,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = 8   #in_c // 2 #// 8
+        mid_C = in_c // 2 #// 8
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
 
         if "nmf" in md_type.lower():
@@ -476,10 +476,13 @@ class iBVPNetMD(nn.Module):
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
         
         [batch, channel, length, width, height] = x.shape
-        if self.in_channels == 1:
-            x = x[:, :, :-1, :, :]
-        else:
-            x = torch.diff(x, dim=2)
+        
+        # if self.in_channels == 1:
+        #     x = x[:, :, :-1, :, :]
+        # else:
+        #     x = torch.diff(x, dim=2)
+        
+        x = torch.diff(x, dim=2)
 
         if self.debug:
             print("Input.shape", x.shape)
