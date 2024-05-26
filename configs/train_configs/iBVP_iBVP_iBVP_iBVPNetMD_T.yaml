@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 40
   LR: 1e-4
-  MODEL_FILE_NAME: iBVP_iBVP_iBVP_iBVPNetMD_FactorizePhys_v43_R1_S4_ST1_LR1e-4
+  MODEL_FILE_NAME: iBVP_iBVP_iBVP_iBVPNetMD_FactorizePhys_T_v44_R1_S8_ST20_LR1e-4
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -115,4 +115,5 @@ INFERENCE:
   EVALUATION_WINDOW:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 30        # In seconds
-  MODEL_PATH: "./final_model_release/iBVP_iBVPNetMD_T.pth"
+  # MODEL_PATH: "./runs/exp/iBVP_RGBT_160_72x72/PreTrainedModels/iBVP_iBVP_iBVP_iBVPNetMD_FactorizePhys_v43_R1_S4_ST1_LR1e-4_Epoch29.pth"
+  MODEL_PATH: "./runs/exp/iBVP_RGBT_160_72x72/PreTrainedModels/iBVP_iBVP_iBVP_iBVPNetMD_FactorizePhys_v43_R1_S4_ST1_LR1e-4_Epoch39.pth"

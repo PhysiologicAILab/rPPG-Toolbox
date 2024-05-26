@@ -13,13 +13,13 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 16, 24, 32]
+nf = [8, 8, 8, 16, 16]
 
 model_config = {
     "INPUT_CHANNELS": 1,
-    "MD_S": 4,
-    "TRAIN_STEPS": 1,
-    "EVAL_STEPS": 1,
+    "MD_S": 8,
+    "TRAIN_STEPS": 20,
+    "EVAL_STEPS": 20,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -112,6 +112,8 @@ class _MatrixDecompositionBase(nn.Module):
                 print("MD_S", self.S)
                 print("MD_R", self.R)
                 print("MD_N", N)
+                print("MD_TRAIN_STEPS", self.train_steps)
+                print("MD_EVAL_STEPS", self.eval_steps)
                 print("x.view(B * self.S, D, N)", x.shape)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
@@ -313,7 +315,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 4
+        mid_C = in_c // 2
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
 
         if "nmf" in md_type.lower():
