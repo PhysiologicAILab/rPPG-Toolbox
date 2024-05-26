@@ -18,8 +18,8 @@ nf = [8, 16, 16, 24, 32]
 model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 4,
-    "TRAIN_STEPS": 10,
-    "EVAL_STEPS": 10,
+    "TRAIN_STEPS": 1,
+    "EVAL_STEPS": 1,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -435,10 +435,7 @@ class decoder_block(nn.Module):
             nn.Tanh(),
             nn.Dropout3d(p=dropout_rate),            
 
-            nn.Conv3d(nf[0], nf[0], (1, 3, 3), stride=(1, 1, 1), padding=(0, 0, 0)),
-            nn.Tanh(),
-
-            nn.Conv3d(nf[0], 1, (3, 1, 1), stride=(1, 1, 1), padding=(1, 0, 0)),
+            nn.Conv3d(nf[0], 1, (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
         )
 
 
