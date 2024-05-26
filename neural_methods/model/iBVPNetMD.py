@@ -17,7 +17,7 @@ nf = [8, 16, 16, 24, 32]
 
 model_config = {
     "INPUT_CHANNELS": 1,
-    "MD_S": 1,
+    "MD_S": 4,
     "TRAIN_STEPS": 10,
     "EVAL_STEPS": 10,
     "INV_T": 1,
