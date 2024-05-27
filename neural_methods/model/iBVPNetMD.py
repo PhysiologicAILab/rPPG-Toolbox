@@ -471,7 +471,7 @@ class iBVPNetMD(nn.Module):
             print("Unsupported input channels")
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=2, debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=8, debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
