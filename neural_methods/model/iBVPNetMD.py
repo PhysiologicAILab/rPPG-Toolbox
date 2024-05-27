@@ -554,13 +554,13 @@ if __name__ == "__main__":
     # fs = 25
     batch_size = 2
     frames = 160    #duration*fs
-    in_channels = 1
+    in_channels = 3
     data_channels = 4
     height = 72
     width = 72
-    debug = True
-    assess_latency = False
-    # assess_latency = True
+    debug = False
+    # assess_latency = False
+    assess_latency = True
     num_trials = 20
     visualize = False
 
