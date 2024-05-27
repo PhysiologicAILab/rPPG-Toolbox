@@ -18,8 +18,8 @@ nf = [8, 8, 8, 8, 8]
 model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 8,
-    "TRAIN_STEPS": 10,
-    "EVAL_STEPS": 10,
+    "TRAIN_STEPS": 8,
+    "EVAL_STEPS": 8,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -315,7 +315,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 2 #// 8
+        mid_C = in_c // 1    #// 2 #// 8
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
 
         if "nmf" in md_type.lower():
