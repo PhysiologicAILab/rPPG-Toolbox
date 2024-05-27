@@ -18,8 +18,8 @@ nf = [8, 8, 8, 16, 16]
 model_config = {
     "INPUT_CHANNELS": 1,
     "MD_S": 8,
-    "TRAIN_STEPS": 20,
-    "EVAL_STEPS": 20,
+    "TRAIN_STEPS": 2,
+    "EVAL_STEPS": 2,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,

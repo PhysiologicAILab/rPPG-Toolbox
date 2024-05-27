@@ -2,9 +2,9 @@ BASE: ['']
 TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test"
 TRAIN:
   BATCH_SIZE: 4
-  EPOCHS: 40
+  EPOCHS: 30
   LR: 1e-4
-  MODEL_FILE_NAME: UBFC_UBFC_PURE_iBVPNetMD_v44_R1_S8_ST20_LR1e-4
+  MODEL_FILE_NAME: UBFC_UBFC_PURE_iBVPNetMD_v44_R1_S8_ST2_LR1e-4
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
