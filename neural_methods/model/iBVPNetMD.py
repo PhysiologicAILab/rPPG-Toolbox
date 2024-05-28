@@ -16,23 +16,36 @@ import numpy as np
 nf = [8, 8, 8, 8, 8]
 
 model_config = {
-    "INPUT_CHANNELS": 1,
-    "MD_S": 8,
-    "TRAIN_STEPS": 5,
-    "EVAL_STEPS": 5,
+    "MD_S": 4,
+    "MD_R": 8,
+    "TRAIN_STEPS": 6,
+    "EVAL_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
-    "MD_TYPE": "NMF"
+    "MD_TYPE": "NMF",
+    "in_channels": 3,
+    "data_channels": 4,
+    "height": 72,
+    "weight": 72,
+    "batch_size": 2,
+    "frames": 160,
+    "debug": True,
+    "assess_latency": False,
+    "num_trials": 20,
+    "visualize": False,
+    "ckpt_path": "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch26.pth",
+    "data_path": "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/1003_input13.npy",
+    "label_path": "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/1003_label3.npy"
 }
 
 class _MatrixDecompositionBase(nn.Module):
-    def __init__(self, device, MD_R, debug=False, dim="3D"):
+    def __init__(self, device, debug=False, dim="3D"):
         super().__init__()
 
         self.dim = dim
         self.S = model_config["MD_S"]
-        self.R = MD_R
+        self.R = model_config["MD_R"]
         self.debug = debug
 
         self.train_steps = model_config["TRAIN_STEPS"]
@@ -108,10 +121,10 @@ class _MatrixDecompositionBase(nn.Module):
 
             if self.debug:
                 print("C, T, H, W", C, T, H, W)
-                print("MD_D", D)
                 print("MD_S", self.S)
-                print("MD_R", self.R)
+                print("MD_D", D)
                 print("MD_N", N)
+                print("MD_R", self.R)
                 print("MD_TRAIN_STEPS", self.train_steps)
                 print("MD_EVAL_STEPS", self.eval_steps)
                 print("x.view(B * self.S, D, N)", x.shape)
@@ -176,8 +189,8 @@ class _MatrixDecompositionBase(nn.Module):
 
 
 class NMF(_MatrixDecompositionBase):
-    def __init__(self, device, MD_R, debug=False, dim="3D"):
-        super().__init__(device, MD_R, debug=debug, dim=dim)
+    def __init__(self, device, debug=False, dim="3D"):
+        super().__init__(device, debug=debug, dim=dim)
         self.device = device
         self.inv_t = 1
 
@@ -217,8 +230,8 @@ class NMF(_MatrixDecompositionBase):
 
 
 class VQ(_MatrixDecompositionBase):
-    def __init__(self, device, MD_R, debug=False, dim="3D"):
-        super().__init__(device, MD_R, debug=debug, dim=dim)
+    def __init__(self, device, debug=False, dim="3D"):
+        super().__init__(device, debug=debug, dim=dim)
         self.device = device
 
     def _build_bases(self, B, S, D, R):
@@ -310,7 +323,7 @@ class ConvBNReLU(nn.Module):
 
 
 class FeaturesFactorizationModule(nn.Module):
-    def __init__(self, device, in_c, MD_R, debug=False):
+    def __init__(self, device, in_c, debug=False):
         super().__init__()
 
         self.device = device
@@ -327,9 +340,9 @@ class FeaturesFactorizationModule(nn.Module):
             self.pre_conv_block = nn.Conv3d(in_c, mid_C, (1, 1, 1))
 
         if "nmf" in md_type.lower():
-            self.md_block = NMF(self.device, MD_R, debug=debug)
+            self.md_block = NMF(self.device, debug=debug)
         elif "vq" in md_type.lower():
-            self.md_block = VQ(self.device, MD_R, debug=debug)
+            self.md_block = VQ(self.device, debug=debug)
         else:
             print("Unknown type specified for MD_TYPE:", md_type)
             exit()
@@ -469,9 +482,12 @@ class iBVPNetMD(nn.Module):
             self.thermal_norm = nn.BatchNorm3d(1)
         else:
             print("Unsupported input channels")
+        
+        if self.debug:
+            print("nf:", nf)
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[4], MD_R=5, debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[4], debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
@@ -545,24 +561,24 @@ if __name__ == "__main__":
     # ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch6.pth"
     # ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch12.pth"
     # ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch19.pth"
-    ckpt_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch26.pth"
-    data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/1003_input13.npy"
-    label_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/1003_label3.npy"
-    # data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/subject36_input9.npy"
+    ckpt_path = model_config["ckpt_path"]
 
-    # duration = 8
-    # fs = 25
-    batch_size = 2
-    frames = 160    #duration*fs
-    in_channels = 3
-    data_channels = 4
-    height = 72
-    width = 72
-    debug = True
-    assess_latency = False
-    # assess_latency = True
-    num_trials = 20
-    visualize = False
+    # data_path = "/Users/jiteshjoshi/Downloads/rPPG_Testing/data/subject36_input9.npy"
+    data_path = model_config["data_path"]
+
+    label_path = model_config["label_path"]
+
+
+    batch_size = model_config["batch_size"]
+    frames = model_config["frames"]
+    in_channels = model_config["in_channels"]
+    data_channels = model_config["data_channels"]
+    height = model_config["height"]
+    width = model_config["weight"]
+    debug = bool(model_config["debug"])
+    assess_latency = bool(model_config["assess_latency"])
+    num_trials = model_config["num_trials"]
+    visualize = model_config["visualize"]
 
     if torch.cuda.is_available():
         device = torch.device(0)
