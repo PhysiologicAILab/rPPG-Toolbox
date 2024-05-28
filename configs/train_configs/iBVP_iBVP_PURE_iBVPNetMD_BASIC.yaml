@@ -3,8 +3,8 @@ TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test
 TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
-  LR: 1e-3
-  MODEL_FILE_NAME: iBVP_iBVP_iBVPNetMD_FactorizePhys_v50_R8_S2_ST5_LR1e-3
+  LR: 5e-4
+  MODEL_FILE_NAME: iBVP_iBVP_iBVPNetMD_FactorizePhys_v49_R1_S8_ST4_LR5e-4
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -102,7 +102,7 @@ NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
 MODEL:
-  DROP_RATE: 0.1
+  DROP_RATE: 0.2
   NAME: iBVPNetMD
   iBVPNet:
     CHANNELS: 3
