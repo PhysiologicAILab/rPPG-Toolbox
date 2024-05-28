@@ -3,8 +3,8 @@ TOOLBOX_MODE: "train_and_test"  # "train_and_test" or "only_train" or "only_test
 TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
-  LR: 1e-4
-  MODEL_FILE_NAME: iBVP_iBVP_iBVPNetMD_FactorizePhys_v49_R8_S8_ST4_LR1e-4
+  LR: 1e-3
+  MODEL_FILE_NAME: iBVP_iBVP_iBVPNetMD_FactorizePhys_v50_R8_S2_ST5_LR1e-3
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30

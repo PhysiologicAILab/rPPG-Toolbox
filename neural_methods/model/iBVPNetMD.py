@@ -13,13 +13,13 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [7, 7, 7, 7, 7]
+nf = [8, 16, 16, 16, 16]
 
 model_config = {
-    "MD_S": 8,
+    "MD_S": 2,
     "MD_R": 8,
-    "TRAIN_STEPS": 4,
-    "EVAL_STEPS": 4,
+    "TRAIN_STEPS": 5,
+    "EVAL_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -328,7 +328,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         md_type = model_config["MD_TYPE"]
-        mid_C = in_c // 1    #// 2 #// 8
+        mid_C = in_c // 2    #// 2 #// 8
         # MD_R = (frames // 4) // 8  # // 4 done by encoder, and //4 for NMF
 
         if "nmf" in md_type.lower():
