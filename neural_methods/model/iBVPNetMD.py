@@ -13,13 +13,13 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [4, 4, 4, 4, 7]
+nf = [7, 7, 7, 7, 7]
 
 model_config = {
     "MD_S": 8,
-    "MD_R": 5,
-    "TRAIN_STEPS": 5,
-    "EVAL_STEPS": 5,
+    "MD_R": 8,
+    "TRAIN_STEPS": 4,
+    "EVAL_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
