@@ -13,13 +13,13 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [7, 7, 7, 7, 7]
+nf = [12, 12, 12, 21, 21]
 
 model_config = {
-    "MD_S": 8,
-    "MD_R": 1,
-    "TRAIN_STEPS": 4,
-    "EVAL_STEPS": 4,
+    "MD_S": 4,
+    "MD_R": 8,
+    "TRAIN_STEPS": 6,
+    "EVAL_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -422,7 +422,7 @@ class encoder_block(nn.Module):
 
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
-            nn.Dropout3d(p=dropout_rate)
+            # nn.Dropout3d(p=dropout_rate)
         )
 
     def forward(self, x):
