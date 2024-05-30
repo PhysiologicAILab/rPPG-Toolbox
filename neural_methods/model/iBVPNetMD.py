@@ -18,15 +18,15 @@ nf = [8, 8, 8, 8, 8]
 model_config = {
     "MD_S": 8,
     "MD_R": 1,
-    "TRAIN_STEPS": 4,
-    "EVAL_STEPS": 4,
+    "TRAIN_STEPS": 6,
+    "EVAL_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
     "MD_TYPE": "NMF",
     "in_channels": 3,
     "data_channels": 4,
-    "align_channels": 8,
+    "align_channels": 4,
     "height": 72,
     "weight": 72,
     "batch_size": 2,
@@ -413,11 +413,11 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
