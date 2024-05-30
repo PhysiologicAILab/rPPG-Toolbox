@@ -13,20 +13,20 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [12, 12, 12, 21, 21]
+nf = [8, 8, 8, 8, 8]
 
 model_config = {
     "MD_S": 4,
     "MD_R": 8,
-    "TRAIN_STEPS": 6,
-    "EVAL_STEPS": 6,
+    "TRAIN_STEPS": 4,
+    "EVAL_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
     "MD_TYPE": "NMF",
     "in_channels": 3,
     "data_channels": 4,
-    "align_channels": 7,
+    "align_channels": 4,
     "height": 72,
     "weight": 72,
     "batch_size": 2,
@@ -405,24 +405,24 @@ class encoder_block(nn.Module):
         self.debug = debug
 
         self.encoder = nn.Sequential(
-            ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(inCh, nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[0], nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
 
-            ConvBlock3D(nf[0], nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[0], nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[1], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[4], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
-            # nn.Dropout3d(p=dropout_rate)
+            ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[3], nf[4], [k_t, 3, 3], [1, 2, 2], [pad_t, 0, 0]),
+            nn.Dropout3d(p=dropout_rate)
         )
 
     def forward(self, x):
