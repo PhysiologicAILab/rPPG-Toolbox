@@ -16,8 +16,8 @@ import numpy as np
 nf = [8, 8, 8, 8, 8]
 
 model_config = {
-    "MD_S": 4,
-    "MD_R": 8,
+    "MD_S": 8,
+    "MD_R": 1,
     "TRAIN_STEPS": 4,
     "EVAL_STEPS": 4,
     "INV_T": 1,
@@ -26,7 +26,7 @@ model_config = {
     "MD_TYPE": "NMF",
     "in_channels": 3,
     "data_channels": 4,
-    "align_channels": 4,
+    "align_channels": 8,
     "height": 72,
     "weight": 72,
     "batch_size": 2,
