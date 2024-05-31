@@ -482,7 +482,7 @@ class iBVPNetMD(nn.Module):
             print("nf:", nf)
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[3], debug=debug)
+        # self.VEFM = FeaturesFactorizationModule(device, nf[3], debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
@@ -527,11 +527,12 @@ class iBVPNetMD(nn.Module):
         if self.debug:
             print("voxel_embeddings.shape", voxel_embeddings.shape)
         
-        factorized_embeddings, att_mask = self.VEFM(voxel_embeddings)
-        if self.debug:
-            print("factorized_embeddings.shape", factorized_embeddings.shape)
+        # factorized_embeddings, att_mask = self.VEFM(voxel_embeddings)
+        # if self.debug:
+        #     print("factorized_embeddings.shape", factorized_embeddings.shape)
 
-        feats = self.decoder(factorized_embeddings)
+        # feats = self.decoder(factorized_embeddings)
+        feats = self.decoder(voxel_embeddings)
         if self.debug:
             print("feats.shape", feats.shape)
 
@@ -540,7 +541,8 @@ class iBVPNetMD(nn.Module):
         if self.debug:
             print("rPPG.shape", rPPG.shape)
 
-        return rPPG, voxel_embeddings, factorized_embeddings, att_mask
+        # return rPPG, voxel_embeddings, factorized_embeddings, att_mask
+        return rPPG, voxel_embeddings, None, None
     
 
 if __name__ == "__main__":
