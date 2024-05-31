@@ -13,10 +13,10 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 16, 16]
+nf = [16, 16, 16, 16]
 
 model_config = {
-    "MD_S": 4,
+    "MD_S": 8,
     "MD_R": 1,
     "TRAIN_STEPS": 4,
     "EVAL_STEPS": 4,
@@ -371,7 +371,8 @@ class FeaturesFactorizationModule(nn.Module):
         x = self.pre_conv_block(x)
         att = self.md_block(x)
         att = self.post_conv_block(att)
-        x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        # x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        x = F.tanh(torch.multiply(shortcut, att))
 
         return x, att
 
@@ -415,11 +416,10 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 0, 0]),
             nn.Dropout3d(p=dropout_rate),
-
-            ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 0, 0]),
+            # ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 0, 0]),
         )
 
     def forward(self, x):
