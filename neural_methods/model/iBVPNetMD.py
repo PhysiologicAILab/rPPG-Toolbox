@@ -13,13 +13,13 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 8, 16, 16, 16]
+nf = [8, 8, 8, 8, 8]
 
 model_config = {
-    "MD_S": 4,
-    "MD_R": 1,
-    "TRAIN_STEPS": 6,
-    "EVAL_STEPS": 6,
+    "MD_S": 1,
+    "MD_R": 8,
+    "TRAIN_STEPS": 4,
+    "EVAL_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -406,7 +406,7 @@ class encoder_block(nn.Module):
 
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[0], nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[0], nf[0], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
 
             ConvBlock3D(nf[0], nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
@@ -417,7 +417,7 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
