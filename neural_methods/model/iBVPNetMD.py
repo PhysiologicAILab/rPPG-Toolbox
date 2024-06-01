@@ -16,8 +16,8 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 1,
-    "MD_S": 16,
+    "MD_R": 10,
+    "MD_S": 4,
     "TRAIN_STEPS": 6,
     "EVAL_STEPS": 6,
     "INV_T": 1,
