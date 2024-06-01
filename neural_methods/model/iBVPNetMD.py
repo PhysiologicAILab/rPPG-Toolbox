@@ -17,9 +17,9 @@ nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_S": 4,
-    "MD_R": 1,
-    "TRAIN_STEPS": 4,
-    "EVAL_STEPS": 4,
+    "MD_R": 4,
+    "TRAIN_STEPS": 6,
+    "EVAL_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -367,14 +367,13 @@ class FeaturesFactorizationModule(nn.Module):
 
     def forward(self, x):
         shortcut = self.shortcut(x)
-
         x = self.pre_conv_block(x)
         att = self.md_block(x)
+        dist = torch.dist(x, att)
         att = self.post_conv_block(att)
         # x = F.tanh(shortcut + torch.multiply(shortcut, att))
         x = F.tanh(torch.multiply(shortcut, att))
-
-        return x, att
+        return x, att, dist
 
     def online_update(self, bases):
         if hasattr(self.md_block, 'online_update'):
@@ -394,32 +393,28 @@ class ConvBlock3D(nn.Module):
         return self.conv_block_3d(x)
 
 
-
 class encoder_block(nn.Module):
-    def __init__(self, inCh, dropout_rate=0.2, debug=False):
+    def __init__(self, inCh, dropout_rate=0.1, debug=False):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 3  # 3  # 5   #7
-        pad_t = 1  # 1  # 2   #3
         self.debug = debug
 
         self.encoder = nn.Sequential(
-            ConvBlock3D(inCh, nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
-            ConvBlock3D(nf[1], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[1], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
-            ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
-            ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 0, 0]),
+            ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
             nn.Dropout3d(p=dropout_rate),
-            # ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 0, 0]),
         )
 
     def forward(self, x):
@@ -432,7 +427,7 @@ class encoder_block(nn.Module):
 
 
 class decoder_block(nn.Module):
-    def __init__(self, dropout_rate=0.2, debug=False):
+    def __init__(self, dropout_rate=0.1, debug=False):
         super(decoder_block, self).__init__()
         self.debug = debug
 
@@ -527,7 +522,7 @@ class iBVPNetMD(nn.Module):
         if self.debug:
             print("voxel_embeddings.shape", voxel_embeddings.shape)
         
-        factorized_embeddings, att_mask = self.VEFM(voxel_embeddings)
+        factorized_embeddings, att_mask, appx_error = self.VEFM(voxel_embeddings)
         if self.debug:
             print("factorized_embeddings.shape", factorized_embeddings.shape)
 
@@ -540,7 +535,7 @@ class iBVPNetMD(nn.Module):
         if self.debug:
             print("rPPG.shape", rPPG.shape)
 
-        return rPPG, voxel_embeddings, factorized_embeddings, att_mask
+        return rPPG, voxel_embeddings, factorized_embeddings, att_mask, appx_error
     
 
 if __name__ == "__main__":
@@ -609,17 +604,22 @@ if __name__ == "__main__":
 
     if assess_latency:
         time_vec = []
+        appx_error_list = []
         for passes in range(num_trials):
             t0 = time.time()
-            pred, vox_embed, factorized_embed, att_mask = net(test_data)
+            pred, vox_embed, factorized_embed, att_mask, appx_error = net(test_data)
             t1 = time.time()
             time_vec.append(t1-t0)
+            appx_error_list.append(appx_error.item())
 
-        print("Average time: ", np.median(time_vec))
+        print("Average time: ", np.mean(time_vec))
+        print("Average error:", np.mean(appx_error_list))
         plt.plot(time_vec)
         plt.show()
     else:
-        pred, vox_embed, factorized_embed, att_mask = net(test_data)
+        pred, vox_embed, factorized_embed, att_mask, appx_error = net(test_data)
+    
+    print("Appx error: ", appx_error.item())    #.detach().numpy())
     # print("-"*100)
     # print(net)
     # print("-"*100)

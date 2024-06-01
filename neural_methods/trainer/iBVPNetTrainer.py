@@ -100,7 +100,7 @@ class iBVPNetTrainer(BaseTrainer):
                 if self.config.MODEL.NAME == "iBVPNet":
                     pred_ppg, vox_embed = self.model(data)
                 else:
-                    pred_ppg, vox_embed, factorized_embed, att_mask = self.model(data)
+                    pred_ppg, vox_embed, factorized_embed, att_mask, appx_error = self.model(data)
                 
                 pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
 
@@ -120,7 +120,7 @@ class iBVPNetTrainer(BaseTrainer):
                 self.optimizer.step()
                 self.scheduler.step()
                 
-                tbar.set_postfix(loss=loss.item())
+                tbar.set_postfix({"appx_error": appx_error.item()}, loss=loss.item())
 
             # Append the mean training loss for the epoch
             mean_training_losses.append(np.mean(train_loss))
@@ -175,13 +175,14 @@ class iBVPNetTrainer(BaseTrainer):
                 if self.config.MODEL.NAME == "iBVPNet":
                     pred_ppg, vox_embed = self.model(data)
                 else:
-                    pred_ppg, vox_embed, factorized_embed, att_mask = self.model(data)
+                    pred_ppg, vox_embed, factorized_embed, att_mask, appx_error = self.model(data)
                 pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
                 loss = self.criterion(pred_ppg, labels)
 
                 valid_loss.append(loss.item())
                 valid_step += 1
-                vbar.set_postfix(loss=loss.item())
+                # vbar.set_postfix(loss=loss.item())
+                vbar.set_postfix({"appx_error": appx_error.item()}, loss=loss.item())
             valid_loss = np.asarray(valid_loss)
         return np.mean(valid_loss)
 
@@ -237,7 +238,7 @@ class iBVPNetTrainer(BaseTrainer):
                 if self.config.MODEL.NAME == "iBVPNet":
                     pred_ppg_test, vox_embed = self.model(data)
                 else:
-                    pred_ppg_test, vox_embed, factorized_embed, att_mask = self.model(data)
+                    pred_ppg_test, vox_embed, factorized_embed, att_mask, appx_error = self.model(data)
                 pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
 
                 if self.config.TEST.OUTPUT_SAVE_DIR:
