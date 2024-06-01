@@ -42,7 +42,8 @@ class iBVPNetTrainer(BaseTrainer):
         in_channels = config.MODEL.iBVPNet.CHANNELS
 
         if config.MODEL.NAME == "iBVPNet":
-            self.model = iBVPNet(frames=frames, in_channels=in_channels) # [3, T, 128,128]
+            self.model = iBVPNet(frames=frames, in_channels=in_channels,
+                                 dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
         else:
             self.model = iBVPNetMD(frames=frames, in_channels=in_channels,
                                    dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
