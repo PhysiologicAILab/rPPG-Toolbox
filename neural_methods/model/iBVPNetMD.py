@@ -16,10 +16,10 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_S": 4,
-    "MD_R": 5,
-    "TRAIN_STEPS": 6,
-    "EVAL_STEPS": 6,
+    "MD_S": 1,
+    "MD_R": 8,
+    "TRAIN_STEPS": 4,
+    "EVAL_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -482,7 +482,7 @@ class iBVPNetMD(nn.Module):
             print("nf:", nf)
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        # self.VEFM = FeaturesFactorizationModule(device, nf[3], debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, nf[3], debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
@@ -527,12 +527,11 @@ class iBVPNetMD(nn.Module):
         if self.debug:
             print("voxel_embeddings.shape", voxel_embeddings.shape)
         
-        # factorized_embeddings, att_mask = self.VEFM(voxel_embeddings)
-        # if self.debug:
-        #     print("factorized_embeddings.shape", factorized_embeddings.shape)
+        factorized_embeddings, att_mask = self.VEFM(voxel_embeddings)
+        if self.debug:
+            print("factorized_embeddings.shape", factorized_embeddings.shape)
 
-        # feats = self.decoder(factorized_embeddings)
-        feats = self.decoder(voxel_embeddings)
+        feats = self.decoder(factorized_embeddings)
         if self.debug:
             print("feats.shape", feats.shape)
 
@@ -541,8 +540,7 @@ class iBVPNetMD(nn.Module):
         if self.debug:
             print("rPPG.shape", rPPG.shape)
 
-        # return rPPG, voxel_embeddings, factorized_embeddings, att_mask
-        return rPPG, voxel_embeddings, None, None
+        return rPPG, voxel_embeddings, factorized_embeddings, att_mask
     
 
 if __name__ == "__main__":
