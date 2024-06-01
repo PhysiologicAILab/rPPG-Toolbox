@@ -38,10 +38,10 @@ class iBVPNetTrainer(BaseTrainer):
             self.device = torch.device("cpu")  # if no GPUs set device is CPU
             self.num_of_gpu = 0  # no GPUs used
 
-        frames = config.MODEL.iBVPNet.FRAME_NUM
-        in_channels = config.MODEL.iBVPNet.CHANNELS
+        frames = self.config.MODEL.iBVPNet.FRAME_NUM
+        in_channels = self.config.MODEL.iBVPNet.CHANNELS
 
-        if config.MODEL.NAME == "iBVPNet":
+        if self.config.MODEL.NAME == "iBVPNet":
             self.model = iBVPNet(frames=frames, in_channels=in_channels,
                                  dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
         else:
@@ -53,15 +53,15 @@ class iBVPNetTrainer(BaseTrainer):
         else:
             self.model = torch.nn.DataParallel(self.model).to(self.device)
 
-        if config.TOOLBOX_MODE == "train_and_test" or config.TOOLBOX_MODE == "only_train":
+        if self.config.TOOLBOX_MODE == "train_and_test" or self.config.TOOLBOX_MODE == "only_train":
             self.num_train_batches = len(data_loader["train"])
             self.criterion = Neg_Pearson()
             self.optimizer = optim.Adam(
-                self.model.parameters(), lr=config.TRAIN.LR)
+                self.model.parameters(), lr=self.config.TRAIN.LR)
             # See more details on the OneCycleLR scheduler here: https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.OneCycleLR.html
             self.scheduler = torch.optim.lr_scheduler.OneCycleLR(
-                self.optimizer, max_lr=config.TRAIN.LR, epochs=config.TRAIN.EPOCHS, steps_per_epoch=self.num_train_batches)
-        elif config.TOOLBOX_MODE == "only_test":
+                self.optimizer, max_lr=self.config.TRAIN.LR, epochs=self.config.TRAIN.EPOCHS, steps_per_epoch=self.num_train_batches)
+        elif self.config.TOOLBOX_MODE == "only_test":
             pass
         else:
             raise ValueError("iBVPNet trainer initialized in incorrect toolbox mode!")
@@ -97,7 +97,10 @@ class iBVPNetTrainer(BaseTrainer):
                 # labels[torch.isnan(labels)] = 0
 
                 self.optimizer.zero_grad()
-                pred_ppg, vox_embed, factorized_embed, att_mask = self.model(data)
+                if self.config.MODEL.NAME == "iBVPNet":
+                    pred_ppg, vox_embed = self.model(data)
+                else:
+                    pred_ppg, vox_embed, factorized_embed, att_mask = self.model(data)
                 
                 pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
 
@@ -169,7 +172,10 @@ class iBVPNetTrainer(BaseTrainer):
                 # labels = labels/ torch.std(labels)  # normalize
                 # labels[torch.isnan(labels)] = 0
 
-                pred_ppg, vox_embed, factorized_embed, att_mask = self.model(data)
+                if self.config.MODEL.NAME == "iBVPNet":
+                    pred_ppg, vox_embed = self.model(data)
+                else:
+                    pred_ppg, vox_embed, factorized_embed, att_mask = self.model(data)
                 pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
                 loss = self.criterion(pred_ppg, labels)
 
@@ -228,7 +234,10 @@ class iBVPNetTrainer(BaseTrainer):
                 # labels_test = labels_test/ torch.std(labels_test)  # normalize
                 # labels_test[torch.isnan(labels_test)] = 0
 
-                pred_ppg_test, vox_embed, factorized_embed, att_mask = self.model(data)
+                if self.config.MODEL.NAME == "iBVPNet":
+                    pred_ppg_test, vox_embed = self.model(data)
+                else:
+                    pred_ppg_test, vox_embed, factorized_embed, att_mask = self.model(data)
                 pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
 
                 if self.config.TEST.OUTPUT_SAVE_DIR:
