@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: iBVP_iBVP_iBVP_T_iBVPNetMD_FactorizePhys_T_v63_No_FSAM
+  MODEL_FILE_NAME: iBVP_iBVP_iBVP_T_iBVPNet_FactorizePhys_T_v66_LR1e-3
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -105,7 +105,7 @@ LOG:
   PATH: runs/exp
 MODEL:
   DROP_RATE: 0.1
-  NAME: iBVPNetMD
+  NAME: iBVPNet
   iBVPNet:
     CHANNELS: 1
     FRAME_NUM: 160
