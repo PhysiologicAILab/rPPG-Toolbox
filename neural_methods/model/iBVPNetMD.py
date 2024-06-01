@@ -371,8 +371,8 @@ class FeaturesFactorizationModule(nn.Module):
         att = self.md_block(x)
         dist = torch.dist(x, att)
         att = self.post_conv_block(att)
-        x = F.tanh(shortcut + torch.multiply(shortcut, att))
-        # x = F.tanh(torch.multiply(shortcut, att))
+        # x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        x = F.tanh(torch.multiply(shortcut, att))
         return x, att, dist
 
     def online_update(self, bases):
