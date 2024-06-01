@@ -115,7 +115,8 @@ class iBVPNetTrainer(BaseTrainer):
                         f'[{epoch}, {idx + 1:5d}] loss: {running_loss / 100:.3f}')
                     running_loss = 0.0
                 train_loss.append(loss.item())
-                appx_error_list.append(appx_error.item())
+                if self.config.MODEL.NAME == "iBVPNetMD":
+                    appx_error_list.append(appx_error.item())
 
                 # Append the current learning rate to the list
                 lrs.append(self.scheduler.get_last_lr())
@@ -123,13 +124,17 @@ class iBVPNetTrainer(BaseTrainer):
                 self.optimizer.step()
                 self.scheduler.step()
                 
-                tbar.set_postfix({"appx_error": appx_error.item()}, loss=loss.item())
+                if self.config.MODEL.NAME == "iBVPNetMD":
+                    tbar.set_postfix({"appx_error": appx_error.item()}, loss=loss.item())
+                else:
+                    tbar.set_postfix(loss=loss.item())
 
             # Append the mean training loss for the epoch
             mean_training_losses.append(np.mean(train_loss))
-            mean_appx_error.append(np.mean(appx_error_list))
-            print("Mean train loss: {}, Mean appx error: {}".format(
-                np.mean(train_loss), np.mean(appx_error_list)))
+            if self.config.MODEL.NAME == "iBVPNetMD":
+                mean_appx_error.append(np.mean(appx_error_list))
+                print("Mean train loss: {}, Mean appx error: {}".format(
+                    np.mean(train_loss), np.mean(appx_error_list)))
 
             self.save_model(epoch)
             if not self.config.TEST.USE_LAST_EPOCH: 
@@ -188,7 +193,10 @@ class iBVPNetTrainer(BaseTrainer):
                 valid_loss.append(loss.item())
                 valid_step += 1
                 # vbar.set_postfix(loss=loss.item())
-                vbar.set_postfix({"appx_error": appx_error.item()}, loss=loss.item())
+                if self.config.MODEL.NAME == "iBVPNetMD":
+                    vbar.set_postfix({"appx_error": appx_error.item()}, loss=loss.item())
+                else:
+                    vbar.set_postfix(loss=loss.item())
             valid_loss = np.asarray(valid_loss)
         return np.mean(valid_loss)
 
