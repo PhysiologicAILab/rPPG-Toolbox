@@ -73,12 +73,14 @@ class iBVPNetTrainer(BaseTrainer):
 
         mean_training_losses = []
         mean_valid_losses = []
+        mean_appx_error = []
         lrs = []
         for epoch in range(self.max_epoch_num):
             print('')
             print(f"====Training Epoch: {epoch}====")
             running_loss = 0.0
             train_loss = []
+            appx_error_list = []
             self.model.train()
             tbar = tqdm(data_loader["train"], ncols=80)
             for idx, batch in enumerate(tbar):
@@ -113,6 +115,7 @@ class iBVPNetTrainer(BaseTrainer):
                         f'[{epoch}, {idx + 1:5d}] loss: {running_loss / 100:.3f}')
                     running_loss = 0.0
                 train_loss.append(loss.item())
+                appx_error_list.append(appx_error.item())
 
                 # Append the current learning rate to the list
                 lrs.append(self.scheduler.get_last_lr())
@@ -124,6 +127,9 @@ class iBVPNetTrainer(BaseTrainer):
 
             # Append the mean training loss for the epoch
             mean_training_losses.append(np.mean(train_loss))
+            mean_appx_error.append(np.mean(appx_error_list))
+            print("Mean train loss: {}, Mean appx error: {}".format(
+                np.mean(train_loss), np.mean(appx_error_list)))
 
             self.save_model(epoch)
             if not self.config.TEST.USE_LAST_EPOCH: 
