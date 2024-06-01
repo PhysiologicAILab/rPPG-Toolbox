@@ -52,28 +52,27 @@ class encoder_block(nn.Module):
         super(encoder_block, self).__init__()
         # inCh, out_channel, kernel_size, stride, padding
 
-        k_t = 3  # 3  # 5   #7
-        pad_t = 1  # 1  # 2   #3
         self.debug = debug
 
         self.encoder = nn.Sequential(
-            ConvBlock3D(inCh, nf[0], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[0], nf[1], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-
-            ConvBlock3D(nf[1], nf[1], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
-            ConvBlock3D(nf[1], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[0], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[2], nf[2], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [k_t, 3, 3], [1, 1, 1], [pad_t, 1, 1]),
+            ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[3], nf[3], [k_t, 3, 3], [1, 2, 2], [pad_t, 1, 1]),
-            ConvBlock3D(nf[3], nf[3], [k_t, 2, 2], [1, 1, 1], [pad_t, 0, 0]),
+            ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
-            ConvBlock3D(nf[3], nf[3], [k_t, 2, 2], [1, 2, 2], [pad_t, 0, 0]),
-            ConvBlock3D(nf[3], nf[3], [k_t, 2, 2], [1, 1, 1], [pad_t, 0, 0]),
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            nn.Dropout3d(p=dropout_rate),
+
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
             nn.Dropout3d(p=dropout_rate),
         )
 
