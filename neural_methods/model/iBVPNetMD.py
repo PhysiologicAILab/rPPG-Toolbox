@@ -17,7 +17,7 @@ nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_S": 4,
-    "MD_R": 8,
+    "MD_R": 1,
     "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
@@ -601,7 +601,7 @@ if __name__ == "__main__":
     md_config["MD_S"] = model_config["MD_S"]
     md_config["MD_R"] = model_config["MD_R"]
     md_config["MD_STEPS"] = model_config["MD_STEPS"]
-    net = nn.DataParallel(iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=debug)).to(device)
+    net = nn.DataParallel(iBVPNetMD(frames=frames, md_config=md_config, device=device, in_channels=in_channels, debug=debug)).to(device)
     # net.load_state_dict(torch.load(ckpt_path, map_location=device))
     net.eval()
 
