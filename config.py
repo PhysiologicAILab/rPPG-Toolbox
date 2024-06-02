@@ -300,8 +300,11 @@ _C.MODEL.PHYSNET.CHANNELS = 3
 # Specific parameters for iBVPNet parameters
 # -----------------------------------------------------------------------------
 _C.MODEL.iBVPNet = CN()
-_C.MODEL.iBVPNet.FRAME_NUM = 64
+_C.MODEL.iBVPNet.FRAME_NUM = 160
 _C.MODEL.iBVPNet.CHANNELS = 3
+_C.MODEL.iBVPNet.MD_S = 8
+_C.MODEL.iBVPNet.MD_R = 8
+_C.MODEL.iBVPNet.MD_STEPS = 6
 
 # -----------------------------------------------------------------------------
 # Model Settings for TS-CAN

@@ -103,6 +103,9 @@ MODEL:
   iBVPNet:
     CHANNELS: 3
     FRAME_NUM: 160
+    MD_S: 8
+    MD_R: 8
+    MD_STEPS: 6
 INFERENCE:
   BATCH_SIZE: 4
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"

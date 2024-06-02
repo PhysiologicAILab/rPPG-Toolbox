@@ -16,10 +16,9 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
+    "MD_S": 4,
     "MD_R": 8,
-    "MD_S": 8,
-    "TRAIN_STEPS": 6,
-    "EVAL_STEPS": 6,
+    "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -41,16 +40,16 @@ model_config = {
 }
 
 class _MatrixDecompositionBase(nn.Module):
-    def __init__(self, device, debug=False, dim="3D"):
+    def __init__(self, device, md_config, debug=False, dim="3D"):
         super().__init__()
 
         self.dim = dim
-        self.S = model_config["MD_S"]
-        self.R = model_config["MD_R"]
+        self.S = md_config["MD_S"]
+        self.R = md_config["MD_R"]
         self.debug = debug
 
-        self.train_steps = model_config["TRAIN_STEPS"]
-        self.eval_steps = model_config["EVAL_STEPS"]
+        self.train_steps = md_config["MD_STEPS"]
+        self.eval_steps = md_config["MD_STEPS"]
 
         self.inv_t = model_config["INV_T"]
         self.eta = model_config["ETA"]
@@ -190,8 +189,8 @@ class _MatrixDecompositionBase(nn.Module):
 
 
 class NMF(_MatrixDecompositionBase):
-    def __init__(self, device, debug=False, dim="3D"):
-        super().__init__(device, debug=debug, dim=dim)
+    def __init__(self, device, md_config, debug=False, dim="3D"):
+        super().__init__(device, md_config, debug=debug, dim=dim)
         self.device = device
         self.inv_t = 1
 
@@ -231,8 +230,8 @@ class NMF(_MatrixDecompositionBase):
 
 
 class VQ(_MatrixDecompositionBase):
-    def __init__(self, device, debug=False, dim="3D"):
-        super().__init__(device, debug=debug, dim=dim)
+    def __init__(self, device, md_config, debug=False, dim="3D"):
+        super().__init__(device, md_config, debug=debug, dim=dim)
         self.device = device
 
     def _build_bases(self, B, S, D, R):
@@ -324,7 +323,7 @@ class ConvBNReLU(nn.Module):
 
 
 class FeaturesFactorizationModule(nn.Module):
-    def __init__(self, device, in_c, debug=False):
+    def __init__(self, device, md_config, in_c, debug=False):
         super().__init__()
 
         self.device = device
@@ -340,9 +339,9 @@ class FeaturesFactorizationModule(nn.Module):
             self.pre_conv_block = nn.Conv3d(in_c, mid_C, (1, 1, 1))
 
         if "nmf" in md_type.lower():
-            self.md_block = NMF(self.device, debug=debug)
+            self.md_block = NMF(self.device, md_config, debug=debug)
         elif "vq" in md_type.lower():
-            self.md_block = VQ(self.device, debug=debug)
+            self.md_block = VQ(self.device, md_config, debug=debug)
         else:
             print("Unknown type specified for MD_TYPE:", md_type)
             exit()
@@ -460,7 +459,7 @@ class decoder_block(nn.Module):
 
 
 class iBVPNetMD(nn.Module):
-    def __init__(self, frames, device, in_channels=3, dropout=0.2, debug=False):
+    def __init__(self, frames, md_config, in_channels=3, dropout=0.2, device=torch.device("cpu"), debug=False):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
 
@@ -477,7 +476,7 @@ class iBVPNetMD(nn.Module):
             print("nf:", nf)
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
-        self.VEFM = FeaturesFactorizationModule(device, nf[3], debug=debug)
+        self.VEFM = FeaturesFactorizationModule(device, md_config, nf[3], debug=debug)
         self.decoder = decoder_block(dropout_rate=dropout, debug=debug)
 
         
@@ -598,6 +597,10 @@ if __name__ == "__main__":
     test_data = test_data.to(torch.float32).to(device)
     # print(test_data.shape)
     # exit()
+    md_config = {}
+    md_config["MD_S"] = model_config["MD_S"]
+    md_config["MD_R"] = model_config["MD_R"]
+    md_config["MD_STEPS"] = model_config["MD_STEPS"]
     net = nn.DataParallel(iBVPNetMD(frames=frames, device=device, in_channels=in_channels, debug=debug)).to(device)
     # net.load_state_dict(torch.load(ckpt_path, map_location=device))
     net.eval()

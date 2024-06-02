@@ -45,7 +45,11 @@ class iBVPNetTrainer(BaseTrainer):
             self.model = iBVPNet(frames=frames, in_channels=in_channels,
                                  dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
         else:
-            self.model = iBVPNetMD(frames=frames, in_channels=in_channels,
+            md_config = {}
+            md_config["MD_S"] = self.config.MODEL.iBVPNet.MD_S
+            md_config["MD_R"] = self.config.MODEL.iBVPNet.MD_R
+            md_config["MD_STEPS"] = self.config.MODEL.iBVPNet.MD_STEPS
+            self.model = iBVPNetMD(frames=frames, md_config=md_config, in_channels=in_channels,
                                    dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
 
         if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
