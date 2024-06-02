@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: iBVP_iBVP_PURE_iBVPNet_FactorizePhys_v68_LR1e-3
+  MODEL_FILE_NAME: iBVP_iBVP_PURE_iBVPNet_FactorizePhys_v69_LR1e-3
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -97,7 +97,7 @@ TEST:
       RESIZE:
         H: 72
         W: 72
-DEVICE: cuda:3
+DEVICE: cuda:1
 NUM_OF_GPU_TRAIN: 1
 LOG:
   PATH: runs/exp
