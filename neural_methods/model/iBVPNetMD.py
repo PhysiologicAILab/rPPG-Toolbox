@@ -16,7 +16,7 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_S": 10,
+    "MD_S": 8,
     "MD_R": 8,
     "MD_STEPS": 6,
     "INV_T": 1,
@@ -370,8 +370,8 @@ class FeaturesFactorizationModule(nn.Module):
         att = self.md_block(x)
         dist = torch.dist(x, att)
         att = self.post_conv_block(att)
-        # x = F.tanh(shortcut + torch.multiply(shortcut, att))
-        x = F.tanh(torch.multiply(shortcut, att))
+        x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        # x = F.tanh(torch.multiply(shortcut, att))
         return x, att, dist
 
     def online_update(self, bases):
