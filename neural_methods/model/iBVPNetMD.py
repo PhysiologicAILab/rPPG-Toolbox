@@ -16,10 +16,10 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 8,
-    "MD_S": 4,
-    "TRAIN_STEPS": 4,
-    "EVAL_STEPS": 4,
+    "MD_R": 5,
+    "MD_S": 8,
+    "TRAIN_STEPS": 5,
+    "EVAL_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
