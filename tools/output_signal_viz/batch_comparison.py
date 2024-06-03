@@ -19,25 +19,38 @@ class CPU_Unpickler(pickle.Unpickler):
             return super().find_class(module, name)
 
 
+# path_dict = {
+#     "root": "/Users/jiteshjoshi/Downloads/rPPG_Testing/FactorizePhys/",
+#     "test_datasets": {
+#         "PURE": {
+#             "iBVP_EfficientPhys_SASN": "iBVP_iBVP_EfficientPhys_outputs.pickle",
+#             "iBVP_EfficientPhys_FSAM": "iBVP_iBVP_EfficientPhysFM_V12_FD40_outputs.pickle",
+#             "iBVP_FactorizePhys": "iBVP_iBVP_iBVPNetMD_FactorizePhys_v63_No_FSAM_outputs.pickle",
+#             "iBVP_FactorizePhys_FSAM": "iBVP_iBVP_iBVPNetMD_FactorizePhys_v63_R8_S8_ST6_LR1e-3_NoRes_outputs.pickle",
+#             "iBVP_PhysFormer": "iBVP_iBVP_PHYSFORMER_outputs.pickle",
+#             "iBVP_PhysNet": "iBVP_iBVP_PHYSNET_outputs.pickle",
+#             "UBFC_EfficientPhys_FSAM": "UBFC_UBFC_PURE_EfficientPhys_FM_v12_outputs.pickle",
+#             "UBFC_EfficientPhys_SASN": "UBFC_UBFC_PURE_EfficientPhys_outputs.pickle",
+#             "UBFC_FactorizePhys": "UBFC_UBFC_PURE_iBVPNetMD_v63_No_FSAM_outputs.pickle",
+#             "UBFC_FactorizePhys_FSAM": "UBFC_UBFC_PURE_iBVPNetMD_v63_R8_S8_ST6_LR1e-3_NoRes_outputs.pickle",
+#             "UBFC_PhysNet": "UBFC_UBFC_PURE_PhysNet_outputs.pickle",
+#             "UBFC_PhysFormer": "UBFC-rPPG_UBFC-rPPG_PURE_PhysFormer_outputs.pickle"
+#         }
+#     }
+# }
+
 path_dict = {
     "root": "/Users/jiteshjoshi/Downloads/rPPG_Testing/FactorizePhys/",
     "test_datasets": {
         "PURE": {
             "iBVP_EfficientPhys_SASN": "iBVP_iBVP_EfficientPhys_outputs.pickle",
-            "iBVP_EfficientPhys_FSAM": "iBVP_iBVP_EfficientPhysFM_V12_FD40_outputs.pickle",
-            "iBVP_FactorizePhys": "iBVP_iBVP_iBVPNetMD_FactorizePhys_v63_No_FSAM_outputs.pickle",
             "iBVP_FactorizePhys_FSAM": "iBVP_iBVP_iBVPNetMD_FactorizePhys_v63_R8_S8_ST6_LR1e-3_NoRes_outputs.pickle",
-            "iBVP_PhysFormer": "iBVP_iBVP_PHYSFORMER_outputs.pickle",
-            "iBVP_PhysNet": "iBVP_iBVP_PHYSNET_outputs.pickle",
-            "UBFC_EfficientPhys_FSAM": "UBFC_UBFC_PURE_EfficientPhys_FM_v12_outputs.pickle",
             "UBFC_EfficientPhys_SASN": "UBFC_UBFC_PURE_EfficientPhys_outputs.pickle",
-            "UBFC_FactorizePhys": "UBFC_UBFC_PURE_iBVPNetMD_v63_No_FSAM_outputs.pickle",
             "UBFC_FactorizePhys_FSAM": "UBFC_UBFC_PURE_iBVPNetMD_v63_R8_S8_ST6_LR1e-3_NoRes_outputs.pickle",
-            "UBFC_PhysNet": "UBFC_UBFC_PURE_PhysNet_outputs.pickle",
-            "UBFC_PhysFormer": "UBFC-rPPG_UBFC-rPPG_PURE_PhysFormer_outputs.pickle"
         }
     }
 }
+
 
 
 # HELPER FUNCTIONS
@@ -129,48 +142,72 @@ def compare_estimated_bvps():
         print("Training datasets:", train_datasets)
         print("Model Names:", model_names)
 
-        chunk_size = 160  # size of chunk to visualize: -1 will plot the entire signal
-
         # List of all video trials
         trial_list = list(data_dict[train_datasets[0]][model_names[0]]['predictions'].keys())
         print('Num Trials', len(trial_list))
+
+        gt_bvp = np.array(_reform_data_from_dict(
+            data_dict[train_datasets[0]][model_names[0]]['predictions'][trial_list[0]]))
+
+        total_samples = len(gt_bvp)
+        chunk_size = 160  # size of chunk to visualize: -1 will plot the entire signal
+        total_chunks = total_samples // chunk_size
         print('Chunk size', chunk_size)
+        print('Total chunks', total_chunks)
+
 
         for trial_ind in range(len(trial_list)):
-
-            fig, ax = plt.subplots(total_train_datasets, 1, figsize=(16, 9))
-            plt.suptitle('Trial: ' + trial_list[trial_ind])
-
+            
             # Read in meta-data from pickle file
             fs = data_dict[train_datasets[0]][model_names[0]]['fs'] # Video Frame Rate
             label_type = data_dict[train_datasets[0]][model_names[0]]['label_type'] # PPG Signal Transformation: `DiffNormalized` or `Standardized`
             diff_flag = (label_type == 'DiffNormalized')
 
+            trial_dict = {}
+
             gt_bvp = np.array(_reform_data_from_dict(
                 data_dict[train_datasets[0]][model_names[0]]['labels'][trial_list[trial_ind]]))
             gt_bvp = _process_signal(gt_bvp, fs, diff_flag=diff_flag)
 
-            for d_ind in range(total_train_datasets):
+            for c_ind in range(total_chunks):
 
-                for m_ind in range(len(model_names)):
+                fig, ax = plt.subplots(total_train_datasets, 1, figsize=(25, 9))
+                plt.suptitle('Testing on PURE Dataset; Trial: ' + trial_list[trial_ind] + "; Chunk: " + str(c_ind))
 
-                    # Reform label and prediction vectors from multiple trial chunks
-                    prediction = np.array(_reform_data_from_dict(data_dict[train_datasets[d_ind]][model_names[m_ind]]['predictions'][trial_list[trial_ind]]))
+                start = (c_ind)*chunk_size
+                stop = (c_ind+1)*chunk_size
+                samples = stop - start
+                x_time = np.linspace(0, samples/fs, num=samples)
 
-                    # Process label and prediction signals
-                    prediction = _process_signal(prediction, fs, diff_flag=diff_flag)
-    
-                    samples = len(prediction)
-                    x_time = np.linspace(0, samples/fs, num=samples)
+                for d_ind in range(total_train_datasets):
+                    if train_datasets[d_ind] not in trial_dict:
+                        trial_dict[train_datasets[d_ind]] = {}
 
-                    ax[d_ind].plot(x_time, prediction, label=model_names[m_ind])
-                
-                ax[d_ind].plot(x_time, gt_bvp, label="GT", color='black')
-                ax[d_ind].legend(loc = "upper right")
-                ax[d_ind].set_xlabel('Time (s)')
+                    for m_ind in range(len(model_names)):
+                            
+                        if model_names[m_ind] not in trial_dict[train_datasets[d_ind]]:
+                            trial_dict[train_datasets[d_ind]][model_names[m_ind]] = {}
 
-            plt.show()
-            plt.close(fig)
+                            # Reform label and prediction vectors from multiple trial chunks
+                            trial_dict[train_datasets[d_ind]][model_names[m_ind]]["prediction"] = np.array(_reform_data_from_dict(
+                                data_dict[train_datasets[d_ind]][model_names[m_ind]]['predictions'][trial_list[trial_ind]]))
+
+                            # Process label and prediction signals
+                            trial_dict[train_datasets[d_ind]][model_names[m_ind]]["prediction"] = _process_signal(
+                                trial_dict[train_datasets[d_ind]][model_names[m_ind]]["prediction"], fs, diff_flag=diff_flag)
+
+                        ax[d_ind].plot(x_time, trial_dict[train_datasets[d_ind]][model_names[m_ind]]
+                                       ["prediction"][start: stop], label=model_names[m_ind])
+
+                    ax[d_ind].plot(x_time, gt_bvp[start: stop], label="GT", color='black')
+                    ax[d_ind].legend(loc = "upper right")
+                    ax[d_ind].set_xlabel('Time (s)')
+                    ax[d_ind].set_title("Training Dataset: " + train_datasets[d_ind])
+
+                # plt.show()
+                save_fn = plot_test_dir.joinpath(str(trial_list[trial_ind]) + "_" + str(c_ind) + ".jpg")
+                plt.savefig(save_fn)
+                plt.close(fig)
         
 if __name__ == "__main__":
     compare_estimated_bvps()
