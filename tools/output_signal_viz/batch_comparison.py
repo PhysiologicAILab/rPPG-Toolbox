@@ -129,14 +129,26 @@ def compare_estimated_bvps():
         print("Training datasets:", train_datasets)
         print("Model Names:", model_names)
 
+        chunk_size = 160  # size of chunk to visualize: -1 will plot the entire signal
+
         # List of all video trials
         trial_list = list(data_dict[train_datasets[0]][model_names[0]]['predictions'].keys())
         print('Num Trials', len(trial_list))
+        print('Chunk size', chunk_size)
 
         for trial_ind in range(len(trial_list)):
 
             fig, ax = plt.subplots(total_train_datasets, 1, figsize=(16, 9))
             plt.suptitle('Trial: ' + trial_list[trial_ind])
+
+            # Read in meta-data from pickle file
+            fs = data_dict[train_datasets[0]][model_names[0]]['fs'] # Video Frame Rate
+            label_type = data_dict[train_datasets[0]][model_names[0]]['label_type'] # PPG Signal Transformation: `DiffNormalized` or `Standardized`
+            diff_flag = (label_type == 'DiffNormalized')
+
+            gt_bvp = np.array(_reform_data_from_dict(
+                data_dict[train_datasets[0]][model_names[0]]['labels'][trial_list[trial_ind]]))
+            gt_bvp = _process_signal(gt_bvp, fs, diff_flag=diff_flag)
 
             for d_ind in range(total_train_datasets):
 
@@ -144,31 +156,21 @@ def compare_estimated_bvps():
 
                     # Reform label and prediction vectors from multiple trial chunks
                     prediction = np.array(_reform_data_from_dict(data_dict[train_datasets[d_ind]][model_names[m_ind]]['predictions'][trial_list[trial_ind]]))
-                    label = np.array(_reform_data_from_dict(data_dict[train_datasets[d_ind]][model_names[m_ind]]['labels'][trial_list[trial_ind]]))
-
-                    # Read in meta-data from pickle file
-                    fs = data_dict[train_datasets[d_ind]][model_names[m_ind]]['fs'] # Video Frame Rate
-                    label_type = data_dict[train_datasets[d_ind]][model_names[m_ind]]['label_type'] # PPG Signal Transformation: `DiffNormalized` or `Standardized`
-                    diff_flag = (label_type == 'DiffNormalized')
-
 
                     # Process label and prediction signals
                     prediction = _process_signal(prediction, fs, diff_flag=diff_flag)
-                    label = _process_signal(label, fs, diff_flag=diff_flag)
-
-                    ax[d_ind].plot()
     
                     samples = len(prediction)
                     x_time = np.linspace(0, samples/fs, num=samples)
 
                     ax[d_ind].plot(x_time, prediction, label=model_names[m_ind])
                 
-                ax[d_ind].plot(x_time, label, color='black')
+                ax[d_ind].plot(x_time, gt_bvp, label="GT", color='black')
                 ax[d_ind].legend(loc = "upper right")
                 ax[d_ind].set_xlabel('Time (s)')
 
-        plt.show()
-        plt.close(fig)
+            plt.show()
+            plt.close(fig)
         
 if __name__ == "__main__":
     compare_estimated_bvps()
