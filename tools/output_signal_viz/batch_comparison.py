@@ -4,9 +4,40 @@ import pickle
 from scipy.signal import filtfilt, butter
 from scipy.sparse import spdiags
 import argparse
-import pathlib
+from pathlib import Path
+import io
 
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+# device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+class CPU_Unpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if module == 'torch.storage' and name == '_load_from_bytes':
+            return lambda b: torch.load(io.BytesIO(b), map_location=device)
+        else:
+            return super().find_class(module, name)
+
+
+path_dict = {
+    "root": "/Users/jiteshjoshi/Downloads/rPPG_Testing/FactorizePhys/",
+    "test_datasets": {
+        "PURE": {
+            "iBVP_EfficientPhys_SASN": "iBVP_iBVP_EfficientPhys_outputs.pickle",
+            "iBVP_EfficientPhys_FSAM": "iBVP_iBVP_EfficientPhysFM_V12_FD40_outputs.pickle",
+            "iBVP_FactorizePhys": "iBVP_iBVP_iBVPNetMD_FactorizePhys_v63_No_FSAM_outputs.pickle",
+            "iBVP_FactorizePhys_FSAM": "iBVP_iBVP_iBVPNetMD_FactorizePhys_v63_R8_S8_ST6_LR1e-3_NoRes_outputs.pickle",
+            "iBVP_PhysFormer": "iBVP_iBVP_PHYSFORMER_outputs.pickle",
+            "iBVP_PhysNet": "iBVP_iBVP_PHYSNET_outputs.pickle",
+            "UBFC_EfficientPhys_FSAM": "UBFC_UBFC_PURE_EfficientPhys_FM_v12_outputs.pickle",
+            "UBFC_EfficientPhys_SASN": "UBFC_UBFC_PURE_EfficientPhys_outputs.pickle",
+            "UBFC_FactorizePhys": "UBFC_UBFC_PURE_iBVPNetMD_v63_No_FSAM_outputs.pickle",
+            "UBFC_FactorizePhys_FSAM": "UBFC_UBFC_PURE_iBVPNetMD_v63_R8_S8_ST6_LR1e-3_NoRes_outputs.pickle",
+            "UBFC_PhysNet": "UBFC_UBFC_PURE_PhysNet_outputs.pickle",
+            "UBFC_PhysFormer": "UBFC-rPPG_UBFC-rPPG_PURE_PhysFormer_outputs.pickle"
+        }
+    }
+}
 
 
 # HELPER FUNCTIONS
@@ -55,21 +86,45 @@ def _detrend(input_signal, lambda_value):
 
 
 
-def compare_bvps(args_parser):
-    data_out_path = "./sample_output.pickle"  # Output Data Path
-    trial_idx = 0
-    chunk_size = 180  # size of chunk to visualize: -1 will plot the entire signal
-    chunk_num = 0
+def compare_estimated_bvps():
 
-
-    # Read in data and list subjects
-    with open(data_out_path, 'rb') as f:
-        data = pickle.load(f)
-
-    # List of all video trials
-    trial_list = list(data['predictions'].keys())
-    print('Num Trials', len(trial_list))
-
-
-if __name__ == "__main__":
+    root_dir = Path(path_dict["root"])
+    if not root_dir.exists():
+        print("Data path does not exists:", str(root_dir))
+        exit()
     
+    plot_dir = root_dir.joinpath("plots")
+    plot_dir.mkdir(parents=True, exist_ok=True)
+
+    for test_dataset in path_dict["test_datasets"]:
+        print("*"*50)
+        print("Test Data:", test_dataset)
+        print("*"*50)
+        data_dict = {}
+
+        plot_test_dir = plot_dir.joinpath(test_dataset)
+        plot_test_dir.mkdir(parents=True, exist_ok=True)
+
+        for train_model in path_dict["test_datasets"][test_dataset]:
+            train_data = train_model.split("_")[0]
+            model_name = "_".join(train_model.split("_")[1:])
+            print("Train Data, Model:", [train_data, model_name])
+            
+            if train_data not in data_dict:
+                data_dict[train_data] = {}
+            
+            fn = root_dir.joinpath(path_dict["test_datasets"][test_dataset][train_model])
+            data_dict[train_data][model_name] = CPU_Unpickler(open(fn, "rb")).load()
+        
+        print("-"*50)
+    
+        # print(data_dict.keys())
+        # print(data_dict["iBVP"].keys())
+        # print(data_dict["UBFC"].keys())
+
+
+    
+
+        
+if __name__ == "__main__":
+    compare_estimated_bvps()
