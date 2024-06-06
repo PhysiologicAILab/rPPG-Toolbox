@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_v63_R8_S16_ST6_LR1e-3_NoRes
+  MODEL_FILE_NAME: PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_v63_R5_S16_ST6_LR1e-3_Res
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -65,7 +65,7 @@ VALID:
         W: 72
 TEST:
   METRICS: ['MAE', 'RMSE', 'MAPE', 'Pearson', 'SNR', 'BA', 'MACC']
-  USE_LAST_EPOCH: True                   # to use provided validation dataset to find the best epoch, should be false
+  USE_LAST_EPOCH: False                   # to use provided validation dataset to find the best epoch, should be false
   DATA:
     FS: 30
     DATASET: iBVP
@@ -105,7 +105,7 @@ MODEL:
   iBVPNet:
     CHANNELS: 3
     FRAME_NUM: 160
-    MD_R: 8
+    MD_R: 5
     MD_S: 16
     MD_STEPS: 6
 INFERENCE:
