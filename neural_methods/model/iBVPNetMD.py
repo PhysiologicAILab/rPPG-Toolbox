@@ -16,7 +16,7 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 5,
+    "MD_R": 1,
     "MD_S": 16,
     "MD_STEPS": 6,
     "INV_T": 1,
@@ -30,8 +30,8 @@ model_config = {
     "weight": 72,
     "batch_size": 2,
     "frames": 160,
-    "debug": False,
-    "assess_latency": True,
+    "debug": True,
+    "assess_latency": False,
     "num_trials": 20,
     "visualize": False,
     "ckpt_path": "/Users/jiteshjoshi/Downloads/rPPG_Testing/models/PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_5_Epoch26.pth",
