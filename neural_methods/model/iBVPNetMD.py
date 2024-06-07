@@ -16,14 +16,14 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 1,
-    "MD_S": 10,
+    "MD_R": 8,
+    "MD_S": 4,
     "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
     "MD_TYPE": "NMF",
-    "in_channels": 1,
+    "in_channels": 3,
     "data_channels": 4,
     "align_channels": 8,
     "height": 72,
@@ -371,12 +371,12 @@ class FeaturesFactorizationModule(nn.Module):
         dist = torch.dist(x, att)
         att = self.post_conv_block(att)
 
-        # If residual connection is used, factorization should aim at very low rank approximation to retain only highly important features.
-        x = F.tanh(shortcut + torch.multiply(shortcut, att))
+        # # If residual connection is used, factorization should aim at very low rank approximation to retain only highly important features.
+        # x = F.tanh(shortcut + torch.multiply(shortcut, att))
 
-        # # In this case (no residual connection), factorization should aim at optimal rank approximation, 
-        # # eliminating only some features, while retaining the most
-        # x = F.tanh(torch.multiply(shortcut, att))
+        # In this case (no residual connection), factorization should aim at optimal rank approximation, 
+        # eliminating only some features, while retaining the most
+        x = F.tanh(torch.multiply(shortcut, att))
 
         return x, att, dist
 
