@@ -348,7 +348,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.post_conv_block = nn.Sequential(
             ConvBNReLU(align_C, align_C, kernel_size=(1, 1, 1)),
-            nn.Conv3d(align_C, align_C, (1, 1, 1), bias=False)
+            # nn.Conv3d(align_C, align_C, (1, 1, 1), bias=False)
         )
         self.shortcut = nn.Sequential()
         self._init_weight()
@@ -481,7 +481,7 @@ class iBVPNetMD(nn.Module):
         if self.use_fsam:
 
             self.align_feats = nn.Sequential(
-                nn.Conv3d(nf[3], model_config["align_channels"], (1, 1, 1), stride=(1, 1, 1), padding=(0, 0, 0)),
+                nn.Conv3d(nf[3], model_config["align_channels"], (3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1)),
                 nn.Tanh(),            
             )
             self.VEFM = FeaturesFactorizationModule(device, md_config, debug=debug)
