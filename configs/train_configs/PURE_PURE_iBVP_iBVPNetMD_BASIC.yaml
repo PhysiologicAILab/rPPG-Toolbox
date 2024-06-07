@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_v63_R8_S1_ST6_LR1e-3_Res
+  MODEL_FILE_NAME: PURE_PURE_iBVP_iBVPNetMD_FactorizePhys_v63_R1_S1_ST6_LR1e-3_Res
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -105,7 +105,7 @@ MODEL:
   iBVPNet:
     CHANNELS: 3
     FRAME_NUM: 160
-    MD_R: 8
+    MD_R: 1
     MD_S: 1
     MD_STEPS: 6
 INFERENCE:
