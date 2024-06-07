@@ -16,14 +16,14 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 4,
-    "MD_S": 2,
-    "MD_STEPS": 6,
+    "MD_R": 1,
+    "MD_S": 10,
+    "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
     "MD_TYPE": "NMF",
-    "in_channels": 3,
+    "in_channels": 1,
     "data_channels": 4,
     "align_channels": 8,
     "height": 72,

@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: iBVP_iBVP_iBVPNetMD_FactorizePhys_v63_R4_S2_ST6_LR1e-3_Res
+  MODEL_FILE_NAME: iBVP_iBVP_iBVPNetMD_FactorizePhys_v63_R1_S10_ST4_LR1e-3_Res
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -107,9 +107,9 @@ MODEL:
   iBVPNet:
     CHANNELS: 3
     FRAME_NUM: 160
-    MD_R: 4
-    MD_S: 2
-    MD_STEPS: 6
+    MD_R: 1
+    MD_S: 10
+    MD_STEPS: 4
 INFERENCE:
   BATCH_SIZE: 4
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
