@@ -16,14 +16,14 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 8,
-    "MD_S": 5,
-    "MD_STEPS": 6,
+    "MD_R": 4,
+    "MD_S": 4,
+    "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
     "MD_TYPE": "NMF",
-    "in_channels": 3,
+    "in_channels": 1,
     "data_channels": 4,
     "align_channels": 8,
     "height": 72,
@@ -323,7 +323,7 @@ class ConvBNReLU(nn.Module):
 
 
 class FeaturesFactorizationModule(nn.Module):
-    def __init__(self, device, md_config, debug=False):
+    def __init__(self, inC, device, md_config, debug=False):
         super().__init__()
 
         self.device = device
@@ -332,7 +332,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
-                nn.Conv3d(align_C, align_C, (1, 1, 1)),
+                nn.Conv3d(inC, align_C, (1, 1, 1)),
                 nn.ReLU(inplace=True)
             )
         else:
@@ -348,7 +348,7 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.post_conv_block = nn.Sequential(
             ConvBNReLU(align_C, align_C, kernel_size=(1, 1, 1)),
-            # nn.Conv3d(align_C, align_C, (1, 1, 1), bias=False)
+            nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
         )
         self.shortcut = nn.Sequential()
         self._init_weight()
@@ -425,13 +425,25 @@ class encoder_block(nn.Module):
 
 
 
-class decoder_block(nn.Module):
-    def __init__(self, inC, dropout_rate=0.1, debug=False):
-        super(decoder_block, self).__init__()
+class BVP_Head(nn.Module):
+    def __init__(self, use_fsam=True, dropout_rate=0.1, debug=False):
+        super(BVP_Head, self).__init__()
         self.debug = debug
 
-        # k_t = 3  # 3  # 5   #7
-        # pad_t = 1  # 1  # 2   #3
+        self.use_fsam = use_fsam
+
+        if self.use_fsam:
+            inC = nf[3]
+            # self.align_feats = nn.Sequential(
+            #     nn.Conv3d(inC, model_config["align_channels"], (1, 1, 1), stride=(1, 1, 1), padding=(0, 0, 0)),
+            #     nn.Tanh(),            
+            # )
+            self.VEFM = FeaturesFactorizationModule(inC, device, md_config, debug=debug)
+
+            # inC = 2 * model_config["align_channels"]
+        else:
+            inC = nf[3]
+
         self.conv_decoder = nn.Sequential(
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
@@ -442,19 +454,37 @@ class decoder_block(nn.Module):
             nn.Conv3d(nf[0], 1, (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
         )
 
-
-    def forward(self, x):
+    def forward(self, voxel_embeddings):
 
         if self.debug:
             print("Decoder")
-            print("     x.shape", x.shape)
+            print("     voxel_embeddings.shape", voxel_embeddings.shape)
+
+        if self.use_fsam:
+            # voxel_embeddings = self.align_feats(voxel_embeddings)
+            factorized_embeddings, att_mask, appx_error = self.VEFM(voxel_embeddings)
+            if self.debug:
+                print("factorized_embeddings.shape", factorized_embeddings.shape)
+
+            # If residual connection is used, factorization should aim at very low rank approximation to retain only highly important features.
+            x = voxel_embeddings + factorized_embeddings
+
+            # # In this case (no residual connection), factorization should aim at optimal rank approximation,
+            # # eliminating only some features, while retaining the most
+            # x = factorized_embeddings
+
+            # # Concatenate
+            # x = torch.cat([voxel_embeddings, factorized_embeddings], dim=1)
 
         x = self.conv_decoder(x)
         
         if self.debug:
             print("     conv_decoder_x.shape", x.shape)
         
-        return x
+        if self.use_fsam:
+            return x, factorized_embeddings, att_mask, appx_error
+        else:
+            return x
 
 
 
@@ -472,24 +502,15 @@ class iBVPNetMD(nn.Module):
         else:
             print("Unsupported input channels")
         
+        self.use_fsam = use_fsam
+
         if self.debug:
             print("nf:", nf)
-        self.use_fsam = use_fsam
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
 
-        if self.use_fsam:
+        self.rppg_head = BVP_Head(use_fsam=use_fsam, dropout_rate=dropout, debug=debug)
 
-            self.align_feats = nn.Sequential(
-                nn.Conv3d(nf[3], model_config["align_channels"], (1, 1, 1), stride=(1, 1, 1), padding=(0, 0, 0)),
-                nn.Tanh(),            
-            )
-            self.VEFM = FeaturesFactorizationModule(device, md_config, debug=debug)
-
-            self.decoder = decoder_block(2 * model_config["align_channels"], dropout_rate=dropout, debug=debug)
-        else:
-
-            self.decoder = decoder_block(nf[3], dropout_rate=dropout, debug=debug)
 
         
     def forward(self, x): # [batch, Features=3, Temp=frames, Width=32, Height=32]
@@ -534,33 +555,22 @@ class iBVPNetMD(nn.Module):
             print("voxel_embeddings.shape", voxel_embeddings.shape)
         
         if self.use_fsam:
-            aligned_embeddings = self.align_feats(voxel_embeddings)
-            factorized_embeddings, att_mask, appx_error = self.VEFM(aligned_embeddings)
-            if self.debug:
-                print("factorized_embeddings.shape", factorized_embeddings.shape)
-
-            # # If residual connection is used, factorization should aim at very low rank approximation to retain only highly important features.
-            # merged_feats = F.tanh(aligned_embeddings + factorized_embeddings)
-
-            # # In this case (no residual connection), factorization should aim at optimal rank approximation,
-            # # eliminating only some features, while retaining the most
-            # merged_feats = F.tanh(factorized_embeddings)
-
-            merged_feats = torch.cat([aligned_embeddings, F.tanh(factorized_embeddings)], dim = 1)
-
-            feats = self.decoder(merged_feats)
+            rppg_feats, factorized_embeddings, att_mask, appx_error = self.rppg_head(voxel_embeddings)
         else:
-            feats = self.decoder(voxel_embeddings)
+            rppg_feats = self.rppg_head(voxel_embeddings)
 
         if self.debug:
-            print("feats.shape", feats.shape)
+            print("rppg_feats.shape", rppg_feats.shape)
 
-        rPPG = feats.view(-1, length-1)
+        rPPG = rppg_feats.view(-1, length-1)
 
         if self.debug:
             print("rPPG.shape", rPPG.shape)
 
-        return rPPG, voxel_embeddings, factorized_embeddings, att_mask, appx_error
+        if self.use_fsam:
+            return rPPG, voxel_embeddings, factorized_embeddings, att_mask, appx_error
+        else:
+            return rPPG, voxel_embeddings
     
 
 if __name__ == "__main__":
