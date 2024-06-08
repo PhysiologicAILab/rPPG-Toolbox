@@ -16,9 +16,9 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 1,
-    "MD_S": 4,
-    "MD_STEPS": 4,
+    "MD_R": 8,
+    "MD_S": 5,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -546,7 +546,7 @@ class iBVPNetMD(nn.Module):
             # # eliminating only some features, while retaining the most
             # merged_feats = F.tanh(factorized_embeddings)
 
-            merged_feats = torch.cat([aligned_embeddings, factorized_embeddings], dim=1)
+            merged_feats = torch.cat([aligned_embeddings, F.tanh(factorized_embeddings)], dim = 1)
 
             feats = self.decoder(merged_feats)
         else:
