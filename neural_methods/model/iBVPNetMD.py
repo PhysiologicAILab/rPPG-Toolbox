@@ -23,7 +23,7 @@ model_config = {
     "ETA": 0.9,
     "RAND_INIT": True,
     "MD_TYPE": "NMF",
-    "in_channels": 1,
+    "in_channels": 3,
     "data_channels": 4,
     "align_channels": 8,
     "height": 72,
@@ -426,7 +426,7 @@ class encoder_block(nn.Module):
 
 
 class BVP_Head(nn.Module):
-    def __init__(self, use_fsam=True, dropout_rate=0.1, debug=False):
+    def __init__(self, device, use_fsam=True, dropout_rate=0.1, debug=False):
         super(BVP_Head, self).__init__()
         self.debug = debug
 
@@ -509,7 +509,7 @@ class iBVPNetMD(nn.Module):
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
 
-        self.rppg_head = BVP_Head(use_fsam=use_fsam, dropout_rate=dropout, debug=debug)
+        self.rppg_head = BVP_Head(device=device, use_fsam=use_fsam, dropout_rate=dropout, debug=debug)
 
 
         
