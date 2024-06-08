@@ -16,8 +16,8 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 4,
-    "MD_S": 5,
+    "MD_R": 8,
+    "MD_S": 8,
     "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
@@ -481,7 +481,7 @@ class iBVPNetMD(nn.Module):
         if self.use_fsam:
 
             self.align_feats = nn.Sequential(
-                nn.Conv3d(nf[3], model_config["align_channels"], (3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1)),
+                nn.Conv3d(nf[3], model_config["align_channels"], (1, 1, 1), stride=(1, 1, 1), padding=(0, 0, 0)),
                 nn.Tanh(),            
             )
             self.VEFM = FeaturesFactorizationModule(device, md_config, debug=debug)
