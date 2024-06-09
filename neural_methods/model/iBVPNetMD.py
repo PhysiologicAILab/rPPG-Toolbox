@@ -467,7 +467,7 @@ class BVP_Head(nn.Module):
                 print("factorized_embeddings.shape", factorized_embeddings.shape)
 
             # If residual connection is used, factorization should aim at very low rank approximation to retain only highly important features.
-            x = F.tanh(voxel_embeddings + F.tanh(factorized_embeddings))
+            x = voxel_embeddings + F.tanh(factorized_embeddings)
 
             # # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # # eliminating only some features, while retaining the most
