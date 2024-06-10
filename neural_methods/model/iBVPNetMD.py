@@ -16,7 +16,7 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 4,
+    "MD_R": 8,
     "MD_S": 8,
     "MD_STEPS": 6,
     "INV_T": 1,
@@ -467,16 +467,17 @@ class BVP_Head(nn.Module):
             # # directly use factorized_embeddings
             # merged_embeddings = factorized_embeddings
 
-            # Residual connection: 
-            merged_embeddings = voxel_embeddings + factorized_embeddings
+            # # Residual connection: 
+            # merged_embeddings = voxel_embeddings + factorized_embeddings
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
+            # merged_embeddings = voxel_embeddings + torch.multiply(1 + voxel_embeddings, factorized_embeddings)
             # # merged_embeddings = voxel_embeddings + F.tanh(torch.multiply(voxel_embeddings, factorized_embeddings))
-            # merged_embeddings = voxel_embeddings + torch.multiply(voxel_embeddings, factorized_embeddings)
+            # # merged_embeddings = F.tanh(voxel_embeddings + torch.multiply(voxel_embeddings, factorized_embeddings))
 
-            # # In this case (no residual connection), factorization should aim at optimal rank approximation,
-            # # eliminating only some features, while retaining the most
-            # merged_embeddings = torch.multiply(voxel_embeddings, factorized_embeddings)
+            # In this case (no residual connection), factorization should aim at optimal rank approximation,
+            # eliminating only some features, while retaining the most
+            merged_embeddings = torch.multiply(1 + voxel_embeddings, factorized_embeddings)
 
             # # Concatenate
             # merged_embeddings = torch.cat([voxel_embeddings, torch.multiply(voxel_embeddings, factorized_embeddings)], dim=1)
