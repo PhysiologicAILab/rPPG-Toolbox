@@ -310,7 +310,7 @@ class ConvBNReLU(nn.Module):
         if act == "sigmoid":
             self.act = nn.Sigmoid()
         else:
-            self.act = nn.ReLU6(inplace=True)
+            self.act = nn.ReLU(inplace=True)
 
     def forward(self, x):
         x = self.conv(x)
@@ -333,7 +333,7 @@ class FeaturesFactorizationModule(nn.Module):
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
                 nn.Conv3d(inC, align_C, (1, 1, 1)),
-                nn.ReLU6(inplace=True)
+                nn.ReLU(inplace=True)
             )
         else:
             self.pre_conv_block = nn.Conv3d(align_C, align_C, (1, 1, 1))
@@ -385,7 +385,7 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            nn.ReLU6(inplace=True)
+            nn.Tanh()
         )
 
     def forward(self, x):
@@ -447,7 +447,7 @@ class BVP_Head(nn.Module):
         self.conv_decoder = nn.Sequential(
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            nn.ReLU6(),
+            nn.Tanh(),
 
             nn.Dropout3d(p=dropout_rate),
 
@@ -466,9 +466,9 @@ class BVP_Head(nn.Module):
             if self.debug:
                 print("factorized_embeddings.shape", factorized_embeddings.shape)
 
-            # If residual connection is used, factorization should aim at very low rank approximation to retain only highly important features.
-            # x = voxel_embeddings + F.relu6(factorized_embeddings)
-            x = voxel_embeddings + factorized_embeddings
+            # # If residual connection is used, factorization should aim at very low rank approximation to retain only highly important features.
+            # # x = voxel_embeddings + F.tanh(factorized_embeddings)
+            # x = voxel_embeddings + factorized_embeddings
 
             # # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # # eliminating only some features, while retaining the most
@@ -477,7 +477,7 @@ class BVP_Head(nn.Module):
             # # Concatenate
             # x = torch.cat([voxel_embeddings, factorized_embeddings], dim=1)
 
-        x = self.conv_decoder(x)
+        x = self.conv_decoder(factorized_embeddings)
         
         if self.debug:
             print("     conv_decoder_x.shape", x.shape)
