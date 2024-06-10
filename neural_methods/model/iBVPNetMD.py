@@ -463,11 +463,11 @@ class BVP_Head(nn.Module):
             if self.debug:
                 print("factorized_embeddings.shape", factorized_embeddings.shape)
 
-            # # directly use factorized_embeddings
-            # merged_embeddings = factorized_embeddings
+            # directly use factorized_embeddings
+            merged_embeddings = factorized_embeddings
 
-            # Residual connection: 
-            merged_embeddings = voxel_embeddings + factorized_embeddings
+            # # Residual connection: 
+            # merged_embeddings = voxel_embeddings + factorized_embeddings
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
             # merged_embeddings = voxel_embeddings + torch.multiply(1 + voxel_embeddings, factorized_embeddings)
