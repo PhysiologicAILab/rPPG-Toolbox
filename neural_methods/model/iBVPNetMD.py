@@ -385,7 +385,7 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            nn.ReLU6()
+            nn.ReLU6(inplace=True)
         )
 
     def forward(self, x):
