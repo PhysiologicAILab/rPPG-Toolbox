@@ -16,9 +16,9 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 1,
-    "MD_S": 4,
-    "MD_STEPS": 1,
+    "MD_R": 4,
+    "MD_S": 8,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -385,7 +385,7 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            nn.Tanh()
+            nn.ReLU6()
         )
 
     def forward(self, x):
@@ -447,7 +447,7 @@ class BVP_Head(nn.Module):
         self.conv_decoder = nn.Sequential(
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            nn.Tanh(),
+            nn.ReLU6(),
 
             nn.Dropout3d(p=dropout_rate),
 
@@ -467,7 +467,7 @@ class BVP_Head(nn.Module):
                 print("factorized_embeddings.shape", factorized_embeddings.shape)
 
             # If residual connection is used, factorization should aim at very low rank approximation to retain only highly important features.
-            x = voxel_embeddings + F.tanh(factorized_embeddings)
+            x = voxel_embeddings + F.relu6(factorized_embeddings)
 
             # # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # # eliminating only some features, while retaining the most
