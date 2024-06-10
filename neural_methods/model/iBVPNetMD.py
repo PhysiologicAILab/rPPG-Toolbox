@@ -310,7 +310,7 @@ class ConvBNReLU(nn.Module):
         if act == "sigmoid":
             self.act = nn.Sigmoid()
         else:
-            self.act = nn.ReLU(inplace=True)
+            self.act = nn.ReLU6(inplace=True)
 
     def forward(self, x):
         x = self.conv(x)
@@ -333,7 +333,7 @@ class FeaturesFactorizationModule(nn.Module):
         if "nmf" in md_type.lower():
             self.pre_conv_block = nn.Sequential(
                 nn.Conv3d(inC, align_C, (1, 1, 1)),
-                nn.ReLU(inplace=True)
+                nn.ReLU6(inplace=True)
             )
         else:
             self.pre_conv_block = nn.Conv3d(align_C, align_C, (1, 1, 1))
@@ -467,7 +467,8 @@ class BVP_Head(nn.Module):
                 print("factorized_embeddings.shape", factorized_embeddings.shape)
 
             # If residual connection is used, factorization should aim at very low rank approximation to retain only highly important features.
-            x = voxel_embeddings + F.relu6(factorized_embeddings)
+            # x = voxel_embeddings + F.relu6(factorized_embeddings)
+            x = voxel_embeddings + factorized_embeddings
 
             # # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # # eliminating only some features, while retaining the most
