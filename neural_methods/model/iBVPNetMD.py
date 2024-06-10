@@ -16,9 +16,9 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 5,
-    "MD_S": 5,
-    "MD_STEPS": 5,
+    "MD_R": 1,
+    "MD_S": 8,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
