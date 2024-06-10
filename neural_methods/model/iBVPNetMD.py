@@ -440,6 +440,7 @@ class BVP_Head(nn.Module):
         else:
             inC = nf[3]
 
+        self.fsam_norm = nn.BatchNorm3d(inC)
         self.conv_decoder = nn.Sequential(
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
@@ -470,7 +471,9 @@ class BVP_Head(nn.Module):
             # merged_embeddings = voxel_embeddings + factorized_embeddings
 
             # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            merged_embeddings = voxel_embeddings + torch.multiply(voxel_embeddings, factorized_embeddings)
+            min_vx = voxel_embeddings.min()
+            min_fx = factorized_embeddings.min()
+            merged_embeddings = voxel_embeddings + self.fsam_norm(torch.multiply(voxel_embeddings - min_vx, factorized_embeddings - min_fx))
             # merged_embeddings = voxel_embeddings + F.tanh(torch.multiply(voxel_embeddings, factorized_embeddings))
             # merged_embeddings = F.tanh(voxel_embeddings + torch.multiply(voxel_embeddings, factorized_embeddings))
 
