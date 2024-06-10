@@ -16,9 +16,9 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 8,
-    "MD_S": 1,
-    "MD_STEPS": 4,
+    "MD_R": 4,
+    "MD_S": 5,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -293,7 +293,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c,
                  kernel_size=(1, 1, 1), stride=(1, 1, 1), padding='same',
-                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=True):
+                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=False):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -440,7 +440,6 @@ class BVP_Head(nn.Module):
         else:
             inC = nf[3]
 
-        self.fsam_norm = nn.BatchNorm3d(inC)
         self.conv_decoder = nn.Sequential(
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
@@ -470,16 +469,14 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # merged_embeddings = voxel_embeddings + factorized_embeddings
 
-            # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            min_vx = voxel_embeddings.min()
-            min_fx = factorized_embeddings.min()
-            merged_embeddings = voxel_embeddings + self.fsam_norm(torch.multiply(voxel_embeddings - min_vx, factorized_embeddings - min_fx))
-            # merged_embeddings = voxel_embeddings + F.tanh(torch.multiply(voxel_embeddings, factorized_embeddings))
-            # merged_embeddings = F.tanh(voxel_embeddings + torch.multiply(voxel_embeddings, factorized_embeddings))
+            # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
+            # merged_embeddings = voxel_embeddings + torch.multiply(1 + voxel_embeddings, factorized_embeddings)
+            # # merged_embeddings = voxel_embeddings + F.tanh(torch.multiply(voxel_embeddings, factorized_embeddings))
+            # # merged_embeddings = F.tanh(voxel_embeddings + torch.multiply(voxel_embeddings, factorized_embeddings))
 
-            # # In this case (no residual connection), factorization should aim at optimal rank approximation,
-            # # eliminating only some features, while retaining the most
-            # merged_embeddings = torch.multiply(voxel_embeddings, factorized_embeddings)
+            # In this case (no residual connection), factorization should aim at optimal rank approximation,
+            # eliminating only some features, while retaining the most
+            merged_embeddings = torch.multiply((1 + voxel_embeddings), factorized_embeddings)
 
             # # Concatenate
             # merged_embeddings = torch.cat([voxel_embeddings, torch.multiply(voxel_embeddings, factorized_embeddings)], dim=1)
