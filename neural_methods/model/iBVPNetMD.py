@@ -16,9 +16,9 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 4,
+    "MD_R": 1,
     "MD_S": 4,
-    "MD_STEPS": 6,
+    "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -350,7 +350,6 @@ class FeaturesFactorizationModule(nn.Module):
             ConvBNReLU(align_C, align_C, kernel_size=(1, 1, 1)),
             nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
         )
-        self.shortcut = nn.Sequential()
         self._init_weight()
 
 
