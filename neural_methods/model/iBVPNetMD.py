@@ -471,13 +471,13 @@ class BVP_Head(nn.Module):
             # merged_embeddings = voxel_embeddings + factorized_embeddings
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            # merged_embeddings = voxel_embeddings + torch.multiply(1 + voxel_embeddings, factorized_embeddings)
+            # merged_embeddings = voxel_embeddings + torch.multiply(voxel_embeddings, factorized_embeddings)
             # # merged_embeddings = voxel_embeddings + F.tanh(torch.multiply(voxel_embeddings, factorized_embeddings))
             # # merged_embeddings = F.tanh(voxel_embeddings + torch.multiply(voxel_embeddings, factorized_embeddings))
 
             # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # eliminating only some features, while retaining the most
-            merged_embeddings = torch.multiply(1 + voxel_embeddings, factorized_embeddings)
+            merged_embeddings = torch.multiply(voxel_embeddings, factorized_embeddings)
 
             # # Concatenate
             # merged_embeddings = torch.cat([voxel_embeddings, torch.multiply(voxel_embeddings, factorized_embeddings)], dim=1)
