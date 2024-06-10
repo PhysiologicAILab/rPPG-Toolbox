@@ -16,8 +16,8 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 7,
-    "MD_S": 16,
+    "MD_R": 4,
+    "MD_S": 8,
     "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
@@ -365,15 +365,12 @@ class FeaturesFactorizationModule(nn.Module):
                     m.bias.data.zero_()
 
     def forward(self, x):
-        shortcut = self.shortcut(x)
         x = self.pre_conv_block(x)
         att = self.md_block(x)
         dist = torch.dist(x, att)
         att = self.post_conv_block(att)
 
-        x = torch.multiply(shortcut, att)
-
-        return x, att, dist
+        return att, dist
 
     def online_update(self, bases):
         if hasattr(self.md_block, 'online_update'):
@@ -462,28 +459,35 @@ class BVP_Head(nn.Module):
 
         if self.use_fsam:
             # voxel_embeddings = self.align_feats(voxel_embeddings)
-            factorized_embeddings, att_mask, appx_error = self.VEFM(voxel_embeddings)
+
+            factorized_embeddings, appx_error = self.VEFM(1 + voxel_embeddings)  # 1 + voxel_embeddings -> to make it positive
             if self.debug:
                 print("factorized_embeddings.shape", factorized_embeddings.shape)
 
-            # # If residual connection is used, factorization should aim at very low rank approximation to retain only highly important features.
-            # # x = voxel_embeddings + F.tanh(factorized_embeddings)
-            # x = voxel_embeddings + factorized_embeddings
+            # # directly use factorized_embeddings
+            # merged_embeddings = factorized_embeddings
+
+            # Residual connection: 
+            merged_embeddings = voxel_embeddings + factorized_embeddings
+
+            # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
+            # # merged_embeddings = voxel_embeddings + F.tanh(torch.multiply(voxel_embeddings, factorized_embeddings))
+            # merged_embeddings = voxel_embeddings + torch.multiply(voxel_embeddings, factorized_embeddings)
 
             # # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # # eliminating only some features, while retaining the most
-            # x = factorized_embeddings
+            # merged_embeddings = torch.multiply(voxel_embeddings, factorized_embeddings)
 
             # # Concatenate
-            # x = torch.cat([voxel_embeddings, factorized_embeddings], dim=1)
+            # merged_embeddings = torch.cat([voxel_embeddings, torch.multiply(voxel_embeddings, factorized_embeddings)], dim=1)
 
-        x = self.conv_decoder(factorized_embeddings)
+        x = self.conv_decoder(merged_embeddings)
         
         if self.debug:
             print("     conv_decoder_x.shape", x.shape)
         
         if self.use_fsam:
-            return x, factorized_embeddings, att_mask, appx_error
+            return x, merged_embeddings, factorized_embeddings, appx_error
         else:
             return x
 
