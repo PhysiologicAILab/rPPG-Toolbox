@@ -16,6 +16,7 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
+    "MD_FSAM": True,
     "MD_R": 8,
     "MD_S": 2,
     "MD_STEPS": 6,
@@ -422,21 +423,15 @@ class encoder_block(nn.Module):
 
 
 class BVP_Head(nn.Module):
-    def __init__(self, md_config, device, use_fsam=True, dropout_rate=0.1, debug=False):
+    def __init__(self, md_config, device, dropout_rate=0.1, debug=False):
         super(BVP_Head, self).__init__()
         self.debug = debug
 
-        self.use_fsam = use_fsam
+        self.use_fsam = md_config["MD_FSAM"]
 
         if self.use_fsam:
             inC = nf[3]
-            # self.align_feats = nn.Sequential(
-            #     nn.Conv3d(inC, model_config["align_channels"], (1, 1, 1), stride=(1, 1, 1), padding=(0, 0, 0)),
-            #     nn.Tanh(),            
-            # )
             self.VEFM = FeaturesFactorizationModule(inC, device, md_config, debug=debug)
-
-            # inC = 2 * model_config["align_channels"]
         else:
             inC = nf[3]
 
@@ -457,42 +452,43 @@ class BVP_Head(nn.Module):
             print("     voxel_embeddings.shape", voxel_embeddings.shape)
 
         if self.use_fsam:
-            # voxel_embeddings = self.align_feats(voxel_embeddings)
-
-            factorized_embeddings, appx_error = self.VEFM(1 + voxel_embeddings)  # 1 + voxel_embeddings -> to make it positive
+            att_mask, appx_error = self.VEFM(1 + voxel_embeddings)  # 1 + voxel_embeddings -> to make it positive
             if self.debug:
-                print("factorized_embeddings.shape", factorized_embeddings.shape)
+                print("att_mask.shape", att_mask.shape)
 
-            # # directly use factorized_embeddings
-            # merged_embeddings = factorized_embeddings
+            # # directly use att_mask
+            # factorized_embeddings = att_mask
 
             # # Residual connection: 
-            # merged_embeddings = voxel_embeddings + factorized_embeddings
+            # factorized_embeddings = voxel_embeddings + att_mask
 
             # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            merged_embeddings = voxel_embeddings + torch.multiply((1 + voxel_embeddings), factorized_embeddings)
+            factorized_embeddings = voxel_embeddings + torch.multiply((1 + voxel_embeddings), att_mask)
 
             # # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # # eliminating only some features, while retaining the most
-            # merged_embeddings = torch.multiply((1 + voxel_embeddings), factorized_embeddings)
+            # factorized_embeddings = torch.multiply((1 + voxel_embeddings), att_mask)
 
             # # Concatenate
-            # merged_embeddings = torch.cat([voxel_embeddings, torch.multiply((1 + voxel_embeddings), factorized_embeddings)], dim=1)
+            # factorized_embeddings = torch.cat([voxel_embeddings, torch.multiply((1 + voxel_embeddings), att_mask)], dim=1)
 
-        x = self.conv_decoder(merged_embeddings)
+            x = self.conv_decoder(factorized_embeddings)
+        
+        else:
+            x = self.conv_decoder(voxel_embeddings)
         
         if self.debug:
             print("     conv_decoder_x.shape", x.shape)
         
         if self.use_fsam:
-            return x, merged_embeddings, factorized_embeddings, appx_error
+            return x, factorized_embeddings, att_mask, appx_error
         else:
             return x
 
 
 
 class iBVPNetMD(nn.Module):
-    def __init__(self, frames, md_config, in_channels=3, dropout=0.2, use_fsam=True, device=torch.device("cpu"), debug=False):
+    def __init__(self, frames, md_config, in_channels=3, dropout=0.2, device=torch.device("cpu"), debug=False):
         super(iBVPNetMD, self).__init__()
         self.debug = debug
 
@@ -505,14 +501,14 @@ class iBVPNetMD(nn.Module):
         else:
             print("Unsupported input channels")
         
-        self.use_fsam = use_fsam
+        self.use_fsam = md_config["MD_FSAM"]
 
         if self.debug:
             print("nf:", nf)
 
         self.voxel_embeddings = encoder_block(self.in_channels, dropout_rate=dropout, debug=debug)
 
-        self.rppg_head = BVP_Head(md_config, device=device, use_fsam=use_fsam, dropout_rate=dropout, debug=debug)
+        self.rppg_head = BVP_Head(md_config, device=device, dropout_rate=dropout, debug=debug)
 
 
         
@@ -596,7 +592,7 @@ if __name__ == "__main__":
 
     label_path = model_config["label_path"]
 
-
+    use_fsam = model_config["MD_FSAM"]
     batch_size = model_config["batch_size"]
     frames = model_config["frames"]
     in_channels = model_config["in_channels"]
@@ -640,6 +636,7 @@ if __name__ == "__main__":
     md_config["MD_S"] = model_config["MD_S"]
     md_config["MD_R"] = model_config["MD_R"]
     md_config["MD_STEPS"] = model_config["MD_STEPS"]
+    md_config["MD_FSAM"] = model_config["MD_FSAM"]
     net = nn.DataParallel(iBVPNetMD(frames=frames, md_config=md_config, device=device, in_channels=in_channels, debug=debug)).to(device)
     # net.load_state_dict(torch.load(ckpt_path, map_location=device))
     net.eval()
@@ -649,7 +646,10 @@ if __name__ == "__main__":
         appx_error_list = []
         for passes in range(num_trials):
             t0 = time.time()
-            pred, vox_embed, factorized_embed, att_mask, appx_error = net(test_data)
+            if use_fsam:
+                pred, vox_embed, factorized_embed, att_mask, appx_error = net(test_data)
+            else:
+                pred, vox_embed = net(test_data)
             t1 = time.time()
             time_vec.append(t1-t0)
             appx_error_list.append(appx_error.item())
@@ -659,9 +659,12 @@ if __name__ == "__main__":
         plt.plot(time_vec)
         plt.show()
     else:
-        pred, vox_embed, factorized_embed, att_mask, appx_error = net(test_data)
-    
-    print("Appx error: ", appx_error.item())    #.detach().numpy())
+        if use_fsam:
+            pred, vox_embed, factorized_embed, att_mask, appx_error = net(test_data)
+            print("Appx error: ", appx_error.item())  # .detach().numpy())
+        else:
+            pred, vox_embed = net(test_data)
+
     # print("-"*100)
     # print(net)
     # print("-"*100)
@@ -669,104 +672,117 @@ if __name__ == "__main__":
     if visualize:
         test_data = test_data.detach().numpy()
         vox_embed = vox_embed.detach().numpy()
-        factorized_embed = factorized_embed.detach().numpy()
-        att_mask = att_mask.detach().numpy()
+        if use_fsam:
+            factorized_embed = factorized_embed.detach().numpy()
+            att_mask = att_mask.detach().numpy()
 
         # print(test_data.shape, vox_embed.shape, factorized_embed.shape)
         b, ch, enc_frames, enc_height, enc_width = vox_embed.shape
         # exit()
         for ch in range(vox_embed.shape[1]):
-            fig, ax = plt.subplots(9, 4, layout="tight")
+            if use_fsam:
+                fig, ax = plt.subplots(9, 4, layout="tight")
+            else:
+                fig, ax = plt.subplots(9, 2, layout="tight")
 
             frame = 0
             ax[0, 0].imshow(np_data[frame, ...].astype(np.uint8))
             ax[0, 0].axis('off')
             ax[0, 1].imshow(vox_embed[0, ch, frame, :, :])
             ax[0, 1].axis('off')
-            ax[0, 2].imshow(factorized_embed[0, ch, frame, :, :])
-            ax[0, 2].axis('off')
-            ax[0, 3].imshow(att_mask[0, ch, frame, :, :])
-            ax[0, 3].axis('off')
+            if use_fsam:
+                ax[0, 2].imshow(factorized_embed[0, ch, frame, :, :])
+                ax[0, 2].axis('off')
+                ax[0, 3].imshow(att_mask[0, ch, frame, :, :])
+                ax[0, 3].axis('off')
 
             frame = 20
             ax[1, 0].imshow(np_data[frame, ...].astype(np.uint8))
             ax[1, 0].axis('off')
             ax[1, 1].imshow(vox_embed[0, ch, frame//4, :, :])
             ax[1, 1].axis('off')
-            ax[1, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-            ax[1, 2].axis('off')
-            ax[1, 3].imshow(att_mask[0, ch, frame//4, :, :])
-            ax[1, 3].axis('off')
+            if use_fsam:
+                ax[1, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+                ax[1, 2].axis('off')
+                ax[1, 3].imshow(att_mask[0, ch, frame//4, :, :])
+                ax[1, 3].axis('off')
 
             frame = 40
             ax[2, 0].imshow(np_data[frame, ...].astype(np.uint8))
             ax[2, 0].axis('off')
             ax[2, 1].imshow(vox_embed[0, ch, frame//4, :, :])
             ax[2, 1].axis('off')
-            ax[2, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-            ax[2, 2].axis('off')
-            ax[2, 3].imshow(att_mask[0, ch, frame//4, :, :])
-            ax[2, 3].axis('off')
+            if use_fsam:
+                ax[2, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+                ax[2, 2].axis('off')
+                ax[2, 3].imshow(att_mask[0, ch, frame//4, :, :])
+                ax[2, 3].axis('off')
 
             frame = 60
             ax[3, 0].imshow(np_data[frame, ...].astype(np.uint8))
             ax[3, 0].axis('off')
             ax[3, 1].imshow(vox_embed[0, ch, frame//4, :, :])
             ax[3, 1].axis('off')
-            ax[3, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-            ax[3, 2].axis('off')
-            ax[3, 3].imshow(att_mask[0, ch, frame//4, :, :])
-            ax[3, 3].axis('off')
+            if use_fsam:
+                ax[3, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+                ax[3, 2].axis('off')
+                ax[3, 3].imshow(att_mask[0, ch, frame//4, :, :])
+                ax[3, 3].axis('off')
 
             frame = 80
             ax[4, 0].imshow(np_data[frame, ...].astype(np.uint8))
             ax[4, 0].axis('off')
             ax[4, 1].imshow(vox_embed[0, ch, frame//4, :, :])
             ax[4, 1].axis('off')
-            ax[4, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-            ax[4, 2].axis('off')
-            ax[4, 3].imshow(att_mask[0, ch, frame//4, :, :])
-            ax[4, 3].axis('off')
+            if use_fsam:
+                ax[4, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+                ax[4, 2].axis('off')
+                ax[4, 3].imshow(att_mask[0, ch, frame//4, :, :])
+                ax[4, 3].axis('off')
 
             frame = 100
             ax[5, 0].imshow(np_data[frame, ...].astype(np.uint8))
             ax[5, 0].axis('off')
             ax[5, 1].imshow(vox_embed[0, ch, frame//4, :, :])
             ax[5, 1].axis('off')
-            ax[5, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-            ax[5, 2].axis('off')
-            ax[5, 3].imshow(att_mask[0, ch, frame//4, :, :])
-            ax[5, 3].axis('off')
+            if use_fsam:
+                ax[5, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+                ax[5, 2].axis('off')
+                ax[5, 3].imshow(att_mask[0, ch, frame//4, :, :])
+                ax[5, 3].axis('off')
 
             frame = 120
             ax[6, 0].imshow(np_data[frame, ...].astype(np.uint8))
             ax[6, 0].axis('off')
             ax[6, 1].imshow(vox_embed[0, ch, frame//4, :, :])
             ax[6, 1].axis('off')
-            ax[6, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-            ax[6, 2].axis('off')
-            ax[6, 3].imshow(att_mask[0, ch, frame//4, :, :])
-            ax[6, 3].axis('off')
+            if use_fsam:
+                ax[6, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+                ax[6, 2].axis('off')
+                ax[6, 3].imshow(att_mask[0, ch, frame//4, :, :])
+                ax[6, 3].axis('off')
 
             frame = 140
             ax[7, 0].imshow(np_data[frame, ...].astype(np.uint8))
             ax[7, 0].axis('off')
             ax[7, 1].imshow(vox_embed[0, ch, frame//4, :, :])
             ax[7, 1].axis('off')
-            ax[7, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-            ax[7, 2].axis('off')
-            ax[7, 3].imshow(att_mask[0, ch, frame//4, :, :])
-            ax[7, 3].axis('off')
+            if use_fsam:
+                ax[7, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+                ax[7, 2].axis('off')
+                ax[7, 3].imshow(att_mask[0, ch, frame//4, :, :])
+                ax[7, 3].axis('off')
 
             frame = 159
             ax[8, 0].imshow(np_data[frame, ...].astype(np.uint8))
             ax[8, 0].axis('off')
             ax[8, 1].imshow(vox_embed[0, ch, frame//4, :, :])
             ax[8, 1].axis('off')
-            ax[8, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
-            ax[8, 2].axis('off')
-            ax[8, 3].imshow(att_mask[0, ch, frame//4, :, :])
-            ax[8, 3].axis('off')
+            if use_fsam:
+                ax[8, 2].imshow(factorized_embed[0, ch, frame//4, :, :])
+                ax[8, 2].axis('off')
+                ax[8, 3].imshow(att_mask[0, ch, frame//4, :, :])
+                ax[8, 3].axis('off')
 
             plt.show()
             plt.close(fig)

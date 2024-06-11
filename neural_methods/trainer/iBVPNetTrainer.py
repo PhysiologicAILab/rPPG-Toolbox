@@ -46,6 +46,7 @@ class iBVPNetTrainer(BaseTrainer):
                                  dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
         else:
             md_config = {}
+            md_config["MD_FSAM"] = self.config.MODEL.iBVPNet.MD_FSAM
             md_config["MD_S"] = self.config.MODEL.iBVPNet.MD_S
             md_config["MD_R"] = self.config.MODEL.iBVPNet.MD_R
             md_config["MD_STEPS"] = self.config.MODEL.iBVPNet.MD_STEPS
