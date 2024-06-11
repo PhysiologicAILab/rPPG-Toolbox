@@ -17,9 +17,9 @@ nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
-    "MD_R": 1,
-    "MD_S": 16,
-    "MD_STEPS": 4,
+    "MD_R": 4,
+    "MD_S": 8,
+    "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
