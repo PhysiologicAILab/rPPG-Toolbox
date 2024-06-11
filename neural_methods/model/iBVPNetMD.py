@@ -311,7 +311,7 @@ class ConvBNReLU(nn.Module):
         if act == "sigmoid":
             self.act = nn.Sigmoid()
         else:
-            self.act = nn.ReLU6(inplace=True)
+            self.act = nn.ReLU(inplace=True)
 
     def forward(self, x):
         x = self.conv(x)
