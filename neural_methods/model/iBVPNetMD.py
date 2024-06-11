@@ -16,9 +16,9 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_R": 5,
-    "MD_S": 16,
-    "MD_STEPS": 6,
+    "MD_R": 1,
+    "MD_S": 4,
+    "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -469,17 +469,15 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # merged_embeddings = voxel_embeddings + factorized_embeddings
 
-            # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            # merged_embeddings = voxel_embeddings + torch.multiply(1 + voxel_embeddings, factorized_embeddings)
-            # # merged_embeddings = voxel_embeddings + F.tanh(torch.multiply(voxel_embeddings, factorized_embeddings))
-            # # merged_embeddings = F.tanh(voxel_embeddings + torch.multiply(voxel_embeddings, factorized_embeddings))
+            # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
+            merged_embeddings = voxel_embeddings + torch.multiply((1 + voxel_embeddings), factorized_embeddings)
 
-            # In this case (no residual connection), factorization should aim at optimal rank approximation,
-            # eliminating only some features, while retaining the most
-            merged_embeddings = torch.multiply((1 + voxel_embeddings), factorized_embeddings)
+            # # In this case (no residual connection), factorization should aim at optimal rank approximation,
+            # # eliminating only some features, while retaining the most
+            # merged_embeddings = torch.multiply((1 + voxel_embeddings), factorized_embeddings)
 
             # # Concatenate
-            # merged_embeddings = torch.cat([voxel_embeddings, torch.multiply(voxel_embeddings, factorized_embeddings)], dim=1)
+            # merged_embeddings = torch.cat([voxel_embeddings, torch.multiply((1 + voxel_embeddings), factorized_embeddings)], dim=1)
 
         x = self.conv_decoder(merged_embeddings)
         
