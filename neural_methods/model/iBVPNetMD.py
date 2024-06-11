@@ -311,7 +311,7 @@ class ConvBNReLU(nn.Module):
         if act == "sigmoid":
             self.act = nn.Sigmoid()
         else:
-            self.act = nn.ReLU(inplace=True)
+            self.act = nn.ReLU6(inplace=True)
 
     def forward(self, x):
         x = self.conv(x)
@@ -462,12 +462,12 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + att_mask
 
-            # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            factorized_embeddings = voxel_embeddings + torch.multiply((1 + voxel_embeddings), att_mask)
+            # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
+            # factorized_embeddings = voxel_embeddings + torch.multiply((1 + voxel_embeddings), att_mask)
 
-            # # In this case (no residual connection), factorization should aim at optimal rank approximation,
-            # # eliminating only some features, while retaining the most
-            # factorized_embeddings = torch.multiply((1 + voxel_embeddings), att_mask)
+            # In this case (no residual connection), factorization should aim at optimal rank approximation,
+            # eliminating only some features, while retaining the most
+            factorized_embeddings = torch.multiply((1 + voxel_embeddings), att_mask)
 
             # # Concatenate
             # factorized_embeddings = torch.cat([voxel_embeddings, torch.multiply((1 + voxel_embeddings), att_mask)], dim=1)
