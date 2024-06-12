@@ -294,7 +294,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c,
                  kernel_size=(1, 1, 1), stride=(1, 1, 1), padding='same',
-                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=False):
+                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=True):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -306,12 +306,14 @@ class ConvBNReLU(nn.Module):
                               padding=padding, dilation=dilation,
                               groups=groups,
                               bias=False)
-        if self.apply_bn:
-            self.bn = nn.BatchNorm3d(out_c)
+
         if act == "sigmoid":
             self.act = nn.Sigmoid()
         else:
             self.act = nn.ReLU(inplace=True)
+
+        if self.apply_bn:
+            self.bn = nn.BatchNorm3d(out_c)
 
     def forward(self, x):
         x = self.conv(x)
@@ -467,7 +469,7 @@ class BVP_Head(nn.Module):
 
             # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # eliminating only some features, while retaining the most
-            factorized_embeddings = torch.multiply(1 + voxel_embeddings, att_mask)
+            factorized_embeddings = torch.multiply(1 + voxel_embeddings, att_mask + att_mask.min().item())
 
             # # Concatenate
             # factorized_embeddings = torch.cat([voxel_embeddings, torch.multiply((1 + voxel_embeddings), att_mask)], dim=1)
