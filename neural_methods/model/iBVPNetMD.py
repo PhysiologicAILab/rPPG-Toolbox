@@ -196,7 +196,8 @@ class NMF(_MatrixDecompositionBase):
         self.inv_t = 1
 
     def _build_bases(self, B, S, D, R):
-        bases = torch.rand((B * S, D, R)).to(self.device)
+        # bases = torch.rand((B * S, D, R)).to(self.device)
+        bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
 
         return bases
@@ -294,7 +295,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c,
                  kernel_size=(1, 1, 1), stride=(1, 1, 1), padding='same',
-                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=True):
+                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=False):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -437,7 +438,7 @@ class BVP_Head(nn.Module):
         else:
             inC = nf[3]
 
-        self.fsam_norm = nn.BatchNorm3d(inC)
+        # self.fsam_norm = nn.BatchNorm3d(inC)
 
         self.conv_decoder = nn.Sequential(
 
@@ -463,20 +464,20 @@ class BVP_Head(nn.Module):
             # # directly use att_mask
             # factorized_embeddings = att_mask
 
-            # # Residual connection: 
-            # factorized_embeddings = voxel_embeddings + att_mask
+            # Residual connection: 
+            factorized_embeddings = voxel_embeddings + att_mask
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
             # factorized_embeddings = voxel_embeddings + torch.multiply(voxel_embeddings - voxel_embeddings.min(), att_mask)
 
-            # In this case (no residual connection), factorization should aim at optimal rank approximation,
-            # eliminating only some features, while retaining the most
-            factorized_embeddings = torch.multiply(1 + voxel_embeddings - voxel_embeddings.min(), 1 + att_mask - att_mask.min())    # to make both tensors positive, to avoid multiplying with zero
+            # # In this case (no residual connection), factorization should aim at optimal rank approximation,
+            # # eliminating only some features, while retaining the most
+            # factorized_embeddings = torch.multiply(1 + voxel_embeddings - voxel_embeddings.min(), 1 + att_mask - att_mask.min())    # to make both tensors positive, to avoid multiplying with zero
 
             # # Concatenate
             # factorized_embeddings = torch.cat([voxel_embeddings, torch.multiply(voxel_embeddings - voxel_embeddings.min(), att_mask - att_mask.min())], dim=1)
 
-            factorized_embeddings = self.fsam_norm(factorized_embeddings)
+            # factorized_embeddings = self.fsam_norm(factorized_embeddings)
 
             x = self.conv_decoder(factorized_embeddings)
         
