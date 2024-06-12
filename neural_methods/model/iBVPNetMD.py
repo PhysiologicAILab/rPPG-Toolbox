@@ -459,16 +459,16 @@ class BVP_Head(nn.Module):
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
 
-            # # directly use att_mask
-            # factorized_embeddings = att_mask
+            # directly use att_mask
+            factorized_embeddings = att_mask - att_mask.mean()
 
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()
 
-            # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            # + max - min: to make both tensors positive, to avoid multiplying with zero
-            factorized_embeddings = torch.mul(voxel_embeddings + voxel_embeddings.max() - voxel_embeddings.min(), att_mask + att_mask.max() - att_mask.min())
-            factorized_embeddings = voxel_embeddings + factorized_embeddings - factorized_embeddings.mean()
+            # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
+            # # + max - min: to make both tensors positive, to avoid multiplying with zero
+            # factorized_embeddings = torch.mul(voxel_embeddings + voxel_embeddings.max() - voxel_embeddings.min(), att_mask + att_mask.max() - att_mask.min())
+            # factorized_embeddings = voxel_embeddings + factorized_embeddings - factorized_embeddings.mean()
 
             # # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # # eliminating only some features, while retaining the most; 
