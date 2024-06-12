@@ -469,7 +469,7 @@ class BVP_Head(nn.Module):
 
             # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # eliminating only some features, while retaining the most
-            factorized_embeddings = torch.multiply(voxel_embeddings - voxel_embeddings.min(), att_mask - att_mask.min())    # to make both tensors positive, to avoid multiplying with zero
+            factorized_embeddings = torch.multiply(1 + voxel_embeddings - voxel_embeddings.min(), 1 + att_mask - att_mask.min())    # to make both tensors positive, to avoid multiplying with zero
 
             # # Concatenate
             # factorized_embeddings = torch.cat([voxel_embeddings, torch.multiply(voxel_embeddings - voxel_embeddings.min(), att_mask - att_mask.min())], dim=1)
