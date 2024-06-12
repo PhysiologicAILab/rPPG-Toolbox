@@ -454,7 +454,7 @@ class BVP_Head(nn.Module):
             print("     voxel_embeddings.shape", voxel_embeddings.shape)
 
         if self.use_fsam:
-            att_mask, appx_error = self.VEFM(1 + voxel_embeddings)  # 1 + voxel_embeddings -> to make it positive
+            att_mask, appx_error = self.VEFM(voxel_embeddings - voxel_embeddings.min())  # to make it positive
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
 
@@ -465,14 +465,14 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = voxel_embeddings + att_mask
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            # factorized_embeddings = voxel_embeddings + torch.multiply(1 + voxel_embeddings, att_mask)
+            # factorized_embeddings = voxel_embeddings + torch.multiply(voxel_embeddings - voxel_embeddings.min(), att_mask)
 
             # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # eliminating only some features, while retaining the most
-            factorized_embeddings = torch.multiply(1 + voxel_embeddings, att_mask - att_mask.min())
+            factorized_embeddings = torch.multiply(voxel_embeddings - voxel_embeddings.min(), att_mask - att_mask.min())    # to make both tensors positive, to avoid multiplying with zero
 
             # # Concatenate
-            # factorized_embeddings = torch.cat([voxel_embeddings, torch.multiply((1 + voxel_embeddings), att_mask)], dim=1)
+            # factorized_embeddings = torch.cat([voxel_embeddings, torch.multiply(voxel_embeddings - voxel_embeddings.min(), att_mask - att_mask.min())], dim=1)
 
             x = self.conv_decoder(factorized_embeddings)
         
