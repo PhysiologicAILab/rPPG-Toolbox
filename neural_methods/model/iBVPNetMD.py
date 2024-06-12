@@ -412,7 +412,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
-            nn.Dropout3d(p=dropout_rate),
+            # nn.Dropout3d(p=dropout_rate),
         )
 
     def forward(self, x):
