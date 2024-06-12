@@ -437,6 +437,8 @@ class BVP_Head(nn.Module):
         else:
             inC = nf[3]
 
+        self.fsam_norm = nn.BatchNorm3d(inC)
+
         self.conv_decoder = nn.Sequential(
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
@@ -473,6 +475,8 @@ class BVP_Head(nn.Module):
 
             # # Concatenate
             # factorized_embeddings = torch.cat([voxel_embeddings, torch.multiply(voxel_embeddings - voxel_embeddings.min(), att_mask - att_mask.min())], dim=1)
+
+            factorized_embeddings = self.fsam_norm(factorized_embeddings)
 
             x = self.conv_decoder(factorized_embeddings)
         
