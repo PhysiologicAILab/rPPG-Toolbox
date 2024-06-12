@@ -462,7 +462,7 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = att_mask - att_mask.mean()
 
             # Residual connection: 
-            factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()       #either apply BN or remove mean
+            factorized_embeddings = voxel_embeddings + att_mask #- att_mask.mean()       #either apply BN or remove mean
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
             # # + max - min: to make both tensors positive, to avoid multiplying with zero
