@@ -17,9 +17,9 @@ nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
-    "MD_R": 4,
-    "MD_S": 5,
-    "MD_STEPS": 4,
+    "MD_R": 1,
+    "MD_S": 8,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -294,7 +294,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c,
                  kernel_size=(1, 1, 1), stride=(1, 1, 1), padding='same',
-                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=True):
+                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=False):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -462,7 +462,7 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = att_mask - att_mask.mean()
 
             # Residual connection: 
-            factorized_embeddings = voxel_embeddings + att_mask     # - att_mask.mean(): either apply BN or remove mean
+            factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()       #either apply BN or remove mean
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
             # # + max - min: to make both tensors positive, to avoid multiplying with zero
