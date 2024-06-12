@@ -196,7 +196,8 @@ class NMF(_MatrixDecompositionBase):
         self.inv_t = 1
 
     def _build_bases(self, B, S, D, R):
-        bases = torch.rand((B * S, D, R)).to(self.device)
+        # bases = torch.rand((B * S, D, R)).to(self.device)
+        bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
 
         return bases
@@ -462,7 +463,7 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = att_mask - att_mask.mean()
 
             # Residual connection: 
-            factorized_embeddings = voxel_embeddings + att_mask #- att_mask.mean()       #either apply BN or remove mean
+            factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()       #either apply BN or remove mean
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
             # # + max - min: to make both tensors positive, to avoid multiplying with zero
