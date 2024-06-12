@@ -294,7 +294,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c,
                  kernel_size=(1, 1, 1), stride=(1, 1, 1), padding='same',
-                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=False):
+                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=True):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -412,7 +412,7 @@ class encoder_block(nn.Module):
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
-            # nn.Dropout3d(p=dropout_rate),
+            nn.Dropout3d(p=dropout_rate),
         )
 
     def forward(self, x):
@@ -458,11 +458,11 @@ class BVP_Head(nn.Module):
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
 
-            # directly use att_mask
-            factorized_embeddings = att_mask - att_mask.mean()
+            # # directly use att_mask   ---> difficult to converge without Residual connection. Needs high rank
+            # factorized_embeddings = att_mask - att_mask.mean()
 
-            # # Residual connection: 
-            # factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()
+            # Residual connection: 
+            factorized_embeddings = voxel_embeddings + att_mask     # - att_mask.mean(): either apply BN or remove mean
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
             # # + max - min: to make both tensors positive, to avoid multiplying with zero
