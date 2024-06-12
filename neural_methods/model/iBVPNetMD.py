@@ -19,7 +19,7 @@ model_config = {
     "MD_FSAM": True,
     "MD_R": 4,
     "MD_S": 5,
-    "MD_STEPS": 6,
+    "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
