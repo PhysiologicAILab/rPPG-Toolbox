@@ -478,16 +478,16 @@ class BVP_Head(nn.Module):
             # # directly use att_mask   ---> difficult to converge without Residual connection. Needs high rank
             # factorized_embeddings = att_mask - att_mask.mean()
 
-            # Residual connection: 
-            if self.md_type == "NMF":
-                factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()       #either apply BN or remove mean
-            else:
-                factorized_embeddings = voxel_embeddings + att_mask
+            # # Residual connection: 
+            # if self.md_type == "NMF":
+            #     factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()       #either apply BN or remove mean
+            # else:
+            #     factorized_embeddings = voxel_embeddings + att_mask
 
-            # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            # # + max - min: to make both tensors positive, to avoid multiplying with zero
-            # x = torch.mul(voxel_embeddings + voxel_embeddings.max() - voxel_embeddings.min(), att_mask + att_mask.max() - att_mask.min())
-            # factorized_embeddings = voxel_embeddings + x - x.mean()
+            # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
+            # + max - min: to make both tensors positive, to avoid multiplying with zero
+            x = torch.mul(voxel_embeddings + voxel_embeddings.max() - voxel_embeddings.min(), att_mask + att_mask.max() - att_mask.min())
+            factorized_embeddings = voxel_embeddings + x - x.mean()
 
             # # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # # eliminating only some features, while retaining the most; 
