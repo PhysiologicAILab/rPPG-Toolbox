@@ -18,9 +18,9 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 1,
-    "MD_S": 4,
-    "MD_STEPS": 4,
+    "MD_R": 4,
+    "MD_S": 5,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -198,8 +198,8 @@ class NMF(_MatrixDecompositionBase):
         self.inv_t = 1
 
     def _build_bases(self, B, S, D, R):
-        # bases = torch.rand((B * S, D, R)).to(self.device)
-        bases = torch.ones((B * S, D, R)).to(self.device)
+        bases = torch.rand((B * S, D, R)).to(self.device)
+        # bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
 
         return bases
