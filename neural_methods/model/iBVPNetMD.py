@@ -18,9 +18,9 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 4,
-    "MD_S": 5,
-    "MD_STEPS": 4,
+    "MD_R": 8,
+    "MD_S": 1,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -356,13 +356,13 @@ class FeaturesFactorizationModule(nn.Module):
 
         if "nmf" in md_type.lower():
             self.post_conv_block = nn.Sequential(
-                ConvBNReLU(align_C, inC, kernel_size=(1, 1, 1)),
-                # nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
+                ConvBNReLU(align_C, align_C, kernel_size=(1, 1, 1)),
+                nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
             )
         else:
             self.post_conv_block = nn.Sequential(
-                ConvBNReLU(align_C, inC, kernel_size=(1, 1, 1), apply_act=False),
-                # nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
+                ConvBNReLU(align_C, align_C, kernel_size=(1, 1, 1), apply_act=False),
+                nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
             )
 
         self._init_weight()
