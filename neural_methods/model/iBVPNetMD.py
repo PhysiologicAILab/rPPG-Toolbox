@@ -18,8 +18,8 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_R": 1,
-    "MD_S": 5,
-    "MD_STEPS": 4,
+    "MD_S": 8,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -237,8 +237,8 @@ class VQ(_MatrixDecompositionBase):
         self.device = device
 
     def _build_bases(self, B, S, D, R):
-        # bases = torch.randn((B * S, D, R)).to(self.device)
-        bases = torch.ones((B * S, D, R)).to(self.device)
+        bases = torch.randn((B * S, D, R)).to(self.device)
+        # bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
         return bases
 
@@ -295,10 +295,11 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c,
                  kernel_size=(1, 1, 1), stride=(1, 1, 1), padding='same',
-                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=False):
+                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=False, apply_act=True):
         super().__init__()
 
         self.apply_bn = apply_bn
+        self.apply_act = apply_act
         if padding == 'same':
             padding = self._same_paddings(kernel_size)
 
@@ -320,7 +321,8 @@ class ConvBNReLU(nn.Module):
         x = self.conv(x)
         if self.apply_bn:
             x = self.bn(x)
-        x = self.act(x)
+        if self.apply_act:
+            x = self.act(x)
 
         return x
 
@@ -357,6 +359,7 @@ class FeaturesFactorizationModule(nn.Module):
             )
         else:
             self.post_conv_block = nn.Sequential(
+                ConvBNReLU(align_C, align_C, kernel_size=(1, 1, 1), apply_act=False),
                 nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
             )
 
@@ -474,7 +477,10 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = att_mask - att_mask.mean()
 
             # Residual connection: 
-            factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()       #either apply BN or remove mean
+            if self.md_type == "NMF":
+                factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()       #either apply BN or remove mean
+            else:
+                factorized_embeddings = voxel_embeddings + att_mask
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
             # # + max - min: to make both tensors positive, to avoid multiplying with zero
