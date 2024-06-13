@@ -19,8 +19,8 @@ model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 1,
-    "MD_S": 1,
-    "MD_STEPS": 6,
+    "MD_S": 4,
+    "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -297,7 +297,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c,
                  kernel_size=(1, 1, 1), stride=(1, 1, 1), padding='same',
-                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=False, apply_act=True):
+                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=True, apply_act=True):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -321,10 +321,10 @@ class ConvBNReLU(nn.Module):
 
     def forward(self, x):
         x = self.conv(x)
-        if self.apply_bn:
-            x = self.bn(x)
         if self.apply_act:
             x = self.act(x)
+        if self.apply_bn:
+            x = self.bn(x)
 
         return x
 
@@ -489,7 +489,7 @@ class BVP_Head(nn.Module):
 
             # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
             # + max - min: to make both tensors positive, to avoid multiplying with zero
-            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1 - att_mask.min())
             factorized_embeddings = voxel_embeddings + x - x.mean()
 
             # # In this case (no residual connection), factorization should aim at optimal rank approximation,
