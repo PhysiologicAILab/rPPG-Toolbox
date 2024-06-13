@@ -23,7 +23,7 @@ model_config = {
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
-    "MD_TYPE": "NMF",
+    "MD_TYPE": "VQ",
     "in_channels": 3,
     "data_channels": 4,
     "align_channels": 8,
@@ -237,9 +237,9 @@ class VQ(_MatrixDecompositionBase):
         self.device = device
 
     def _build_bases(self, B, S, D, R):
-        bases = torch.randn((B * S, D, R)).to(self.device)
+        # bases = torch.randn((B * S, D, R)).to(self.device)
+        bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
-
         return bases
 
     @torch.no_grad()
@@ -340,7 +340,7 @@ class FeaturesFactorizationModule(nn.Module):
                 nn.ReLU(inplace=True)
             )
         else:
-            self.pre_conv_block = nn.Conv3d(align_C, align_C, (1, 1, 1))
+            self.pre_conv_block = nn.Conv3d(inC, align_C, (1, 1, 1))
 
         if "nmf" in md_type.lower():
             self.md_block = NMF(self.device, md_config, debug=debug)
@@ -350,10 +350,16 @@ class FeaturesFactorizationModule(nn.Module):
             print("Unknown type specified for MD_TYPE:", md_type)
             exit()
 
-        self.post_conv_block = nn.Sequential(
-            ConvBNReLU(align_C, align_C, kernel_size=(1, 1, 1)),
-            nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
-        )
+        if "nmf" in md_type.lower():
+            self.post_conv_block = nn.Sequential(
+                ConvBNReLU(align_C, align_C, kernel_size=(1, 1, 1)),
+                nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
+            )
+        else:
+            self.post_conv_block = nn.Sequential(
+                nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
+            )
+
         self._init_weight()
 
 
@@ -431,6 +437,7 @@ class BVP_Head(nn.Module):
         self.debug = debug
 
         self.use_fsam = md_config["MD_FSAM"]
+        self.md_type = md_config["MD_TYPE"]
 
         if self.use_fsam:
             inC = nf[3]
@@ -455,20 +462,24 @@ class BVP_Head(nn.Module):
             print("     voxel_embeddings.shape", voxel_embeddings.shape)
 
         if self.use_fsam:
-            att_mask, appx_error = self.VEFM(voxel_embeddings - voxel_embeddings.min())  # to make it positive
+            if self.md_type == "NMF":
+                att_mask, appx_error = self.VEFM(voxel_embeddings - voxel_embeddings.min())  # to make it positive
+            else:
+                att_mask, appx_error = self.VEFM(voxel_embeddings)  # to make it positive
+
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
 
             # # directly use att_mask   ---> difficult to converge without Residual connection. Needs high rank
             # factorized_embeddings = att_mask - att_mask.mean()
 
-            # # Residual connection: 
-            # factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()       #either apply BN or remove mean
+            # Residual connection: 
+            factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()       #either apply BN or remove mean
 
-            # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            # + max - min: to make both tensors positive, to avoid multiplying with zero
-            x = torch.mul(voxel_embeddings + voxel_embeddings.max() - voxel_embeddings.min(), att_mask + att_mask.max() - att_mask.min())
-            factorized_embeddings = voxel_embeddings + x - x.mean()
+            # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
+            # # + max - min: to make both tensors positive, to avoid multiplying with zero
+            # x = torch.mul(voxel_embeddings + voxel_embeddings.max() - voxel_embeddings.min(), att_mask + att_mask.max() - att_mask.min())
+            # factorized_embeddings = voxel_embeddings + x - x.mean()
 
             # # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # # eliminating only some features, while retaining the most; 
@@ -644,6 +655,7 @@ if __name__ == "__main__":
     md_config["MD_R"] = model_config["MD_R"]
     md_config["MD_STEPS"] = model_config["MD_STEPS"]
     md_config["MD_FSAM"] = model_config["MD_FSAM"]
+    md_config["MD_TYPE"] = model_config["MD_TYPE"]
     net = nn.DataParallel(iBVPNetMD(frames=frames, md_config=md_config, device=device, in_channels=in_channels, debug=debug)).to(device)
     # net.load_state_dict(torch.load(ckpt_path, map_location=device))
     net.eval()
