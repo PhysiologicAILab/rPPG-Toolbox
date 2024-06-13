@@ -17,13 +17,13 @@ nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
-    "MD_R": 1,
-    "MD_S": 8,
+    "MD_TYPE": "VQ",
+    "MD_R": 4,
+    "MD_S": 4,
     "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
-    "MD_TYPE": "VQ",
     "in_channels": 3,
     "data_channels": 4,
     "align_channels": 8,
@@ -45,6 +45,7 @@ class _MatrixDecompositionBase(nn.Module):
         super().__init__()
 
         self.dim = dim
+        self.md_type = md_config["MD_TYPE"]
         self.S = md_config["MD_S"]
         self.R = md_config["MD_R"]
         self.debug = debug
@@ -122,6 +123,7 @@ class _MatrixDecompositionBase(nn.Module):
 
             if self.debug:
                 print("C, T, H, W", C, T, H, W)
+                print("MD_Type", self.md_type)
                 print("MD_S", self.S)
                 print("MD_D", D)
                 print("MD_N", N)
