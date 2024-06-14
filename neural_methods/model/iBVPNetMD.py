@@ -14,7 +14,7 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 8, 8, 8]
+nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
@@ -92,46 +92,19 @@ class _MatrixDecompositionBase(nn.Module):
         raise NotImplementedError
 
     def forward(self, x, return_bases=False):
-        
+
+        if self.debug:
+            print("Org x.shape", x.shape)
+
         if self.dim == "3D":        # (B, C, T, H, W) -> (B * S, D, N)
             B, C, T, H, W = x.shape
 
-            # channels and spatial elements are considered as features
-            # while each time point is considered as a sample
-            # D = C * H * W // self.S
-            # N = T                   
-
-            # D = C // self.S
-            # N = T * H * W
-
             # # dimension of vector of our interest is T (rPPG signal as T dimension), so forming this as vector
-            # # From spatial and channel dimension, which are are examples, only 2-4 shall be enough to generate the approximated attention matrix
+            # # From spatial and channel dimension, which are features, only 2-4 shall be enough to generate the approximated attention matrix
             D = T // self.S
             N = C * H * W 
-            # self.R = max(4, min(D//8, N // 32))
-            # self.R = max(4, min(D, N) // 8)
-
-            # D = T * H * W // self.S
-            # N = C
-
-            # D = T * C // self.S
-            # N = H * W
-
-            # D = T * C // self.S
-            # N = H * W
 
             x = x.view(B * self.S, D, N)
-
-            if self.debug:
-                print("C, T, H, W", C, T, H, W)
-                print("MD_Type", self.md_type)
-                print("MD_S", self.S)
-                print("MD_D", D)
-                print("MD_N", N)
-                print("MD_R", self.R)
-                print("MD_TRAIN_STEPS", self.train_steps)
-                print("MD_EVAL_STEPS", self.eval_steps)
-                print("x.view(B * self.S, D, N)", x.shape)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             B, C, H, W = x.shape
@@ -139,11 +112,25 @@ class _MatrixDecompositionBase(nn.Module):
             N = H * W
             x = x.view(B * self.S, D, N)
 
-        else:                       # (B, C, L) -> (B * S, D, N)
+        elif self.dim == "1D":                       # (B, C, L) -> (B * S, D, N)
             B, C, L = x.shape
-            D = C // self.S
-            N = L
+            D = L // self.S
+            N = C
             x = x.view(B * self.S, D, N)
+
+        else:
+            print("Dimension not supported")
+            exit()
+
+        if self.debug:
+            print("MD_Type", self.md_type)
+            print("MD_S", self.S)
+            print("MD_D", D)
+            print("MD_N", N)
+            print("MD_R", self.R)
+            print("MD_TRAIN_STEPS", self.train_steps)
+            print("MD_EVAL_STEPS", self.eval_steps)
+            print("x.view(B * self.S, D, N)", x.shape)
 
         if not self.rand_init and not hasattr(self, 'bases'):
             bases = self._build_bases(1, self.S, D, self.R)
