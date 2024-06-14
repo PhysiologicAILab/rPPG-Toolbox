@@ -514,7 +514,7 @@ class BVP_Head(nn.Module):
         if self.use_fsam:
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
-            # self.fsam_norm = nn.InstanceNorm3d(inC)
+            self.fsam_norm = nn.InstanceNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
             self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
@@ -551,13 +551,13 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()
 
-            # # Multiplication with Residual connection
-            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            # factorized_embeddings = voxel_embeddings + x - x.mean()
-
-            # Multiplication
+            # Multiplication with Residual connection
             x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            factorized_embeddings = x - x.mean()
+            factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
+
+            # # Multiplication
+            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # factorized_embeddings = x - x.mean()
             
             # # Concatenate
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
