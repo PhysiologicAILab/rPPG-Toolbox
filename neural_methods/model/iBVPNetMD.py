@@ -19,9 +19,9 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 4,
+    "MD_R": 1,
     "MD_S": 4,
-    "MD_STEPS": 6,
+    "MD_STEPS": 2,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -489,15 +489,11 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            # # + max - min: to make both tensors positive, to avoid multiplying with zero
-            # factorized_embeddings = voxel_embeddings + self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
+            # Multiplication with Residual connection
+            factorized_embeddings = self.fsam_norm(voxel_embeddings + torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
 
-            # In this case (no residual connection), factorization should aim at optimal rank approximation,
-            # eliminating only some features, while retaining the most; 
-            # + max - min: to make both tensors positive, to avoid multiplying with zero
-            factorized_embeddings = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            factorized_embeddings = self.fsam_norm(factorized_embeddings)
+            # # Multiplication
+            # factorized_embeddings = self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
             
             # # # Concatenate
             # factorized_embeddings = torch.cat([
