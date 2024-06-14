@@ -489,7 +489,7 @@ class BVP_Head(nn.Module):
 
             # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
             # # + max - min: to make both tensors positive, to avoid multiplying with zero
-            # factorized_embeddings = voxel_embeddings + self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
+            # factorized_embeddings = self.fsam_norm(voxel_embeddings + torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
 
             # In this case (no residual connection), factorization should aim at optimal rank approximation,
             # eliminating only some features, while retaining the most; 
