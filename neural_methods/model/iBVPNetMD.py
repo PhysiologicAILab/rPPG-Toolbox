@@ -19,9 +19,9 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 1,
-    "MD_S": 1,
-    "MD_STEPS": 6,
+    "MD_R": 4,
+    "MD_S": 4,
+    "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -551,13 +551,13 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()
 
-            # Multiplication with Residual connection
-            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
-
-            # # Multiplication
+            # # Multiplication with Residual connection
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            # factorized_embeddings = x - x.mean()
+            # factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
+
+            # Multiplication
+            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            factorized_embeddings = self.fsam_norm(x)
             
             # # Concatenate
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
