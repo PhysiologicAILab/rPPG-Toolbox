@@ -480,18 +480,18 @@ class encoder_block(nn.Module):
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[0], nf[1], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
-            nn.Dropout3d(p=dropout_rate),
-
-            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
+            nn.Dropout3d(p=dropout_rate)
         )
 
     def forward(self, x):
@@ -515,8 +515,8 @@ class BVP_Head(nn.Module):
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
             self.fsam_norm = nn.InstanceNorm3d(inC)
-            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
-            self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
+            # self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
+            # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
             inC = nf[3]
 
@@ -538,7 +538,7 @@ class BVP_Head(nn.Module):
 
         if self.use_fsam:
             if self.md_type == "NMF":
-                att_mask, appx_error = self.fsam(voxel_embeddings + self.bias1) #- voxel_embeddings.min())  # to make it positive
+                att_mask, appx_error = self.fsam(voxel_embeddings - voxel_embeddings.min()) #self.bias1) #- voxel_embeddings.min())  # to make it positive
             else:
                 att_mask, appx_error = self.fsam(voxel_embeddings)  # to make it positive
 
@@ -556,7 +556,7 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
 
             # Multiplication
-            x = torch.mul(voxel_embeddings + self.bias2, att_mask - att_mask.min() + self.bias1)
+            x = torch.mul(voxel_embeddings - voxel_embeddings.min(), att_mask - att_mask.min()) #+ self.bias2, + self.bias1)
             factorized_embeddings = self.fsam_norm(x)  # x - x.mean()
             
             # # Concatenate
