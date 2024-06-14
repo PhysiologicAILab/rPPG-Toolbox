@@ -19,9 +19,9 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 1,
+    "MD_R": 4,
     "MD_S": 4,
-    "MD_STEPS": 6,
+    "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -277,27 +277,76 @@ class VQ(_MatrixDecompositionBase):
 
 class ConvBNReLU(nn.Module):
     @classmethod
-    def _same_paddings(cls, kernel_size):
-        if kernel_size == (1, 1, 1):
-            return (0, 0, 0)
-        elif kernel_size == (3, 3, 3):
-            return (1, 1, 1)
+    def _same_paddings(cls, kernel_size, dim):
+        if dim == "3D":
+            if kernel_size == (1, 1, 1):
+                return (0, 0, 0)
+            elif kernel_size == (3, 3, 3):
+                return (1, 1, 1)
+        elif dim == "2D":
+            if kernel_size == (1, 1):
+                return (0, 0)
+            elif kernel_size == (3, 3):
+                return (1, 1)
+        else:
+            if kernel_size == 1:
+                return 0
+            elif kernel_size == 3:
+                return 1
 
-    def __init__(self, in_c, out_c,
-                 kernel_size=(1, 1, 1), stride=(1, 1, 1), padding='same',
-                 dilation=(1, 1, 1), groups=1, act='relu', apply_bn=False, apply_act=True):
+    def __init__(self, in_c, out_c, dim,
+                 kernel_size=1, stride=1, padding='same',
+                 dilation=1, groups=1, act='relu', apply_bn=False, apply_act=True):
         super().__init__()
 
         self.apply_bn = apply_bn
         self.apply_act = apply_act
-        if padding == 'same':
-            padding = self._same_paddings(kernel_size)
+        self.dim = dim
+        if dilation == 1:
+            if self.dim == "3D":
+                dilation = (1, 1, 1)
+            elif self.dim == "2D":
+                dilation = (1, 1)
+            else:
+                dilation = 1
 
-        self.conv = nn.Conv3d(in_c, out_c,
-                              kernel_size=kernel_size, stride=stride,
-                              padding=padding, dilation=dilation,
-                              groups=groups,
-                              bias=False)
+        if kernel_size == 1:
+            if self.dim == "3D":
+                kernel_size = (1, 1, 1)
+            elif self.dim == "2D":
+                kernel_size = (1, 1)
+            else:
+                kernel_size = 1
+
+        if stride == 1:
+            if self.dim == "3D":
+                stride = (1, 1, 1)
+            elif self.dim == "2D":
+                stride = (1, 1)
+            else:
+                stride = 1
+
+        if padding == 'same':
+            padding = self._same_paddings(kernel_size, dim)
+
+        if self.dim == "3D":
+            self.conv = nn.Conv3d(in_c, out_c,
+                                  kernel_size=kernel_size, stride=stride,
+                                  padding=padding, dilation=dilation,
+                                  groups=groups,
+                                  bias=False)
+        elif self.dim == "2D":
+            self.conv = nn.Conv2d(in_c, out_c,
+                                  kernel_size=kernel_size, stride=stride,
+                                  padding=padding, dilation=dilation,
+                                  groups=groups,
+                                  bias=False)
+        else:
+            self.conv = nn.Conv1d(in_c, out_c,
+                                  kernel_size=kernel_size, stride=stride,
+                                  padding=padding, dilation=dilation,
+                                  groups=groups,
+                                  bias=False)
 
         if act == "sigmoid":
             self.act = nn.Sigmoid()
@@ -305,7 +354,12 @@ class ConvBNReLU(nn.Module):
             self.act = nn.ReLU(inplace=True)
 
         if self.apply_bn:
-            self.bn = nn.InstanceNorm3d(out_c)
+            if self.dim == "3D":
+                self.bn = nn.InstanceNorm3d(out_c)
+            elif self.dim == "2D":
+                self.bn = nn.InstanceNorm2d(out_c)
+            else:
+                self.bn = nn.InstanceNorm1d(out_c)
 
     def forward(self, x):
         x = self.conv(x)
@@ -317,41 +371,56 @@ class ConvBNReLU(nn.Module):
         return x
 
 
-
 class FeaturesFactorizationModule(nn.Module):
-    def __init__(self, inC, device, md_config, debug=False):
+    def __init__(self, inC, device, md_config, dim="3D", debug=False):
         super().__init__()
 
         self.device = device
+        self.dim = dim
         md_type = model_config["MD_TYPE"]
         align_C = model_config["align_channels"] #in_c // 2  # // 2 #// 8
 
-        if "nmf" in md_type.lower():
-            self.pre_conv_block = nn.Sequential(
-                nn.Conv3d(inC, align_C, (1, 1, 1)),
-                nn.ReLU(inplace=True)
-            )
+        if self.dim == "3D":
+            if "nmf" in md_type.lower():
+                self.pre_conv_block = nn.Sequential(nn.Conv3d(inC, align_C, (1, 1, 1)), nn.ReLU(inplace=True))
+            else:
+                self.pre_conv_block = nn.Conv3d(inC, align_C, (1, 1, 1))
+        elif self.dim == "2D":
+            if "nmf" in md_type.lower():
+                self.pre_conv_block = nn.Sequential(nn.Conv2d(inC, align_C, (1, 1)), nn.ReLU(inplace=True))
+            else:
+                self.pre_conv_block = nn.Conv2d(inC, align_C, (1, 1))
+        elif self.dim == "1D":
+            if "nmf" in md_type.lower():
+                self.pre_conv_block = nn.Sequential(nn.Conv1d(inC, align_C, 1), nn.ReLU(inplace=True))
+            else:
+                self.pre_conv_block = nn.Conv1d(inC, align_C, 1)
         else:
-            self.pre_conv_block = nn.Conv3d(inC, align_C, (1, 1, 1))
+            print("Dimension not supported")
 
         if "nmf" in md_type.lower():
-            self.md_block = NMF(self.device, md_config, debug=debug)
+            self.md_block = NMF(self.device, md_config, dim=self.dim, debug=debug)
         elif "vq" in md_type.lower():
-            self.md_block = VQ(self.device, md_config, debug=debug)
+            self.md_block = VQ(self.device, md_config, dim=self.dim, debug=debug)
         else:
             print("Unknown type specified for MD_TYPE:", md_type)
             exit()
 
-        if "nmf" in md_type.lower():
-            self.post_conv_block = nn.Sequential(
-                ConvBNReLU(align_C, align_C, kernel_size=(1, 1, 1)),
-                nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
-            )
+        if self.dim == "3D":
+            if "nmf" in md_type.lower():
+                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1), nn.Conv3d(align_C, inC, 1, bias=False))
+            else:
+                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False), nn.Conv3d(align_C, inC, 1, bias=False))
+        elif self.dim == "2D":
+            if "nmf" in md_type.lower():
+                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1), nn.Conv2d(align_C, inC, 1, bias=False))
+            else:
+                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False), nn.Conv2d(align_C, inC, 1, bias=False))
         else:
-            self.post_conv_block = nn.Sequential(
-                ConvBNReLU(align_C, align_C, kernel_size=(1, 1, 1), apply_act=False),
-                nn.Conv3d(align_C, inC, (1, 1, 1), bias=False)
-            )
+            if "nmf" in md_type.lower():
+                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1), nn.Conv1d(align_C, inC, 1, bias=False))
+            else:
+                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False), nn.Conv1d(align_C, inC, 1, bias=False))
 
         self._init_weight()
 
@@ -360,6 +429,12 @@ class FeaturesFactorizationModule(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
                 N = m.kernel_size[0] * m.kernel_size[1] * m.kernel_size[2] * m.out_channels
+                m.weight.data.normal_(0, np.sqrt(2. / N))
+            elif isinstance(m, nn.Conv2d):
+                N = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, np.sqrt(2. / N))
+            elif isinstance(m, nn.Conv1d):
+                N = m.kernel_size[0] * m.out_channels
                 m.weight.data.normal_(0, np.sqrt(2. / N))
             elif isinstance(m, _BatchNorm):
                 m.weight.data.fill_(1)
@@ -438,7 +513,7 @@ class BVP_Head(nn.Module):
 
         if self.use_fsam:
             inC = nf[3]
-            self.VEFM = FeaturesFactorizationModule(inC, device, md_config, debug=debug)
+            self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
             self.fsam_norm = nn.InstanceNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
             self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=True).to(device)
@@ -463,9 +538,9 @@ class BVP_Head(nn.Module):
 
         if self.use_fsam:
             if self.md_type == "NMF":
-                att_mask, appx_error = self.VEFM(voxel_embeddings + self.bias1) #- voxel_embeddings.min())  # to make it positive
+                att_mask, appx_error = self.fsam(voxel_embeddings + self.bias1) #- voxel_embeddings.min())  # to make it positive
             else:
-                att_mask, appx_error = self.VEFM(voxel_embeddings)  # to make it positive
+                att_mask, appx_error = self.fsam(voxel_embeddings)  # to make it positive
 
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
@@ -476,11 +551,11 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # # Multiplication with Residual connection
-            # factorized_embeddings = voxel_embeddings + self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
+            # Multiplication with Residual connection
+            factorized_embeddings = voxel_embeddings + self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
 
-            # Multiplication
-            factorized_embeddings = self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
+            # # Multiplication
+            # factorized_embeddings = self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
             
             # # # Concatenate
             # factorized_embeddings = torch.cat([
