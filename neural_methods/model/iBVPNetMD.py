@@ -19,7 +19,7 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 4,
+    "MD_R": 1,
     "MD_S": 4,
     "MD_STEPS": 4,
     "INV_T": 1,
@@ -377,8 +377,8 @@ class FeaturesFactorizationModule(nn.Module):
 
         self.device = device
         self.dim = dim
-        md_type = model_config["MD_TYPE"]
-        align_C = model_config["align_channels"] #in_c // 2  # // 2 #// 8
+        md_type = md_config["MD_TYPE"]
+        align_C = inC // 2  # // 2 #// 8
 
         if self.dim == "3D":
             if "nmf" in md_type.lower():
@@ -515,8 +515,8 @@ class BVP_Head(nn.Module):
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
             self.fsam_norm = nn.InstanceNorm3d(inC)
-            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
-            self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=True).to(device)
+            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
+            self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
             inC = nf[3]
 
