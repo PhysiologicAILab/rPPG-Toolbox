@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: iBVP_iBVP_iBVP_T_iBVPNetMD_FactorizePhys_T_v63_R4_S4_ST4_LR1e-3_Res_Mul_InstanceNorm
+  MODEL_FILE_NAME: iBVP_iBVP_iBVP_T_iBVPNetMD_FactorizePhys_T_v63_R4_S4_ST4_LR1e-3_Mul_InstanceNorm
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
