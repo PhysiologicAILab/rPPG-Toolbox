@@ -20,8 +20,8 @@ model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 1,
-    "MD_S": 4,
-    "MD_STEPS": 4,
+    "MD_S": 1,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -355,11 +355,11 @@ class ConvBNReLU(nn.Module):
 
         if self.apply_bn:
             if self.dim == "3D":
-                self.bn = nn.InstanceNorm3d(out_c)
+                self.bn = nn.BatchNorm3d(out_c)
             elif self.dim == "2D":
-                self.bn = nn.InstanceNorm2d(out_c)
+                self.bn = nn.BatchNorm2d(out_c)
             else:
-                self.bn = nn.InstanceNorm1d(out_c)
+                self.bn = nn.BatchNorm1d(out_c)
 
     def forward(self, x):
         x = self.conv(x)
@@ -514,7 +514,7 @@ class BVP_Head(nn.Module):
         if self.use_fsam:
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
-            self.fsam_norm = nn.InstanceNorm3d(inC)
+            # self.fsam_norm = nn.InstanceNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
             self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
@@ -546,22 +546,23 @@ class BVP_Head(nn.Module):
                 print("att_mask.shape", att_mask.shape)
 
             # # directly use att_mask   ---> difficult to converge without Residual connection. Needs high rank
-            # factorized_embeddings = self.fsam_norm(att_mask)
+            # factorized_embeddings = att_mask - att_mask.mean()
 
             # # Residual connection: 
-            # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
+            # factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()
 
             # # Multiplication with Residual connection
-            # factorized_embeddings = voxel_embeddings + self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
+            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # factorized_embeddings = voxel_embeddings + x - x.mean()
 
             # Multiplication
-            factorized_embeddings = self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
+            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            factorized_embeddings = x - x.mean()
             
-            # # # Concatenate
-            # factorized_embeddings = torch.cat([
-            #     voxel_embeddings,
-            #     self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
-            #     ], dim=1)
+            # # Concatenate
+            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # x = x - x.mean()
+            # factorized_embeddings = torch.cat([voxel_embeddings, x], dim=1)
 
             x = self.conv_decoder(factorized_embeddings)
         
@@ -585,10 +586,10 @@ class iBVPNetMD(nn.Module):
 
         self.in_channels = in_channels
         if self.in_channels == 1 or self.in_channels == 3:
-            self.norm = nn.InstanceNorm3d(self.in_channels)
+            self.norm = nn.BatchNorm3d(self.in_channels)
         elif self.in_channels == 4:
-            self.rgb_norm = nn.InstanceNorm3d(3)
-            self.thermal_norm = nn.InstanceNorm3d(1)
+            self.rgb_norm = nn.BatchNorm3d(3)
+            self.thermal_norm = nn.BatchNorm3d(1)
         else:
             print("Unsupported input channels")
         
