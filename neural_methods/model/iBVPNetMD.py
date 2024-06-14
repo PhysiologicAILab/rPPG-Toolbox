@@ -14,14 +14,14 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 16, 16]
+nf = [8, 16, 24, 32]
 
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 4,
-    "MD_S": 4,
-    "MD_STEPS": 5,
+    "MD_S": 1,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -378,7 +378,7 @@ class FeaturesFactorizationModule(nn.Module):
         self.device = device
         self.dim = dim
         md_type = md_config["MD_TYPE"]
-        align_C = inC // 2  # // 2 #// 8
+        align_C = model_config["align_channels"]    #inC // 2  # // 2 #// 8
 
         if self.dim == "3D":
             if "nmf" in md_type.lower():
@@ -480,18 +480,18 @@ class encoder_block(nn.Module):
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[0], nf[1], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
-            ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
-            ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
-            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
             nn.Dropout3d(p=dropout_rate),
+
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
         )
 
     def forward(self, x):
@@ -552,15 +552,15 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()
 
             # # Multiplication with Residual connection
-            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # x = torch.mul(voxel_embeddings + self.bias2, att_mask - att_mask.min() + self.bias1)
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
 
             # Multiplication
-            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            x = torch.mul(voxel_embeddings + self.bias2, att_mask - att_mask.min() + self.bias1)
             factorized_embeddings = self.fsam_norm(x)
             
             # # Concatenate
-            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # x = torch.mul(voxel_embeddings + self.bias2, att_mask - att_mask.min() + self.bias1)
             # x = x - x.mean()
             # factorized_embeddings = torch.cat([voxel_embeddings, x], dim=1)
 
