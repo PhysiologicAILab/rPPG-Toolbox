@@ -479,26 +479,26 @@ class BVP_Head(nn.Module):
                 print("att_mask.shape", att_mask.shape)
 
             # # directly use att_mask   ---> difficult to converge without Residual connection. Needs high rank
-            # factorized_embeddings = att_mask - att_mask.mean()
+            # factorized_embeddings = self.fsam_norm(att_mask)
 
             # # Residual connection: 
-            # if self.md_type == "NMF":
-            #     factorized_embeddings = voxel_embeddings + att_mask - att_mask.mean()       #either apply BN or remove mean
-            # else:
-            #     factorized_embeddings = voxel_embeddings + att_mask
+            # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
-            # # + max - min: to make both tensors positive, to avoid multiplying with zero
-            # factorized_embeddings = self.fsam_norm(voxel_embeddings + torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
-
-            # In this case (no residual connection), factorization should aim at optimal rank approximation,
-            # eliminating only some features, while retaining the most; 
+            # Residual connection + Multiplication: factorization should aim at very low rank approximation to retain only highly important features.
             # + max - min: to make both tensors positive, to avoid multiplying with zero
-            factorized_embeddings = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            factorized_embeddings = self.fsam_norm(factorized_embeddings)
+            factorized_embeddings = voxel_embeddings + self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
+
+            # # In this case (no residual connection), factorization should aim at optimal rank approximation,
+            # # eliminating only some features, while retaining the most; 
+            # # + max - min: to make both tensors positive, to avoid multiplying with zero
+            # factorized_embeddings = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # factorized_embeddings = self.fsam_norm(factorized_embeddings)
             
-            # # Concatenate
-            # factorized_embeddings = torch.cat([voxel_embeddings, torch.multiply(voxel_embeddings - voxel_embeddings.min(), att_mask - att_mask.min())], dim=1)
+            # # # Concatenate
+            # factorized_embeddings = torch.cat([
+            #     voxel_embeddings,
+            #     self.fsam_norm(torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1))
+            #     ], dim=1)
 
             x = self.conv_decoder(factorized_embeddings)
         
