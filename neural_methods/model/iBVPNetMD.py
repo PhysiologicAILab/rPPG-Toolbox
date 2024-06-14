@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.batchnorm import _BatchNorm
+from torch.nn.modules.instancenorm import _InstanceNorm
 
 import numpy as np
 
@@ -18,9 +19,9 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 1,
+    "MD_R": 4,
     "MD_S": 4,
-    "MD_STEPS": 4,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -317,7 +318,7 @@ class ConvBNReLU(nn.Module):
             self.act = nn.ReLU(inplace=True)
 
         if self.apply_bn:
-            self.bn = nn.BatchNorm3d(out_c)
+            self.bn = nn.InstanceNorm3d(out_c)
 
     def forward(self, x):
         x = self.conv(x)
@@ -374,6 +375,10 @@ class FeaturesFactorizationModule(nn.Module):
                 N = m.kernel_size[0] * m.kernel_size[1] * m.kernel_size[2] * m.out_channels
                 m.weight.data.normal_(0, np.sqrt(2. / N))
             elif isinstance(m, _BatchNorm):
+                m.weight.data.fill_(1)
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            elif isinstance(m, _InstanceNorm):
                 m.weight.data.fill_(1)
                 if m.bias is not None:
                     m.bias.data.zero_()
@@ -447,7 +452,7 @@ class BVP_Head(nn.Module):
         if self.use_fsam:
             inC = nf[3]
             self.VEFM = FeaturesFactorizationModule(inC, device, md_config, debug=debug)
-            self.fsam_norm = nn.BatchNorm3d(inC)
+            self.fsam_norm = nn.InstanceNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
             self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=True).to(device)
         else:
@@ -522,10 +527,10 @@ class iBVPNetMD(nn.Module):
 
         self.in_channels = in_channels
         if self.in_channels == 1 or self.in_channels == 3:
-            self.norm = nn.BatchNorm3d(self.in_channels)
+            self.norm = nn.InstanceNorm3d(self.in_channels)
         elif self.in_channels == 4:
-            self.rgb_norm = nn.BatchNorm3d(3)
-            self.thermal_norm = nn.BatchNorm3d(1)
+            self.rgb_norm = nn.InstanceNorm3d(3)
+            self.thermal_norm = nn.InstanceNorm3d(1)
         else:
             print("Unsupported input channels")
         
@@ -683,8 +688,8 @@ if __name__ == "__main__":
             time_vec.append(t1-t0)
             appx_error_list.append(appx_error.item())
 
-        print("Average time: ", np.mean(time_vec))
-        print("Average error:", np.mean(appx_error_list))
+        print("Median time: ", np.median(time_vec))
+        print("Median error:", np.median(appx_error_list))
         plt.plot(time_vec)
         plt.show()
     else:
