@@ -14,14 +14,14 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32]
+nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 1,
-    "MD_S": 8,
-    "MD_STEPS": 6,
+    "MD_R": 4,
+    "MD_S": 4,
+    "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -296,7 +296,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c, dim,
                  kernel_size=1, stride=1, padding='same',
-                 dilation=1, groups=1, act='relu', apply_bn=True, apply_act=True):
+                 dilation=1, groups=1, act='relu', apply_bn=False, apply_act=True):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -559,7 +559,7 @@ class BVP_Head(nn.Module):
             # Multiplication
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1) #+ self.bias2, + self.bias1)
             # factorized_embeddings = self.fsam_norm(x)  # x - x.mean()
-            factorized_embeddings = F.relu(torch.mul(voxel_embeddings, att_mask)) #+ self.bias2, + self.bias1)
+            factorized_embeddings = F.relu(torch.mul(voxel_embeddings, att_mask), inplace=True) #+ self.bias2, + self.bias1)
             
             # # Concatenate
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
