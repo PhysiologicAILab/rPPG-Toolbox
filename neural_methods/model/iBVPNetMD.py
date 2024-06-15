@@ -21,7 +21,7 @@ model_config = {
     "MD_TYPE": "NMF",
     "MD_R": 4,
     "MD_S": 4,
-    "MD_STEPS": 4,
+    "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
