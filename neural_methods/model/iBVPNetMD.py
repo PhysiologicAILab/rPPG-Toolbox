@@ -14,13 +14,13 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32]
+nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 1,
-    "MD_S": 8,
+    "MD_S": 1,
     "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
@@ -551,13 +551,13 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # # Multiplication with Residual connection
-            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            # factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
+            # Multiplication with Residual connection
+            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
 
-            # Multiplication
-            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1) #+ self.bias2, + self.bias1)
-            factorized_embeddings = self.fsam_norm(x)  # x - x.mean()
+            # # Multiplication
+            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1) #+ self.bias2, + self.bias1)
+            # factorized_embeddings = self.fsam_norm(x)  # x - x.mean()
             
             # # Concatenate
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
