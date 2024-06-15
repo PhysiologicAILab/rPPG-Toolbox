@@ -41,18 +41,18 @@ class iBVPNetTrainer(BaseTrainer):
         frames = self.config.MODEL.iBVPNet.FRAME_NUM
         in_channels = self.config.MODEL.iBVPNet.CHANNELS
 
-        if self.config.MODEL.NAME == "iBVPNet":
-            self.model = iBVPNet(frames=frames, in_channels=in_channels,
-                                 dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
-        else:
-            md_config = {}
-            md_config["MD_TYPE"] = self.config.MODEL.iBVPNet.MD_TYPE
-            md_config["MD_FSAM"] = self.config.MODEL.iBVPNet.MD_FSAM
-            md_config["MD_S"] = self.config.MODEL.iBVPNet.MD_S
-            md_config["MD_R"] = self.config.MODEL.iBVPNet.MD_R
-            md_config["MD_STEPS"] = self.config.MODEL.iBVPNet.MD_STEPS
-            self.model = iBVPNetMD(frames=frames, md_config=md_config, in_channels=in_channels,
-                                   dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
+        # if self.config.MODEL.NAME == "iBVPNet":
+        #     self.model = iBVPNet(frames=frames, in_channels=in_channels,
+        #                          dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
+        # else:
+        md_config = {}
+        md_config["MD_TYPE"] = self.config.MODEL.iBVPNet.MD_TYPE
+        md_config["MD_FSAM"] = self.config.MODEL.iBVPNet.MD_FSAM
+        md_config["MD_S"] = self.config.MODEL.iBVPNet.MD_S
+        md_config["MD_R"] = self.config.MODEL.iBVPNet.MD_R
+        md_config["MD_STEPS"] = self.config.MODEL.iBVPNet.MD_STEPS
+        self.model = iBVPNetMD(frames=frames, md_config=md_config, in_channels=in_channels,
+                                dropout=self.dropout_rate, device=self.device)  # [3, T, 128,128]
 
         if torch.cuda.device_count() > 0 and self.num_of_gpu > 0:  # distribute model across GPUs
             self.model = torch.nn.DataParallel(self.model, device_ids=[self.device])  # data parallel model
@@ -105,10 +105,10 @@ class iBVPNetTrainer(BaseTrainer):
                 # labels[torch.isnan(labels)] = 0
 
                 self.optimizer.zero_grad()
-                if self.config.MODEL.NAME == "iBVPNet":
-                    pred_ppg, vox_embed = self.model(data)
-                else:
+                if self.config.MODEL.iBVPNet.MD_FSAM:
                     pred_ppg, vox_embed, factorized_embed, att_mask, appx_error = self.model(data)
+                else:
+                    pred_ppg, vox_embed = self.model(data)
                 
                 pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
 
@@ -121,7 +121,7 @@ class iBVPNetTrainer(BaseTrainer):
                         f'[{epoch}, {idx + 1:5d}] loss: {running_loss / 100:.3f}')
                     running_loss = 0.0
                 train_loss.append(loss.item())
-                if self.config.MODEL.NAME == "iBVPNetMD":
+                if self.config.MODEL.iBVPNet.MD_FSAM:
                     appx_error_list.append(appx_error.item())
 
                 # Append the current learning rate to the list
@@ -130,14 +130,14 @@ class iBVPNetTrainer(BaseTrainer):
                 self.optimizer.step()
                 self.scheduler.step()
                 
-                if self.config.MODEL.NAME == "iBVPNetMD":
+                if self.config.MODEL.iBVPNet.MD_FSAM:
                     tbar.set_postfix({"appx_error": appx_error.item()}, loss=loss.item())
                 else:
                     tbar.set_postfix(loss=loss.item())
 
             # Append the mean training loss for the epoch
             mean_training_losses.append(np.mean(train_loss))
-            if self.config.MODEL.NAME == "iBVPNetMD":
+            if self.config.MODEL.iBVPNet.MD_FSAM:
                 mean_appx_error.append(np.mean(appx_error_list))
                 print("Mean train loss: {}, Mean appx error: {}".format(
                     np.mean(train_loss), np.mean(appx_error_list)))
@@ -189,17 +189,17 @@ class iBVPNetTrainer(BaseTrainer):
                 # labels = labels/ torch.std(labels)  # normalize
                 # labels[torch.isnan(labels)] = 0
 
-                if self.config.MODEL.NAME == "iBVPNet":
-                    pred_ppg, vox_embed = self.model(data)
-                else:
+                if self.config.MODEL.iBVPNet.MD_FSAM:
                     pred_ppg, vox_embed, factorized_embed, att_mask, appx_error = self.model(data)
+                else:
+                    pred_ppg, vox_embed = self.model(data)
                 pred_ppg = (pred_ppg - torch.mean(pred_ppg)) / torch.std(pred_ppg)  # normalize
                 loss = self.criterion(pred_ppg, labels)
 
                 valid_loss.append(loss.item())
                 valid_step += 1
                 # vbar.set_postfix(loss=loss.item())
-                if self.config.MODEL.NAME == "iBVPNetMD":
+                if self.config.MODEL.iBVPNet.MD_FSAM:
                     vbar.set_postfix({"appx_error": appx_error.item()}, loss=loss.item())
                 else:
                     vbar.set_postfix(loss=loss.item())
@@ -255,10 +255,10 @@ class iBVPNetTrainer(BaseTrainer):
                 # labels_test = labels_test/ torch.std(labels_test)  # normalize
                 # labels_test[torch.isnan(labels_test)] = 0
 
-                if self.config.MODEL.NAME == "iBVPNet":
-                    pred_ppg_test, vox_embed = self.model(data)
-                else:
+                if self.config.MODEL.iBVPNet.MD_FSAM:
                     pred_ppg_test, vox_embed, factorized_embed, att_mask, appx_error = self.model(data)
+                else:
+                    pred_ppg_test, vox_embed = self.model(data)
                 pred_ppg_test = (pred_ppg_test - torch.mean(pred_ppg_test)) / torch.std(pred_ppg_test)  # normalize
 
                 if self.config.TEST.OUTPUT_SAVE_DIR:
