@@ -551,15 +551,15 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # Multiplication with Residual connection
-            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            # factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
-            factorized_embeddings = F.relu(voxel_embeddings + torch.mul(voxel_embeddings, att_mask))
+            # # Multiplication with Residual connection
+            # # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # # factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
+            # factorized_embeddings = F.relu(voxel_embeddings + torch.mul(voxel_embeddings, att_mask))
 
-            # # Multiplication
-            # # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1) #+ self.bias2, + self.bias1)
-            # # factorized_embeddings = self.fsam_norm(x)  # x - x.mean()
-            # factorized_embeddings = F.relu(torch.mul(voxel_embeddings, att_mask)) #+ self.bias2, + self.bias1)
+            # Multiplication
+            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1) #+ self.bias2, + self.bias1)
+            # factorized_embeddings = self.fsam_norm(x)  # x - x.mean()
+            factorized_embeddings = F.relu(torch.mul(voxel_embeddings, att_mask)) #+ self.bias2, + self.bias1)
             
             # # Concatenate
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
