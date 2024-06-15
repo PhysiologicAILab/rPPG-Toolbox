@@ -14,7 +14,7 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 8, 8, 8]
+nf = [8, 16, 32, 64]
 
 model_config = {
     "MD_FSAM": True,
@@ -27,7 +27,7 @@ model_config = {
     "RAND_INIT": True,
     "in_channels": 3,
     "data_channels": 4,
-    "align_channels": 4,
+    "align_channels": 8,
     "height": 72,
     "weight": 72,
     "batch_size": 2,
