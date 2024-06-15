@@ -19,8 +19,8 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 1,
-    "MD_S": 1,
+    "MD_R": 4,
+    "MD_S": 4,
     "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
@@ -296,7 +296,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c, dim,
                  kernel_size=1, stride=1, padding='same',
-                 dilation=1, groups=1, act='relu', apply_bn=False, apply_act=True):
+                 dilation=1, groups=1, act='relu', apply_bn=True, apply_act=True):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -363,11 +363,10 @@ class ConvBNReLU(nn.Module):
 
     def forward(self, x):
         x = self.conv(x)
-        if self.apply_act:
-            x = self.act(x)
         if self.apply_bn:
             x = self.bn(x)
-
+        if self.apply_act:
+            x = self.act(x)
         return x
 
 
@@ -463,7 +462,7 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            nn.Tanh()
+            nn.ReLU()
         )
 
     def forward(self, x):
@@ -514,16 +513,16 @@ class BVP_Head(nn.Module):
         if self.use_fsam:
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
-            self.fsam_norm = nn.InstanceNorm3d(inC)
-            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
-            self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
+            # self.fsam_norm = nn.InstanceNorm3d(inC)
+            # self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
+            # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
             inC = nf[3]
 
         self.conv_decoder = nn.Sequential(
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            nn.Tanh(),
+            nn.ReLU(),
 
             nn.Dropout3d(p=dropout_rate),
 
@@ -537,10 +536,11 @@ class BVP_Head(nn.Module):
             print("     voxel_embeddings.shape", voxel_embeddings.shape)
 
         if self.use_fsam:
-            if self.md_type == "NMF":
-                att_mask, appx_error = self.fsam(voxel_embeddings + self.bias1) #- voxel_embeddings.min())  # to make it positive
-            else:
-                att_mask, appx_error = self.fsam(voxel_embeddings)  # to make it positive
+            # if self.md_type == "NMF":
+            #     att_mask, appx_error = self.fsam(voxel_embeddings + self.bias1) #- voxel_embeddings.min())  # to make it positive
+            # else:
+            #     att_mask, appx_error = self.fsam(voxel_embeddings)
+            att_mask, appx_error = self.fsam(voxel_embeddings)
 
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
@@ -551,13 +551,14 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # Multiplication with Residual connection
-            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
+            # # Multiplication with Residual connection
+            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
 
-            # # Multiplication
+            # Multiplication
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1) #+ self.bias2, + self.bias1)
             # factorized_embeddings = self.fsam_norm(x)  # x - x.mean()
+            factorized_embeddings = F.relu(torch.mul(voxel_embeddings, att_mask)) #+ self.bias2, + self.bias1)
             
             # # Concatenate
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
@@ -585,10 +586,10 @@ class iBVPNetMD(nn.Module):
 
         self.in_channels = in_channels
         if self.in_channels == 1 or self.in_channels == 3:
-            self.norm = nn.InstanceNorm3d(self.in_channels)
+            self.norm = nn.BatchNorm3d(self.in_channels)
         elif self.in_channels == 4:
-            self.rgb_norm = nn.InstanceNorm3d(3)
-            self.thermal_norm = nn.InstanceNorm3d(1)
+            self.rgb_norm = nn.BatchNorm3d(3)
+            self.thermal_norm = nn.BatchNorm3d(1)
         else:
             print("Unsupported input channels")
         
