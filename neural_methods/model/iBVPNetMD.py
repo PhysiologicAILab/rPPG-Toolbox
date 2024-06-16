@@ -555,8 +555,8 @@ class BVP_Head(nn.Module):
 
             # Multiplication with Residual connection
             x = torch.mul(voxel_embeddings + self.bias1, att_mask + self.bias1)
-            factorized_embeddings = F.relu6(voxel_embeddings + self.fsam_norm(x), inplace=True)
-
+            factorized_embeddings = F.relu6(self.fsam_norm(x), inplace=True)
+            factorized_embeddings = voxel_embeddings + factorized_embeddings
             # # Multiplication
             # x = torch.mul(voxel_embeddings + self.bias1, att_mask + self.bias1)
             # factorized_embeddings = F.relu6(self.fsam_norm(x), inplace=True)
