@@ -538,20 +538,19 @@ class BVP_Head(nn.Module):
             print("     voxel_embeddings.shape", voxel_embeddings.shape)
 
         if self.use_fsam:
-            # if self.md_type == "NMF":
-            #     att_mask, appx_error = self.fsam(voxel_embeddings + self.bias1) #- voxel_embeddings.min())  # to make it positive
-            # else:
-            #     att_mask, appx_error = self.fsam(voxel_embeddings)
-            att_mask, appx_error = self.fsam(voxel_embeddings)
+            if self.md_type == "NMF":
+                att_mask, appx_error = self.fsam(voxel_embeddings + self.bias1) #- voxel_embeddings.min())  # to make it positive
+            else:
+                att_mask, appx_error = self.fsam(voxel_embeddings)
 
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
 
             # # directly use att_mask   ---> difficult to converge without Residual connection. Needs high rank
-            # factorized_embeddings = self.fsam_norm(att_mask)
+            # factorized_embeddings = F.tanh(self.fsam_norm(att_mask))
 
             # # Residual connection: 
-            # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
+            # factorized_embeddings = voxel_embeddings + F.tanh(self.fsam_norm(att_mask))
 
             # Multiplication
             x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
@@ -564,7 +563,7 @@ class BVP_Head(nn.Module):
             
             # # Concatenate
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            # factorized_embeddings = torch.cat([voxel_embeddings, self.fsam_norm(x)], dim=1)
+            # factorized_embeddings = torch.cat([voxel_embeddings, F.tanh(self.fsam_norm(x))], dim=1)
 
             x = self.conv_decoder(factorized_embeddings)
         
