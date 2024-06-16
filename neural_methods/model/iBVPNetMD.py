@@ -20,7 +20,7 @@ model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 4,
-    "MD_S": 5,
+    "MD_S": 4,
     "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
@@ -186,8 +186,8 @@ class NMF(_MatrixDecompositionBase):
         self.inv_t = 1
 
     def _build_bases(self, B, S, D, R):
-        bases = torch.rand((B * S, D, R)).to(self.device)
-        # bases = torch.ones((B * S, D, R)).to(self.device)
+        # bases = torch.rand((B * S, D, R)).to(self.device)
+        bases = torch.ones((B * S, D, R)).to(self.device)
         # bases = torch.zeros((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
 
@@ -228,8 +228,8 @@ class VQ(_MatrixDecompositionBase):
         self.device = device
 
     def _build_bases(self, B, S, D, R):
-        bases = torch.randn((B * S, D, R)).to(self.device)
-        # bases = torch.ones((B * S, D, R)).to(self.device)
+        # bases = torch.randn((B * S, D, R)).to(self.device)
+        bases = torch.ones((B * S, D, R)).to(self.device)
         # bases = torch.zeros((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
         return bases
@@ -353,7 +353,7 @@ class ConvBNReLU(nn.Module):
         if act == "sigmoid":
             self.act = nn.Sigmoid()
         else:
-            self.act = nn.ReLU6(inplace=True)
+            self.act = nn.ReLU(inplace=True)
 
         if self.apply_bn:
             if self.dim == "3D":
@@ -383,17 +383,17 @@ class FeaturesFactorizationModule(nn.Module):
 
         if self.dim == "3D":
             if "nmf" in md_type.lower():
-                self.pre_conv_block = nn.Sequential(nn.Conv3d(inC, align_C, (1, 1, 1)), nn.ReLU6(inplace=True))
+                self.pre_conv_block = nn.Sequential(nn.Conv3d(inC, align_C, (1, 1, 1)), nn.ReLU(inplace=True))
             else:
                 self.pre_conv_block = nn.Conv3d(inC, align_C, (1, 1, 1))
         elif self.dim == "2D":
             if "nmf" in md_type.lower():
-                self.pre_conv_block = nn.Sequential(nn.Conv2d(inC, align_C, (1, 1)), nn.ReLU6(inplace=True))
+                self.pre_conv_block = nn.Sequential(nn.Conv2d(inC, align_C, (1, 1)), nn.ReLU(inplace=True))
             else:
                 self.pre_conv_block = nn.Conv2d(inC, align_C, (1, 1))
         elif self.dim == "1D":
             if "nmf" in md_type.lower():
-                self.pre_conv_block = nn.Sequential(nn.Conv1d(inC, align_C, 1), nn.ReLU6(inplace=True))
+                self.pre_conv_block = nn.Sequential(nn.Conv1d(inC, align_C, 1), nn.ReLU(inplace=True))
             else:
                 self.pre_conv_block = nn.Conv1d(inC, align_C, 1)
         else:
@@ -464,7 +464,7 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            nn.ReLU6(inplace=True)
+            nn.Tanh()
         )
 
     def forward(self, x):
@@ -517,14 +517,14 @@ class BVP_Head(nn.Module):
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
             self.fsam_norm = nn.InstanceNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
-            # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
+            self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=True).to(device)
         else:
             inC = nf[3]
 
         self.conv_decoder = nn.Sequential(
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            nn.ReLU6(inplace=True),
+            nn.Tanh(),
 
             nn.Dropout3d(p=dropout_rate),
 
@@ -554,12 +554,12 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
             # Multiplication
-            x = torch.mul(voxel_embeddings + self.bias1, att_mask + self.bias1)
-            factorized_embeddings = F.relu6(self.fsam_norm(x), inplace=True)
+            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            factorized_embeddings = F.tanh(self.fsam_norm(x))
 
             # # Multiplication with Residual connection
-            # x = torch.mul(voxel_embeddings + self.bias1, att_mask + self.bias1)
-            # factorized_embeddings = F.relu6(self.fsam_norm(x), inplace=True)
+            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # factorized_embeddings = F.tanh(self.fsam_norm(x))
             # factorized_embeddings = voxel_embeddings + factorized_embeddings
             
             # # Concatenate
