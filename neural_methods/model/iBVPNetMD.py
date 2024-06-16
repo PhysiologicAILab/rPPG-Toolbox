@@ -19,8 +19,8 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 4,
-    "MD_S": 5,
+    "MD_R": 1,
+    "MD_S": 4,
     "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
@@ -516,7 +516,7 @@ class BVP_Head(nn.Module):
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
             self.fsam_norm = nn.InstanceNorm3d(inC)
-            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
+            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
             # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
             inC = nf[3]
@@ -553,15 +553,13 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # # Multiplication with Residual connection
-            # # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            # # factorized_embeddings = voxel_embeddings + self.fsam_norm(x)
-            # factorized_embeddings = F.relu(voxel_embeddings + torch.mul(voxel_embeddings, att_mask))
+            # Multiplication with Residual connection
+            x = torch.mul(voxel_embeddings + self.bias1, att_mask + self.bias1)
+            factorized_embeddings = F.relu6(voxel_embeddings + self.fsam_norm(x), inplace=True)
 
-            # Multiplication
-            x = torch.mul(voxel_embeddings + self.bias1, att_mask + self.bias1) #+ self.bias2, + self.bias1)
-            x = self.fsam_norm(x)  # x - x.mean()
-            factorized_embeddings = F.relu6(x, inplace=True) #+ self.bias2, + self.bias1)
+            # # Multiplication
+            # x = torch.mul(voxel_embeddings + self.bias1, att_mask + self.bias1)
+            # factorized_embeddings = F.relu6(self.fsam_norm(x), inplace=True)
             
             # # Concatenate
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
