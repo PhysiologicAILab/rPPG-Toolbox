@@ -186,9 +186,8 @@ class NMF(_MatrixDecompositionBase):
         self.inv_t = 1
 
     def _build_bases(self, B, S, D, R):
-        bases = torch.rand((B * S, D, R)).to(self.device)
-        # bases = torch.ones((B * S, D, R)).to(self.device)
-        # bases = torch.zeros((B * S, D, R)).to(self.device)
+        # bases = torch.rand((B * S, D, R)).to(self.device)
+        bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
 
         return bases
@@ -228,9 +227,8 @@ class VQ(_MatrixDecompositionBase):
         self.device = device
 
     def _build_bases(self, B, S, D, R):
-        bases = torch.randn((B * S, D, R)).to(self.device)
-        # bases = torch.ones((B * S, D, R)).to(self.device)
-        # bases = torch.zeros((B * S, D, R)).to(self.device)
+        # bases = torch.randn((B * S, D, R)).to(self.device)
+        bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
         return bases
 
@@ -516,8 +514,8 @@ class BVP_Head(nn.Module):
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
             self.fsam_norm = nn.InstanceNorm3d(inC)
-            # self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
-            # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
+            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
+            self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
             inC = nf[3]
 
@@ -538,7 +536,10 @@ class BVP_Head(nn.Module):
             print("     voxel_embeddings.shape", voxel_embeddings.shape)
 
         if self.use_fsam:
-            att_mask, appx_error = self.fsam(voxel_embeddings)
+            if self.md_type == "NMF":
+                att_mask, appx_error = self.fsam(voxel_embeddings + self.bias1)
+            else:
+                att_mask, appx_error = self.fsam(voxel_embeddings)
 
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
@@ -550,8 +551,8 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = voxel_embeddings + F.tanh(self.fsam_norm(att_mask))
 
             # Multiplication
-            x = torch.mul(voxel_embeddings, att_mask)
-            factorized_embeddings = F.tanh(self.fsam_norm(x))
+            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            factorized_embeddings = self.fsam_norm(x)
 
             # # Multiplication with Residual connection
             # x = torch.mul(voxel_embeddings, att_mask)
