@@ -516,8 +516,8 @@ class BVP_Head(nn.Module):
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
             self.fsam_norm = nn.InstanceNorm3d(inC)
-            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
-            self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=True).to(device)
+            # self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
+            # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
             inC = nf[3]
 
@@ -538,10 +538,7 @@ class BVP_Head(nn.Module):
             print("     voxel_embeddings.shape", voxel_embeddings.shape)
 
         if self.use_fsam:
-            if self.md_type == "NMF":
-                att_mask, appx_error = self.fsam(voxel_embeddings + self.bias1) #- voxel_embeddings.min())  # to make it positive
-            else:
-                att_mask, appx_error = self.fsam(voxel_embeddings)
+            att_mask, appx_error = self.fsam(voxel_embeddings)
 
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
@@ -549,17 +546,17 @@ class BVP_Head(nn.Module):
             # # directly use att_mask   ---> difficult to converge without Residual connection. Needs high rank
             # factorized_embeddings = F.tanh(self.fsam_norm(att_mask))
 
-            # # Residual connection: 
-            # factorized_embeddings = voxel_embeddings + F.tanh(self.fsam_norm(att_mask))
+            # Residual connection: 
+            factorized_embeddings = voxel_embeddings + F.tanh(self.fsam_norm(att_mask))
 
             # # Multiplication
-            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # x = torch.mul(voxel_embeddings, att_mask)
             # factorized_embeddings = F.tanh(self.fsam_norm(x))
 
-            # Multiplication with Residual connection
-            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            factorized_embeddings = F.tanh(self.fsam_norm(x))
-            factorized_embeddings = voxel_embeddings + factorized_embeddings
+            # # Multiplication with Residual connection
+            # x = torch.mul(voxel_embeddings, att_mask)
+            # factorized_embeddings = F.tanh(self.fsam_norm(x))
+            # factorized_embeddings = voxel_embeddings + factorized_embeddings
             
             # # Concatenate
             # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
