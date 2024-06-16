@@ -514,8 +514,8 @@ class BVP_Head(nn.Module):
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
             self.fsam_norm = nn.InstanceNorm3d(inC)
-            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
-            self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
+            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
+            self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=True).to(device)
         else:
             inC = nf[3]
 
