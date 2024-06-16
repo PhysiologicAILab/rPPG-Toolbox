@@ -552,7 +552,7 @@ class BVP_Head(nn.Module):
 
             # Multiplication
             x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
-            factorized_embeddings = self.fsam_norm(x)
+            factorized_embeddings = F.tanh(self.fsam_norm(x))
 
             # # Multiplication with Residual connection
             # x = torch.mul(voxel_embeddings, att_mask)
