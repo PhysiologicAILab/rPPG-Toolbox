@@ -463,8 +463,8 @@ class ConvBlock3D(nn.Module):
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
             # nn.Tanh()
-            nn.ReLU6(inplace=True),
             nn.BatchNorm3d(out_channel),
+            nn.ReLU6(inplace=True),
         )
 
     def forward(self, x):
@@ -526,8 +526,8 @@ class BVP_Head(nn.Module):
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
             # nn.Tanh(),
-            nn.ReLU6(inplace=True),
             nn.BatchNorm3d(nf[0]),
+            nn.ReLU6(inplace=True),
 
             nn.Dropout3d(p=dropout_rate),
 
