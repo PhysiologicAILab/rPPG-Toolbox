@@ -19,9 +19,9 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 4,
+    "MD_R": 1,
     "MD_S": 4,
-    "MD_STEPS": 5,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -557,14 +557,14 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + F.tanh(self.fsam_norm(att_mask))
 
-            # Multiplication
-            x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask + self.bias1)
-            factorized_embeddings = self.fsam_norm(F.elu(x, inplace=True))
-
-            # # Multiplication with Residual connection
-            # x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            # # Multiplication
+            # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
             # factorized_embeddings = self.fsam_norm(x)
-            # factorized_embeddings = voxel_embeddings + factorized_embeddings
+
+            # Multiplication with Residual connection
+            x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
+            factorized_embeddings = self.fsam_norm(x)
+            factorized_embeddings = voxel_embeddings + factorized_embeddings
             
             # # Concatenate
             # factorized_embeddings = torch.cat([voxel_embeddings, self.fsam_norm(x)], dim=1)
@@ -591,10 +591,10 @@ class iBVPNetMD(nn.Module):
 
         self.in_channels = in_channels
         if self.in_channels == 1 or self.in_channels == 3:
-            self.norm = nn.BatchNorm3d(self.in_channels)
+            self.norm = nn.InstanceNorm3d(self.in_channels)
         elif self.in_channels == 4:
-            self.rgb_norm = nn.BatchNorm3d(3)
-            self.thermal_norm = nn.BatchNorm3d(1)
+            self.rgb_norm = nn.InstanceNorm3d(3)
+            self.thermal_norm = nn.InstanceNorm3d(1)
         else:
             print("Unsupported input channels")
         
