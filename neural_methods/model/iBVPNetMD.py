@@ -20,7 +20,7 @@ model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 1,
-    "MD_S": 8,
+    "MD_S": 4,
     "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
@@ -298,7 +298,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c, dim,
                  kernel_size=1, stride=1, padding='same',
-                 dilation=1, groups=1, act='relu', apply_bn=False, apply_act=True):
+                 dilation=1, groups=1, act='relu', apply_bn=True, apply_act=True):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -517,8 +517,8 @@ class BVP_Head(nn.Module):
         if self.use_fsam:
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
-            self.fsam_norm = nn.InstanceNorm3d(inC)
-            # self.fsam_norm = nn.BatchNorm3d(inC)
+            # self.fsam_norm = nn.InstanceNorm3d(inC)
+            self.fsam_norm = nn.BatchNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
             # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
