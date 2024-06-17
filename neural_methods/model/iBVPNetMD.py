@@ -17,10 +17,10 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_FSAM": True,
+    "MD_FSAM": False,
     "MD_TYPE": "NMF",
-    "MD_R": 1,
-    "MD_S": 8,
+    "MD_R": 4,
+    "MD_S": 4,
     "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
@@ -462,7 +462,9 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            nn.Tanh()
+            # nn.Tanh()
+            nn.ReLU6(inplace=True),
+            nn.BatchNorm3d(out_channel),
         )
 
     def forward(self, x):
@@ -513,7 +515,8 @@ class BVP_Head(nn.Module):
         if self.use_fsam:
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
-            self.fsam_norm = nn.InstanceNorm3d(inC)
+            # self.fsam_norm = nn.InstanceNorm3d(inC)
+            self.fsam_norm = nn.BatchNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
             self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
@@ -522,7 +525,9 @@ class BVP_Head(nn.Module):
         self.conv_decoder = nn.Sequential(
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            nn.Tanh(),
+            # nn.Tanh(),
+            nn.ReLU6(inplace=True),
+            nn.BatchNorm3d(nf[0]),
 
             nn.Dropout3d(p=dropout_rate),
 
@@ -536,10 +541,11 @@ class BVP_Head(nn.Module):
             print("     voxel_embeddings.shape", voxel_embeddings.shape)
 
         if self.use_fsam:
-            if self.md_type == "NMF":
-                att_mask, appx_error = self.fsam(voxel_embeddings + self.bias1)
-            else:
-                att_mask, appx_error = self.fsam(voxel_embeddings)
+            # if self.md_type == "NMF":
+            #     att_mask, appx_error = self.fsam(voxel_embeddings + self.bias1)
+            # else:
+            #     att_mask, appx_error = self.fsam(voxel_embeddings)
+            att_mask, appx_error = self.fsam(voxel_embeddings)
 
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
@@ -551,7 +557,7 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = voxel_embeddings + F.tanh(self.fsam_norm(att_mask))
 
             # Multiplication
-            x = torch.mul(voxel_embeddings + self.bias2, att_mask + self.bias1)
+            x = torch.mul(voxel_embeddings + self.bias1, att_mask + self.bias1)
             factorized_embeddings = self.fsam_norm(x)
 
             # # Multiplication with Residual connection
@@ -584,10 +590,10 @@ class iBVPNetMD(nn.Module):
 
         self.in_channels = in_channels
         if self.in_channels == 1 or self.in_channels == 3:
-            self.norm = nn.InstanceNorm3d(self.in_channels)
+            self.norm = nn.BatchNorm3d(self.in_channels)
         elif self.in_channels == 4:
-            self.rgb_norm = nn.InstanceNorm3d(3)
-            self.thermal_norm = nn.InstanceNorm3d(1)
+            self.rgb_norm = nn.BatchNorm3d(3)
+            self.thermal_norm = nn.BatchNorm3d(1)
         else:
             print("Unsupported input channels")
         
