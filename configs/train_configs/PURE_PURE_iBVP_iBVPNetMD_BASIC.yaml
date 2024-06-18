@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_iBVP_FactorizePhys_v01_R1_S1_ST6_ELU_B_MulRes_RandInit
+  MODEL_FILE_NAME: PURE_PURE_iBVP_FactorizePhys_v01_Base    #R1_S1_ST6_ELU_B_MulRes_RandInit
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -105,7 +105,7 @@ MODEL:
   iBVPNet:
     CHANNELS: 3
     FRAME_NUM: 160
-    MD_FSAM: True
+    MD_FSAM: False
     MD_TYPE: "NMF"
     MD_R: 1
     MD_S: 1
