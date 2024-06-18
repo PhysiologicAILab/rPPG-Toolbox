@@ -19,12 +19,12 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 5,
-    "MD_S": 4,
+    "MD_R": 1,
+    "MD_S": 1,
     "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
-    "RAND_INIT": False,
+    "RAND_INIT": True,
     "in_channels": 3,
     "data_channels": 4,
     "align_channels": 8,
@@ -186,9 +186,9 @@ class NMF(_MatrixDecompositionBase):
         self.inv_t = 1
 
     def _build_bases(self, B, S, D, R):
-        # bases = torch.rand((B * S, D, R)).to(self.device)
+        bases = torch.rand((B * S, D, R)).to(self.device)
         # bases = torch.ones((B * S, D, R)).to(self.device)
-        bases = torch.zeros((B * S, D, R)).to(self.device)
+        # bases = torch.zeros((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
 
         return bases
@@ -228,9 +228,9 @@ class VQ(_MatrixDecompositionBase):
         self.device = device
 
     def _build_bases(self, B, S, D, R):
-        # bases = torch.randn((B * S, D, R)).to(self.device)
+        bases = torch.randn((B * S, D, R)).to(self.device)
         # bases = torch.ones((B * S, D, R)).to(self.device)
-        bases = torch.zeros((B * S, D, R)).to(self.device)
+        # bases = torch.zeros((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
         return bases
 
@@ -298,7 +298,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c, dim,
                  kernel_size=1, stride=1, padding='same',
-                 dilation=1, groups=1, act='relu', apply_bn=True, apply_act=True):
+                 dilation=1, groups=1, act='relu', apply_bn=False, apply_act=True):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -519,7 +519,7 @@ class BVP_Head(nn.Module):
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
             # self.fsam_norm = nn.InstanceNorm3d(inC)
             self.fsam_norm = nn.BatchNorm3d(inC)
-            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=False).to(device)
+            self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
             # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
             inC = nf[3]
@@ -555,16 +555,16 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = self.fsam_norm(att_mask)
 
             # # Residual connection: 
-            # factorized_embeddings = voxel_embeddings + F.tanh(self.fsam_norm(att_mask))
+            # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # Multiplication
-            x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
-            factorized_embeddings = self.fsam_norm(x)
-
-            # # Multiplication with Residual connection
+            # # Multiplication
             # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
             # factorized_embeddings = self.fsam_norm(x)
-            # factorized_embeddings = voxel_embeddings + factorized_embeddings
+
+            # Multiplication with Residual connection
+            x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
+            factorized_embeddings = self.fsam_norm(x)
+            factorized_embeddings = voxel_embeddings + factorized_embeddings
             
             # # Concatenate
             # factorized_embeddings = torch.cat([voxel_embeddings, self.fsam_norm(x)], dim=1)
