@@ -24,7 +24,7 @@ model_config = {
     "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
-    "RAND_INIT": True,
+    "RAND_INIT": False,
     "in_channels": 3,
     "data_channels": 4,
     "align_channels": 8,
