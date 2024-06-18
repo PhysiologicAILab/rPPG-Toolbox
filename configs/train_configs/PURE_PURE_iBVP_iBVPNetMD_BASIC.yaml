@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: PURE_PURE_iBVP_FactorizePhys_v01_R1_S4_ST4_ELU_BB_Mul_ZerosInit
+  MODEL_FILE_NAME: PURE_PURE_iBVP_FactorizePhys_v01_R5_S4_ST6_ELU_BB_Mul_ZerosInit
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -107,9 +107,9 @@ MODEL:
     FRAME_NUM: 160
     MD_FSAM: True
     MD_TYPE: "NMF"
-    MD_R: 1
+    MD_R: 5
     MD_S: 4
-    MD_STEPS: 4
+    MD_STEPS: 6
 INFERENCE:
   BATCH_SIZE: 4
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
