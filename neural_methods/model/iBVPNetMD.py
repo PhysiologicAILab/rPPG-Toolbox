@@ -19,7 +19,7 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 8,
+    "MD_R": 1,
     "MD_S": 1,
     "MD_STEPS": 6,
     "INV_T": 1,
@@ -186,9 +186,8 @@ class NMF(_MatrixDecompositionBase):
         self.inv_t = 1
 
     def _build_bases(self, B, S, D, R):
-        bases = torch.rand((B * S, D, R)).to(self.device)
-        # bases = torch.ones((B * S, D, R)).to(self.device)
-        # bases = torch.zeros((B * S, D, R)).to(self.device)
+        # bases = torch.rand((B * S, D, R)).to(self.device)
+        bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
 
         return bases
@@ -228,9 +227,8 @@ class VQ(_MatrixDecompositionBase):
         self.device = device
 
     def _build_bases(self, B, S, D, R):
-        bases = torch.randn((B * S, D, R)).to(self.device)
-        # bases = torch.ones((B * S, D, R)).to(self.device)
-        # bases = torch.zeros((B * S, D, R)).to(self.device)
+        # bases = torch.randn((B * S, D, R)).to(self.device)
+        bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
         return bases
 
@@ -466,7 +464,7 @@ class ConvBlock3D(nn.Module):
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
             nn.Tanh(),
             # nn.ELU(inplace=True),
-            nn.InstanceNorm3d(out_channel),
+            # nn.InstanceNorm3d(out_channel),
         )
 
     def forward(self, x):
