@@ -187,9 +187,9 @@ class NMF(_MatrixDecompositionBase):
 
     def _build_bases(self, B, S, D, R):
         # bases = torch.rand((B * S, D, R)).to(self.device)
-        # bases = torch.ones((B * S, D, R)).to(self.device)
-        bases = torch.zeros((B * S, D, R)).to(self.device)
-        # bases = F.normalize(bases, dim=1)
+        bases = torch.ones((B * S, D, R)).to(self.device)
+        # bases = torch.zeros((B * S, D, R)).to(self.device)
+        bases = F.normalize(bases, dim=1)
 
         return bases
 
@@ -229,9 +229,9 @@ class VQ(_MatrixDecompositionBase):
 
     def _build_bases(self, B, S, D, R):
         # bases = torch.randn((B * S, D, R)).to(self.device)
-        # bases = torch.ones((B * S, D, R)).to(self.device)
-        bases = torch.zeros((B * S, D, R)).to(self.device)
-        # bases = F.normalize(bases, dim=1)
+        bases = torch.ones((B * S, D, R)).to(self.device)
+        # bases = torch.zeros((B * S, D, R)).to(self.device)
+        bases = F.normalize(bases, dim=1)
         return bases
 
     @torch.no_grad()
