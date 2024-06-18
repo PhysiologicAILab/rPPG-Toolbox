@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: iBVP_iBVP_iBVP_T_FactorizePhys_v01_R1_S8_ST4_ELU_BN_Mul
+  MODEL_FILE_NAME: iBVP_iBVP_iBVP_T_FactorizePhys_v01_R1_S4_ST4_ELU_BB_Mul_ZerosInit
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -112,7 +112,7 @@ MODEL:
     MD_FSAM: True
     MD_TYPE: "NMF"
     MD_R: 1
-    MD_S: 8
+    MD_S: 4
     MD_STEPS: 4
 INFERENCE:
   BATCH_SIZE: 4
