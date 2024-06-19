@@ -14,17 +14,17 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32]
+nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 4,
-    "MD_S": 2,
+    "MD_S": 4,
     "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
-    "RAND_INIT": True,
+    "RAND_INIT": False,
     "in_channels": 3,
     "data_channels": 4,
     "align_channels": 8,
@@ -525,11 +525,9 @@ class BVP_Head(nn.Module):
         self.conv_decoder = nn.Sequential(
 
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            nn.Tanh(),
-            # nn.ELU(inplace=True),
-            nn.InstanceNorm3d(nf[0]),
+            # nn.Tanh(),
 
-            nn.Dropout3d(p=dropout_rate),
+            # nn.Dropout3d(p=dropout_rate),
 
             nn.Conv3d(nf[0], 1, (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
         )
