@@ -24,7 +24,7 @@ model_config = {
     "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
-    "RAND_INIT": False,
+    "RAND_INIT": True,
     "in_channels": 3,
     "data_channels": 4,
     "align_channels": 8,
@@ -524,14 +524,15 @@ class BVP_Head(nn.Module):
 
         self.conv_decoder = nn.Sequential(
 
-            nn.Conv3d(inC, 1, (3, 7, 7), stride=(1, 1, 1), padding=(1, 0, 0)),
+            # nn.Conv3d(inC, 1, (3, 7, 7), stride=(1, 1, 1), padding=(1, 0, 0)),
 
             # nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            # nn.Tanh(),
+            nn.Conv3d(inC, nf[0], (1, 5, 5), stride=(1, 1, 1), padding=(0, 0, 0)),
+            nn.Tanh(),
 
-            # nn.Dropout3d(p=dropout_rate),
+            nn.Dropout3d(p=dropout_rate),
 
-            # nn.Conv3d(nf[0], 1, (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
+            nn.Conv3d(nf[0], 1, (1, 3, 3), stride=(1, 1, 1), padding=(0, 0, 0)),
         )
 
     def forward(self, voxel_embeddings):
