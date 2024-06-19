@@ -20,7 +20,7 @@ model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 1,
-    "MD_S": 4,
+    "MD_S": 8,
     "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
