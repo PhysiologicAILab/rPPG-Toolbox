@@ -14,7 +14,7 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32]
+nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
@@ -524,12 +524,14 @@ class BVP_Head(nn.Module):
 
         self.conv_decoder = nn.Sequential(
 
-            nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
+            nn.Conv3d(inC, 1, (3, 7, 7), stride=(1, 1, 1), padding=(1, 0, 0)),
+
+            # nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
             # nn.Tanh(),
 
             # nn.Dropout3d(p=dropout_rate),
 
-            nn.Conv3d(nf[0], 1, (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
+            # nn.Conv3d(nf[0], 1, (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
         )
 
     def forward(self, voxel_embeddings):
