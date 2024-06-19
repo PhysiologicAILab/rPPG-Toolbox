@@ -355,11 +355,11 @@ class ConvBNReLU(nn.Module):
 
         if self.apply_bn:
             if self.dim == "3D":
-                self.bn = nn.InstanceNorm3d(out_c)
+                self.bn = nn.BatchNorm3d(out_c)
             elif self.dim == "2D":
-                self.bn = nn.InstanceNorm2d(out_c)
+                self.bn = nn.BatchNorm2d(out_c)
             else:
-                self.bn = nn.InstanceNorm1d(out_c)
+                self.bn = nn.BatchNorm1d(out_c)
 
     def forward(self, x):
         x = self.conv(x)
@@ -463,7 +463,7 @@ class ConvBlock3D(nn.Module):
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
             nn.ELU(inplace=True),
-            nn.InstanceNorm3d(out_channel),
+            nn.BatchNorm3d(out_channel),
         )
 
     def forward(self, x):
@@ -514,7 +514,7 @@ class BVP_Head(nn.Module):
         if self.use_fsam:
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
-            self.fsam_norm = nn.InstanceNorm3d(inC)
+            self.fsam_norm = nn.BatchNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
             # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
@@ -523,7 +523,7 @@ class BVP_Head(nn.Module):
         self.conv_decoder = nn.Sequential(
             nn.Conv3d(inC, nf[0], (3, 5, 5), stride=(1, 1, 1), padding=(1, 0, 0)),
             nn.ELU(inplace=True),
-            nn.InstanceNorm3d(nf[0]),
+            nn.BatchNorm3d(nf[0]),
 
             nn.Dropout3d(p=dropout_rate),
 
@@ -585,10 +585,10 @@ class iBVPNetMD(nn.Module):
 
         self.in_channels = in_channels
         if self.in_channels == 1 or self.in_channels == 3:
-            self.norm = nn.InstanceNorm3d(self.in_channels)
+            self.norm = nn.BatchNorm3d(self.in_channels)
         elif self.in_channels == 4:
-            self.rgb_norm = nn.InstanceNorm3d(3)
-            self.thermal_norm = nn.InstanceNorm3d(1)
+            self.rgb_norm = nn.BatchNorm3d(3)
+            self.thermal_norm = nn.BatchNorm3d(1)
         else:
             print("Unsupported input channels")
         
