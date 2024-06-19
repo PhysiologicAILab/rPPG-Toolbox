@@ -19,7 +19,7 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 2,
+    "MD_R": 1,
     "MD_S": 4,
     "MD_STEPS": 5,
     "INV_T": 1,
