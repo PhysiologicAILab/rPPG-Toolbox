@@ -14,7 +14,7 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32]
+nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
@@ -24,7 +24,7 @@ model_config = {
     "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
-    "RAND_INIT": False,
+    "RAND_INIT": True,
     "in_channels": 3,
     "data_channels": 4,
     "align_channels": 8,
@@ -186,8 +186,8 @@ class NMF(_MatrixDecompositionBase):
         self.inv_t = 1
 
     def _build_bases(self, B, S, D, R):
-        # bases = torch.rand((B * S, D, R)).to(self.device)
-        bases = torch.ones((B * S, D, R)).to(self.device)
+        bases = torch.rand((B * S, D, R)).to(self.device)
+        # bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
 
         return bases
@@ -227,8 +227,8 @@ class VQ(_MatrixDecompositionBase):
         self.device = device
 
     def _build_bases(self, B, S, D, R):
-        # bases = torch.randn((B * S, D, R)).to(self.device)
-        bases = torch.ones((B * S, D, R)).to(self.device)
+        bases = torch.randn((B * S, D, R)).to(self.device)
+        # bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
         return bases
 
@@ -527,7 +527,7 @@ class BVP_Head(nn.Module):
 
             nn.Dropout3d(p=dropout_rate),
 
-            nn.Conv3d(nf[0], 1, (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
+            nn.Conv3d(nf[0], 1, (5, 3, 3), stride=(1, 1, 1), padding=(2, 0, 0)),
         )
 
     def forward(self, voxel_embeddings):
