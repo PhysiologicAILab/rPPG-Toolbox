@@ -6,7 +6,7 @@ TRAIN:
   LR: 1e-3
   MODEL_FILE_NAME: iBVP_iBVP_FactorizePhys_v06_R1_S4_ST4
   PLOT_LOSSES_AND_LR: True
-  DATA:1
+  DATA:
     FS: 30
     DATASET: iBVP
     DO_PREPROCESS: False                  # if first time, should be true
