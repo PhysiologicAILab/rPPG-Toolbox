@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: iBVP_iBVP_FactorizePhys_v06_R1_S4_ST4
+  MODEL_FILE_NAME: iBVP_iBVP_FactorizePhys_v06_Base   #R1_S4_ST4
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -107,7 +107,7 @@ MODEL:
   iBVPNet:
     CHANNELS: 3
     FRAME_NUM: 160
-    MD_FSAM: True
+    MD_FSAM: False
     MD_TYPE: "NMF"
     MD_R: 1
     MD_S: 4
