@@ -14,12 +14,12 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 16, 16]
+nf = [8, 8, 8, 8]
 
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 1,
+    "MD_R": 4,
     "MD_S": 1,
     "MD_STEPS": 4,
     "INV_T": 1,
@@ -27,7 +27,7 @@ model_config = {
     "RAND_INIT": True,
     "in_channels": 3,
     "data_channels": 4,
-    "align_channels": 8,
+    "align_channels": 4,
     "height": 72,
     "weight": 72,
     "batch_size": 2,

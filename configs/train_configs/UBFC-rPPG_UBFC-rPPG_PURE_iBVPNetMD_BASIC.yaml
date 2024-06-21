@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: UBFC_UBFC_PURE_FactorizePhys_v06_R1_S1_ST4
+  MODEL_FILE_NAME: UBFC_UBFC_PURE_FactorizePhys_v06s_R4_S1_ST4
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -105,7 +105,7 @@ MODEL:
     FRAME_NUM: 160
     MD_FSAM: True
     MD_TYPE: "NMF"
-    MD_R: 1
+    MD_R: 4
     MD_S: 1
     MD_STEPS: 4
 INFERENCE:
