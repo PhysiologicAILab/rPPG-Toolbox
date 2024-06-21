@@ -14,7 +14,7 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 24, 32]
+nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
@@ -548,12 +548,13 @@ class BVP_Head(nn.Module):
             # # directly use att_mask   ---> difficult to converge without Residual connection. Needs high rank
             # factorized_embeddings = self.fsam_norm(att_mask)
 
-            # Residual connection: 
-            factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
+            # # Residual connection: 
+            # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # # Multiplication
-            # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
-            # factorized_embeddings = self.fsam_norm(x)
+            # Multiplication
+            x = self.fsam_norm(att_mask)
+            x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, x - x.min() + self.bias1)
+            factorized_embeddings = x - x.mean()
 
             # # Multiplication with Residual connection
             # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
