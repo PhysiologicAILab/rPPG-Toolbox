@@ -107,7 +107,7 @@ MODEL:
   iBVPNet:
     CHANNELS: 3
     FRAME_NUM: 160
-    MD_FSAM: False
+    MD_FSAM: True
     MD_TYPE: "NMF"
     MD_R: 1
     MD_S: 1
