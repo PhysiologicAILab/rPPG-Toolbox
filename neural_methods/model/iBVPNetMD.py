@@ -14,7 +14,7 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 16, 16]
+nf = [8, 16, 24, 32]
 
 model_config = {
     "MD_FSAM": True,
@@ -514,7 +514,8 @@ class BVP_Head(nn.Module):
         if self.use_fsam:
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
-            self.fsam_norm = nn.InstanceNorm3d(inC)
+            self.fsam_norm1 = nn.InstanceNorm3d(inC)
+            self.fsam_norm2 = nn.InstanceNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
             # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
@@ -552,14 +553,17 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
             # Multiplication
-            x = self.fsam_norm(att_mask)
+            x = self.fsam_norm1(att_mask)
             x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, x - x.min() + self.bias1)
-            factorized_embeddings = x - x.mean()
+            factorized_embeddings = self.fsam_norm2(x)
 
             # # Multiplication with Residual connection
-            # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
-            # factorized_embeddings = self.fsam_norm(x)
-            # factorized_embeddings = voxel_embeddings + factorized_embeddings
+            # x = self.fsam_norm(att_mask)
+            # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, x - x.min() + self.bias1)
+            # factorized_embeddings = voxel_embeddings + x - x.mean()
+            # # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
+            # # factorized_embeddings = self.fsam_norm(x)
+            # # factorized_embeddings = voxel_embeddings + factorized_embeddings
             
             # # Concatenate
             # factorized_embeddings = torch.cat([voxel_embeddings, self.fsam_norm(x)], dim=1)
