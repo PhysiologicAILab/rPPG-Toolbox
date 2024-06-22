@@ -9,7 +9,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.batchnorm import _BatchNorm
-from torch.nn.modules.instancenorm import _InstanceNorm
 
 import numpy as np
 
@@ -27,7 +26,7 @@ model_config = {
     "RAND_INIT": True,
     "in_channels": 3,
     "data_channels": 4,
-    "align_channels": 4,
+    "align_channels": 8,
     "height": 72,
     "weight": 72,
     "batch_size": 2,
@@ -131,6 +130,10 @@ class _MatrixDecompositionBase(nn.Module):
             print("MD_TRAIN_STEPS", self.train_steps)
             print("MD_EVAL_STEPS", self.eval_steps)
             print("x.view(B * self.S, D, N)", x.shape)
+
+        # x = x.view(B * self.S, N, D)
+        # x = F.conv1d(x, weight=[1, 1, 1], bias=0, padding=1)
+        # x = x.view(B * self.S, D, N)
 
         if not self.rand_init and not hasattr(self, 'bases'):
             bases = self._build_bases(1, self.S, D, self.R)
