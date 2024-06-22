@@ -106,7 +106,7 @@ class _MatrixDecompositionBase(nn.Module):
             # smoothening the temporal dimension
             x = x.view(B * self.S, N, D)
             # print("Intermediate-1 x", x.shape)
-            kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(N, N, 1)
+            kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(N, N, 1).to(self.device)
             x = F.conv1d(x, kernels, padding=1)
             x = F.instance_norm(x)
             x = x.permute(0, 2, 1)
