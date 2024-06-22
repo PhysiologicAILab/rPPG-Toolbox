@@ -103,14 +103,16 @@ class _MatrixDecompositionBase(nn.Module):
             D = T // self.S
             N = C * H * W 
 
-            # # smoothening the temporal dimension
-            # x = x.view(B * self.S, N, D)
-            # kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(B, N, 1)
-            # bias = torch.FloatTensor([0, 0])
-            # x = F.conv1d(x, weight=kernels, bias=bias, stride=(1), padding=(1))
-            # x = F.instance_norm(x)
+            # smoothening the temporal dimension
+            x = x.view(B * self.S, N, D)
+            # print("Intermediate-1 x", x.shape)
+            kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(N, N, 1)
+            x = F.conv1d(x, kernels, padding=1)
+            x = F.instance_norm(x)
+            x = x.permute(0, 2, 1)
+            # print("Intermediate-2 x", x.shape)
 
-            x = x.view(B * self.S, D, N)
+            # x = x.view(B * self.S, D, N)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             B, C, H, W = x.shape
