@@ -26,7 +26,7 @@ model_config = {
     "RAND_INIT": True,
     "in_channels": 3,
     "data_channels": 4,
-    "align_channels": 8,
+    "align_channels": 16,
     "height": 72,
     "weight": 72,
     "batch_size": 2,
