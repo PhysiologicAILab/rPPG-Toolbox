@@ -296,7 +296,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c, dim,
                  kernel_size=1, stride=1, padding='same',
-                 dilation=1, groups=1, act='relu', apply_bn=False, apply_act=True):
+                 dilation=1, groups=1, act='relu', apply_bn=True, apply_act=True):
         super().__init__()
 
         self.apply_bn = apply_bn
