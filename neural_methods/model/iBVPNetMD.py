@@ -439,10 +439,6 @@ class FeaturesFactorizationModule(nn.Module):
                 m.weight.data.fill_(1)
                 if m.bias is not None:
                     m.bias.data.zero_()
-            elif isinstance(m, _InstanceNorm):
-                m.weight.data.fill_(1)
-                if m.bias is not None:
-                    m.bias.data.zero_()
 
     def forward(self, x):
         x = self.pre_conv_block(x)
