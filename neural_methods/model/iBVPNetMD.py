@@ -103,20 +103,20 @@ class _MatrixDecompositionBase(nn.Module):
             D = T // self.S
             N = C * H * W 
 
-            # smoothening the temporal dimension
-            x = x.view(B * self.S, N, D)
-            # print("Intermediate-1 x", x.shape)
-            sample_1 = x[:, :, 0].unsqueeze(2)
-            sample_2 = x[:, :, -1].unsqueeze(2)
-            x = torch.cat([sample_1, x, sample_2], dim=2)
-            kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(N, N, 1).to(self.device)
-            x = F.conv1d(x, kernels, padding="valid")
-            # x = F.instance_norm(x)
-            x = (x - x.min())/x.std()
-            x = x.permute(0, 2, 1)
-            # print("Intermediate-2 x", x.shape)
+            # # smoothening the temporal dimension
+            # x = x.view(B * self.S, N, D)
+            # # print("Intermediate-1 x", x.shape)
+            # sample_1 = x[:, :, 0].unsqueeze(2)
+            # sample_2 = x[:, :, -1].unsqueeze(2)
+            # x = torch.cat([sample_1, x, sample_2], dim=2)
+            # kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(N, N, 1).to(self.device)
+            # x = F.conv1d(x, kernels, padding="valid")
+            # # x = F.instance_norm(x)
+            # x = (x - x.min())/x.std()
+            # x = x.permute(0, 2, 1)
+            # # print("Intermediate-2 x", x.shape)
 
-            # x = x.view(B * self.S, D, N)
+            x = x.view(B * self.S, D, N)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             B, C, H, W = x.shape
@@ -162,8 +162,23 @@ class _MatrixDecompositionBase(nn.Module):
         # (B * S, D, R) @ (B * S, N, R)^T -> (B * S, D, N)
         x = torch.bmm(bases, coef.transpose(1, 2))
 
+
         if self.dim == "3D":
-            # (B * S, D, N) -> (B, C, H, W)
+
+            # smoothening the temporal dimension
+            # print("Intermediate-0 x", x.shape)
+            x = x.permute(0, 2, 1)
+            # print("Intermediate-1 x", x.shape)
+            sample_1 = x[:, :, 0].unsqueeze(2)
+            sample_2 = x[:, :, -1].unsqueeze(2)
+            x = torch.cat([sample_1, x, sample_2], dim=2)
+            kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(N, N, 1).to(self.device)
+            x = F.conv1d(x, kernels, padding="valid")
+            x = (x - x.min())/x.std()
+            # x = x.permute(0, 2, 1)
+            # print("Intermediate-2 x", x.shape)
+
+            # (B * S, D, N) -> (B, C, T, H, W)
             x = x.view(B, C, T, H, W)
         elif self.dim == "2D":
             # (B * S, D, N) -> (B, C, H, W)
