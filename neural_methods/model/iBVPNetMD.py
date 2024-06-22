@@ -584,10 +584,10 @@ class iBVPNetMD(nn.Module):
 
         self.in_channels = in_channels
         if self.in_channels == 1 or self.in_channels == 3:
-            self.norm = nn.BatchNorm3d(self.in_channels)
+            self.norm = nn.InstanceNorm3d(self.in_channels)
         elif self.in_channels == 4:
-            self.rgb_norm = nn.BatchNorm3d(3)
-            self.thermal_norm = nn.BatchNorm3d(1)
+            self.rgb_norm = nn.InstanceNorm3d(3)
+            self.thermal_norm = nn.InstanceNorm3d(1)
         else:
             print("Unsupported input channels")
         
@@ -637,7 +637,7 @@ class iBVPNetMD(nn.Module):
                 exit()
 
         if self.debug:
-            print("BatchNormed shape", x.shape)
+            print("Diff Normalized shape", x.shape)
 
         voxel_embeddings = self.voxel_embeddings(x)
         if self.debug:
