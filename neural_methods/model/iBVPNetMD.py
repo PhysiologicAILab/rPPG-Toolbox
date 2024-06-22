@@ -14,12 +14,12 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 import numpy as np
 
 # num_filters
-nf = [8, 8, 8, 8]
+nf = [8, 16, 16, 16]
 
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 4,
+    "MD_R": 1,
     "MD_S": 1,
     "MD_STEPS": 4,
     "INV_T": 1,
@@ -526,7 +526,7 @@ class BVP_Head(nn.Module):
             nn.ELU(inplace=True),
             nn.InstanceNorm3d(nf[0]),
 
-            nn.Dropout3d(p=dropout_rate),
+            # nn.Dropout3d(p=dropout_rate),
 
             nn.Conv3d(nf[0], 1, (5, 3, 3), stride=(1, 1, 1), padding=(2, 0, 0)),
         )
