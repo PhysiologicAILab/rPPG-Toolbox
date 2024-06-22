@@ -296,7 +296,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c, dim,
                  kernel_size=1, stride=1, padding='same',
-                 dilation=1, groups=1, act='relu', apply_bn=False, apply_act=True):
+                 dilation=1, groups=1, act='relu', apply_bn=True, apply_act=True):
         super().__init__()
 
         self.apply_bn = apply_bn
@@ -355,11 +355,11 @@ class ConvBNReLU(nn.Module):
 
         if self.apply_bn:
             if self.dim == "3D":
-                self.bn = nn.InstanceNorm3d(out_c)
+                self.bn = nn.BatchNorm3d(out_c)
             elif self.dim == "2D":
-                self.bn = nn.InstanceNorm2d(out_c)
+                self.bn = nn.BatchNorm2d(out_c)
             else:
-                self.bn = nn.InstanceNorm1d(out_c)
+                self.bn = nn.BatchNorm1d(out_c)
 
     def forward(self, x):
         x = self.conv(x)
@@ -463,7 +463,7 @@ class ConvBlock3D(nn.Module):
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
             nn.ELU(inplace=True),
-            nn.InstanceNorm3d(out_channel),
+            nn.BatchNorm3d(out_channel),
         )
 
     def forward(self, x):
@@ -514,8 +514,7 @@ class BVP_Head(nn.Module):
         if self.use_fsam:
             inC = nf[3]
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
-            self.fsam_norm1 = nn.InstanceNorm3d(inC)
-            self.fsam_norm2 = nn.InstanceNorm3d(inC)
+            self.fsam_norm = nn.BatchNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
             # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
@@ -524,9 +523,9 @@ class BVP_Head(nn.Module):
         self.conv_decoder = nn.Sequential(
             nn.Conv3d(inC, nf[0], (3, 5, 5), stride=(1, 1, 1), padding=(1, 0, 0)),
             nn.ELU(inplace=True),
-            nn.InstanceNorm3d(nf[0]),
+            nn.BatchNorm3d(nf[0]),
 
-            # nn.Dropout3d(p=dropout_rate),
+            nn.Dropout3d(p=dropout_rate),
 
             nn.Conv3d(nf[0], 1, (5, 3, 3), stride=(1, 1, 1), padding=(2, 0, 0)),
         )
@@ -553,9 +552,8 @@ class BVP_Head(nn.Module):
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
             # Multiplication
-            x = self.fsam_norm1(att_mask)
-            x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, x - x.min() + self.bias1)
-            factorized_embeddings = self.fsam_norm2(x)
+            x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
+            factorized_embeddings = self.fsam_norm(x)
 
             # # Multiplication with Residual connection
             # x = self.fsam_norm(att_mask)
