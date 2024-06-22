@@ -363,10 +363,10 @@ class ConvBNReLU(nn.Module):
 
     def forward(self, x):
         x = self.conv(x)
-        if self.apply_act:
-            x = self.act(x)
         if self.apply_bn:
             x = self.bn(x)
+        if self.apply_act:
+            x = self.act(x)
         return x
 
 
