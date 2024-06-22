@@ -544,10 +544,12 @@ class BVP_Head(nn.Module):
             print("     voxel_embeddings.shape", voxel_embeddings.shape)
 
         if self.use_fsam:
-            if self.md_type == "NMF":
-                att_mask, appx_error = self.fsam(voxel_embeddings - voxel_embeddings.min()) # to make it positive (>= 0)
-            else:
-                att_mask, appx_error = self.fsam(voxel_embeddings)
+            # if self.md_type == "NMF":
+            #     att_mask, appx_error = self.fsam(voxel_embeddings - voxel_embeddings.min()) # to make it positive (>= 0)
+            # else:
+            #     att_mask, appx_error = self.fsam(voxel_embeddings)
+
+            att_mask, appx_error = self.fsam(voxel_embeddings)
 
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
