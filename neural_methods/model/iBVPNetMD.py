@@ -103,6 +103,13 @@ class _MatrixDecompositionBase(nn.Module):
             D = T // self.S
             N = C * H * W 
 
+            # # smoothening the temporal dimension
+            # x = x.view(B * self.S, N, D)
+            # kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(B, N, 1)
+            # bias = torch.FloatTensor([0, 0])
+            # x = F.conv1d(x, weight=kernels, bias=bias, stride=(1), padding=(1))
+            # x = F.instance_norm(x)
+
             x = x.view(B * self.S, D, N)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
@@ -115,14 +122,6 @@ class _MatrixDecompositionBase(nn.Module):
             B, C, L = x.shape
             D = L // self.S
             N = C
-
-            # smoothening the temporal dimension
-            x = x.view(B * self.S, N, D)
-            kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(B, N, 1)
-            bias = torch.FloatTensor([0, 0])
-            x = F.conv1d(x, weight=kernels, bias=bias, stride=(1), padding=(1))
-            x = F.instance_norm(x)
-
             x = x.view(B * self.S, D, N)
 
         else:
@@ -303,7 +302,7 @@ class ConvBNReLU(nn.Module):
 
     def __init__(self, in_c, out_c, dim,
                  kernel_size=1, stride=1, padding='same',
-                 dilation=1, groups=1, act='relu', apply_bn=True, apply_act=True):
+                 dilation=1, groups=1, act='relu', apply_bn=False, apply_act=True):
         super().__init__()
 
         self.apply_bn = apply_bn
