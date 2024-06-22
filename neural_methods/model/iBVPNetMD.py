@@ -111,7 +111,8 @@ class _MatrixDecompositionBase(nn.Module):
             x = torch.cat([sample_1, x, sample_2], dim=2)
             kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(N, N, 1).to(self.device)
             x = F.conv1d(x, kernels, padding="valid")
-            x = F.instance_norm(x)
+            # x = F.instance_norm(x)
+            x = (x - x.min())/x.std()
             x = x.permute(0, 2, 1)
             # print("Intermediate-2 x", x.shape)
 
@@ -544,12 +545,10 @@ class BVP_Head(nn.Module):
             print("     voxel_embeddings.shape", voxel_embeddings.shape)
 
         if self.use_fsam:
-            # if self.md_type == "NMF":
-            #     att_mask, appx_error = self.fsam(voxel_embeddings - voxel_embeddings.min()) # to make it positive (>= 0)
-            # else:
-            #     att_mask, appx_error = self.fsam(voxel_embeddings)
-
-            att_mask, appx_error = self.fsam(voxel_embeddings)
+            if self.md_type == "NMF":
+                att_mask, appx_error = self.fsam(voxel_embeddings - voxel_embeddings.min()) # to make it positive (>= 0)
+            else:
+                att_mask, appx_error = self.fsam(voxel_embeddings)
 
             if self.debug:
                 print("att_mask.shape", att_mask.shape)
