@@ -19,8 +19,8 @@ model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 1,
-    "MD_S": 1,
-    "MD_STEPS": 3,
+    "MD_S": 2,
+    "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -166,7 +166,8 @@ class _MatrixDecompositionBase(nn.Module):
         if self.dim == "3D":
 
             # smoothening the temporal dimension
-            # print("Intermediate-0 x", x.shape)
+            x = x.view(B, D * self.S, N)    #Joining temporal dimension for contiguous smoothening
+            # print("Intermediate-0 x", x.shape)            
             x = x.permute(0, 2, 1)
             # print("Intermediate-1 x", x.shape)
             sample_1 = x[:, :, 0].unsqueeze(2)
