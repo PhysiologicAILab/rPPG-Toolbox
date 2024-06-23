@@ -19,7 +19,7 @@ model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 1,
-    "MD_S": 4,
+    "MD_S": 1,
     "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
@@ -165,22 +165,22 @@ class _MatrixDecompositionBase(nn.Module):
 
         if self.dim == "3D":
 
-            # smoothening the temporal dimension
-            x = x.view(B, D * self.S, N)    #Joining temporal dimension for contiguous smoothening
-            # print("Intermediate-0 x", x.shape)            
-            x = x.permute(0, 2, 1)
-            # print("Intermediate-1 x", x.shape)
-            sample_1 = x[:, :, 0].unsqueeze(2)
-            sample_2 = x[:, :, 0].unsqueeze(2)
-            sample_3 = x[:, :, -1].unsqueeze(2)
-            sample_4 = x[:, :, -1].unsqueeze(2)
-            x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
-            kernels = torch.FloatTensor([[[0.33, 0.66, 1.00, 0.66, 0.33]]]).repeat(N, N, 1).to(self.device)
-            bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
-            x = F.conv1d(x, kernels, bias=bias, padding="valid")
-            x = (x - x.min())/x.std()
+            # # smoothening the temporal dimension
+            # x = x.view(B, D * self.S, N)    #Joining temporal dimension for contiguous smoothening
+            # # print("Intermediate-0 x", x.shape)            
             # x = x.permute(0, 2, 1)
-            # print("Intermediate-2 x", x.shape)
+            # # print("Intermediate-1 x", x.shape)
+            # sample_1 = x[:, :, 0].unsqueeze(2)
+            # sample_2 = x[:, :, 0].unsqueeze(2)
+            # sample_3 = x[:, :, -1].unsqueeze(2)
+            # sample_4 = x[:, :, -1].unsqueeze(2)
+            # x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
+            # kernels = torch.FloatTensor([[[0.33, 0.66, 1.00, 0.66, 0.33]]]).repeat(N, N, 1).to(self.device)
+            # bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
+            # x = F.conv1d(x, kernels, bias=bias, padding="valid")
+            # x = (x - x.min())/x.std()
+            # # x = x.permute(0, 2, 1)
+            # # print("Intermediate-2 x", x.shape)
 
             # (B * S, D, N) -> (B, C, T, H, W)
             x = x.view(B, C, T, H, W)
@@ -412,17 +412,25 @@ class FeaturesFactorizationModule(nn.Module):
 
         if self.dim == "3D":
             if "nmf" in md_type.lower():
-                self.pre_conv_block = nn.Sequential(nn.Conv3d(inC, align_C, (1, 1, 1)), nn.ReLU(inplace=True))
+                self.pre_conv_block = nn.Sequential(
+                    nn.Conv3d(inC, align_C, (1, 1, 1)), 
+                    nn.ReLU(inplace=True))
             else:
                 self.pre_conv_block = nn.Conv3d(inC, align_C, (1, 1, 1))
         elif self.dim == "2D":
             if "nmf" in md_type.lower():
-                self.pre_conv_block = nn.Sequential(nn.Conv2d(inC, align_C, (1, 1)), nn.ReLU(inplace=True))
+                self.pre_conv_block = nn.Sequential(
+                    nn.Conv2d(inC, align_C, (1, 1)),
+                    nn.ReLU(inplace=True)
+                    )
             else:
                 self.pre_conv_block = nn.Conv2d(inC, align_C, (1, 1))
         elif self.dim == "1D":
             if "nmf" in md_type.lower():
-                self.pre_conv_block = nn.Sequential(nn.Conv1d(inC, align_C, 1), nn.ReLU(inplace=True))
+                self.pre_conv_block = nn.Sequential(
+                    nn.Conv1d(inC, align_C, 1),
+                    nn.ReLU(inplace=True)
+                    )
             else:
                 self.pre_conv_block = nn.Conv1d(inC, align_C, 1)
         else:
@@ -438,19 +446,37 @@ class FeaturesFactorizationModule(nn.Module):
 
         if self.dim == "3D":
             if "nmf" in md_type.lower():
-                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1), nn.Conv3d(align_C, inC, 1, bias=False))
+                self.post_conv_block = nn.Sequential(
+                    ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=(3, 1, 1), padding=(1, 0, 0)),
+                    nn.Conv3d(align_C, inC, (3, 1, 1), bias=False, padding=(1, 0, 0))
+                    )
             else:
-                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False), nn.Conv3d(align_C, inC, 1, bias=False))
+                self.post_conv_block = nn.Sequential(
+                    ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False), 
+                    nn.Conv3d(align_C, inC, 1, bias=False)
+                    )
         elif self.dim == "2D":
             if "nmf" in md_type.lower():
-                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1), nn.Conv2d(align_C, inC, 1, bias=False))
+                self.post_conv_block = nn.Sequential(
+                    ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1), 
+                    nn.Conv2d(align_C, inC, 1, bias=False)
+                    )
             else:
-                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False), nn.Conv2d(align_C, inC, 1, bias=False))
+                self.post_conv_block = nn.Sequential(
+                    ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False),
+                    nn.Conv2d(align_C, inC, 1, bias=False)
+                    )
         else:
             if "nmf" in md_type.lower():
-                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1), nn.Conv1d(align_C, inC, 1, bias=False))
+                self.post_conv_block = nn.Sequential(
+                    ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1),
+                    nn.Conv1d(align_C, inC, 1, bias=False)
+                    )
             else:
-                self.post_conv_block = nn.Sequential(ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False), nn.Conv1d(align_C, inC, 1, bias=False))
+                self.post_conv_block = nn.Sequential(
+                    ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False),
+                    nn.Conv1d(align_C, inC, 1, bias=False)
+                    )
 
         self._init_weight()
 
