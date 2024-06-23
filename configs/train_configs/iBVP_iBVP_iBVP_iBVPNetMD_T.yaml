@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: iBVP_iBVP_iBVP_T_FactorizePhys_v06_R4_S1_ST4_II_smooth5_post
+  MODEL_FILE_NAME: iBVP_iBVP_iBVP_T_FactorizePhys_v06_R4_S5_ST4_II_PostConvFilter_Groups
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -112,7 +112,7 @@ MODEL:
     MD_FSAM: True
     MD_TYPE: "NMF"
     MD_R: 4
-    MD_S: 1
+    MD_S: 5
     MD_STEPS: 4
 INFERENCE:
   BATCH_SIZE: 4

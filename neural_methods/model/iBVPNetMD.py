@@ -448,8 +448,9 @@ class FeaturesFactorizationModule(nn.Module):
             if "nmf" in md_type.lower():
                 self.post_conv_block = nn.Sequential(
                     ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=(3, 1, 1), padding=(1, 0, 0), groups=align_C),
-                    nn.Conv3d(align_C, inC, (3, 1, 1), bias=False, padding=(1, 0, 0), groups=align_C)
+                    nn.Conv3d(align_C, inC, 1, bias=False)
                     )
+                # nn.Conv3d(align_C, inC, (3, 1, 1), bias=False, padding=(1, 0, 0), groups=align_C)
             else:
                 self.post_conv_block = nn.Sequential(
                     ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False), 
