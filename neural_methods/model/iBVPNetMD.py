@@ -166,27 +166,15 @@ class _MatrixDecompositionBase(nn.Module):
         if self.dim == "3D":
 
             # smoothening the temporal dimension
-            x = x.view(B, D * self.S, N)    #Joining temporal dimension for contiguous smoothening
-            # print("Intermediate-0 x", x.shape)            
-            x = x.permute(0, 2, 1)
+            x = x.view(B, N, D * self.S)    #Joining temporal dimension for contiguous smoothening
             # print("Intermediate-1 x", x.shape)
             sample_1 = x[:, :, 0].unsqueeze(2)
-            # sample_2 = x[:, :, 0].unsqueeze(2)
-            # sample_3 = x[:, :, -1].unsqueeze(2)
-            sample_4 = x[:, :, -1].unsqueeze(2)
-            # x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
-            x = torch.cat([sample_1, x, sample_4], dim=2)
-            kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(N, N, 1).to(self.device)
-            # kernels = torch.FloatTensor([[[0.5, 0.75, 1.00, 0.75, 0.5]]]).repeat(N, N, 1).to(self.device)
-            # kernels = torch.FloatTensor([[[0.11587662110459311, 0.14730805612132936, 0.1595769121605731,
-            #                             0.14730805612132936, 0.11587662110459311]]]).repeat(N, N, 1).to(self.device)
-            # kernels = torch.FloatTensor(
-            #     [[[0.12579440923099774, 0.1329807601338109, 0.12579440923099774]]]).repeat(N, N, 1).to(self.device)
-            
+            sample_2 = x[:, :, -1].unsqueeze(2)
+            x = torch.cat([sample_1, x, sample_2], dim=2)
+            kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(N, N, 1).to(self.device)            
             bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
             x = F.conv1d(x, kernels, bias=bias, padding="valid")
             x = (x - x.min())/x.std()
-            # x = x.permute(0, 2, 1)
             # print("Intermediate-2 x", x.shape)
 
             # (B * S, D, N) -> (B, C, T, H, W)
@@ -526,7 +514,7 @@ class ConvBlock3D(nn.Module):
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
             nn.ELU(inplace=True),
-            nn.BatchNorm3d(out_channel),
+            nn.InstanceNorm3d(out_channel),
         )
 
     def forward(self, x):
