@@ -526,7 +526,7 @@ class ConvBlock3D(nn.Module):
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
             nn.ELU(inplace=True),
-            nn.InstanceNorm3d(out_channel),
+            nn.BatchNorm3d(out_channel),
         )
 
     def forward(self, x):
