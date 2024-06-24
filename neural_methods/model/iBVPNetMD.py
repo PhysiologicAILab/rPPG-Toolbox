@@ -19,7 +19,7 @@ model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 1,
-    "MD_S": 2,
+    "MD_S": 5,
     "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
@@ -165,22 +165,24 @@ class _MatrixDecompositionBase(nn.Module):
 
         if self.dim == "3D":
 
-            # # smoothening the temporal dimension
-            # x = x.view(B, D * self.S, N)    #Joining temporal dimension for contiguous smoothening
-            # # print("Intermediate-0 x", x.shape)            
+            # smoothening the temporal dimension
+            x = x.view(B, D * self.S, N)    #Joining temporal dimension for contiguous smoothening
+            # print("Intermediate-0 x", x.shape)            
+            x = x.permute(0, 2, 1)
+            # print("Intermediate-1 x", x.shape)
+            sample_1 = x[:, :, 0].unsqueeze(2)
+            sample_2 = x[:, :, 0].unsqueeze(2)
+            sample_3 = x[:, :, -1].unsqueeze(2)
+            sample_4 = x[:, :, -1].unsqueeze(2)
+            x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
+            # kernels = torch.FloatTensor([[[0.5, 0.75, 1.00, 0.75, 0.5]]]).repeat(N, N, 1).to(self.device)
+            kernels = torch.FloatTensor([[[0.10934004978399577, 0.2129653370149015, 0.2659615202676218,
+                                        0.2129653370149015, 0.10934004978399577]]]).repeat(N, N, 1).to(self.device)            
+            bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
+            x = F.conv1d(x, kernels, bias=bias, padding="valid")
+            x = (x - x.min())/x.std()
             # x = x.permute(0, 2, 1)
-            # # print("Intermediate-1 x", x.shape)
-            # sample_1 = x[:, :, 0].unsqueeze(2)
-            # sample_2 = x[:, :, 0].unsqueeze(2)
-            # sample_3 = x[:, :, -1].unsqueeze(2)
-            # sample_4 = x[:, :, -1].unsqueeze(2)
-            # x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
-            # kernels = torch.FloatTensor([[[0.33, 0.66, 1.00, 0.66, 0.33]]]).repeat(N, N, 1).to(self.device)
-            # bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
-            # x = F.conv1d(x, kernels, bias=bias, padding="valid")
-            # x = (x - x.min())/x.std()
-            # # x = x.permute(0, 2, 1)
-            # # print("Intermediate-2 x", x.shape)
+            # print("Intermediate-2 x", x.shape)
 
             # (B * S, D, N) -> (B, C, T, H, W)
             x = x.view(B, C, T, H, W)
@@ -448,7 +450,7 @@ class FeaturesFactorizationModule(nn.Module):
             if "nmf" in md_type.lower():
                 self.post_conv_block = nn.Sequential(
                     ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1),
-                    nn.Conv3d(align_C, inC, (3, 1, 1), bias=False, padding=(1, 0, 0), groups=align_C)
+                    nn.Conv3d(align_C, inC, 1, bias=False)
                     )
                 # ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=(3, 1, 1), padding=(1, 0, 0), groups=align_C),
                 # nn.Conv3d(align_C, inC, (3, 1, 1), bias=False, padding=(1, 0, 0), groups=align_C)
