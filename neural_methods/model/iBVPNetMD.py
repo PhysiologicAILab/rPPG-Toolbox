@@ -176,8 +176,8 @@ class _MatrixDecompositionBase(nn.Module):
             sample_4 = x[:, :, -1].unsqueeze(2)
             x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
             # kernels = torch.FloatTensor([[[0.5, 0.75, 1.00, 0.75, 0.5]]]).repeat(N, N, 1).to(self.device)
-            kernels = torch.FloatTensor([[[0.10934004978399577, 0.2129653370149015, 0.2659615202676218,
-                                        0.2129653370149015, 0.10934004978399577]]]).repeat(N, N, 1).to(self.device)            
+            kernels = torch.FloatTensor([[[0.11587662110459311, 0.14730805612132936, 0.1595769121605731,
+                                        0.14730805612132936, 0.11587662110459311]]]).repeat(N, N, 1).to(self.device)
             bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
             x = F.conv1d(x, kernels, bias=bias, padding="valid")
             x = (x - x.min())/x.std()
