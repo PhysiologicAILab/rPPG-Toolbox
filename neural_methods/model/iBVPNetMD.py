@@ -103,23 +103,23 @@ class _MatrixDecompositionBase(nn.Module):
             D = T // self.S
             N = C * H * W 
 
-            # smoothening the temporal dimension
-            x = x.view(B * self.S, N, D)
-            # print("Intermediate-1 x", x.shape)
+            # # smoothening the temporal dimension
+            # x = x.view(B * self.S, N, D)
+            # # print("Intermediate-1 x", x.shape)
 
-            sample_1 = x[:, :, 0].unsqueeze(2)
-            sample_2 = x[:, :, -1].unsqueeze(2)
-            x = torch.cat([sample_1, x, sample_2], dim=2)
-            gaussian_kernel = [1.0, 1.0, 1.0]
-            kernels = torch.FloatTensor([[gaussian_kernel]]).repeat(N, N, 1).to(self.device)
-            bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
-            x = F.conv1d(x, kernels, bias=bias, padding="valid")
-            x = (x - x.min()) / (x.max() - x.min())
+            # sample_1 = x[:, :, 0].unsqueeze(2)
+            # sample_2 = x[:, :, -1].unsqueeze(2)
+            # x = torch.cat([sample_1, x, sample_2], dim=2)
+            # gaussian_kernel = [1.0, 1.0, 1.0]
+            # kernels = torch.FloatTensor([[gaussian_kernel]]).repeat(N, N, 1).to(self.device)
+            # bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
+            # x = F.conv1d(x, kernels, bias=bias, padding="valid")
+            # x = (x - x.min()) / (x.max() - x.min())
 
-            x = x.permute(0, 2, 1)
-            # print("Intermediate-2 x", x.shape)
+            # x = x.permute(0, 2, 1)
+            # # print("Intermediate-2 x", x.shape)
 
-            # x = x.view(B * self.S, D, N)
+            x = x.view(B * self.S, D, N)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
             B, C, H, W = x.shape
@@ -171,18 +171,20 @@ class _MatrixDecompositionBase(nn.Module):
             # smoothening the temporal dimension
             x = x.view(B, N, D * self.S)    #Joining temporal dimension for contiguous smoothening
             # print("Intermediate-1 x", x.shape)
+
             sample_1 = x[:, :, 0].unsqueeze(2)
             sample_2 = x[:, :, -1].unsqueeze(2)
-            # x = torch.cat([sample_1, sample_1, x, sample_2, sample_2], dim=2)
-            x = torch.cat([sample_1, x, sample_2], dim=2)
-            
-            # gaussian_kernel = [0.07365402806066468, 0.07820853879509118,
-            #                    0.07978845608028655, 0.07820853879509118, 0.07365402806066468]
+
             # gaussian_kernel = [0.25, 0.50, 0.75, 0.50, 0.25]
-            gaussian_kernel = [1.0, 1.0, 1.0]
+            gaussian_kernel = [0.33, 0.66, 1.00, 0.66, 0.33]
+            # gaussian_kernel = [1.0, 1.0, 1.0]
 
             kernels = torch.FloatTensor([[gaussian_kernel]]).repeat(N, N, 1).to(self.device)
             bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
+
+            # x = torch.cat([sample_1, x, sample_2], dim=2)
+            x = torch.cat([sample_1, sample_1, x, sample_2, sample_2], dim=2)
+
             x = F.conv1d(x, kernels, bias=bias, padding="valid")
             x = (x - x.min()) / (x.max() - x.min())
 
