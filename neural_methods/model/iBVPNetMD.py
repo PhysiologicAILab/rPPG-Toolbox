@@ -170,11 +170,16 @@ class _MatrixDecompositionBase(nn.Module):
             # print("Intermediate-1 x", x.shape)
             sample_1 = x[:, :, 0].unsqueeze(2)
             sample_2 = x[:, :, -1].unsqueeze(2)
-            x = torch.cat([sample_1, x, sample_2], dim=2)
-            kernels = torch.FloatTensor([[[1, 1, 1]]]).repeat(N, N, 1).to(self.device)            
+            x = torch.cat([sample_1, sample_1, x, sample_2, sample_2], dim=2)
+            
+            # gaussian_kernel = [0.07365402806066468, 0.07820853879509118,
+            #                    0.07978845608028655, 0.07820853879509118, 0.07365402806066468]
+            gaussian_kernel = [0.25, 0.50, 0.75, 0.50, 0.25]
+
+            kernels = torch.FloatTensor([[gaussian_kernel]]).repeat(N, N, 1).to(self.device)
             bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
             x = F.conv1d(x, kernels, bias=bias, padding="valid")
-            x = (x - x.min())/x.std()
+            x = (x - x.min())/(x.max() - x.min())
             # print("Intermediate-2 x", x.shape)
 
             # (B * S, D, N) -> (B, C, T, H, W)
