@@ -186,7 +186,8 @@ class _MatrixDecompositionBase(nn.Module):
             # x = torch.cat([sample_1, sample_1, x, sample_2, sample_2], dim=2)
 
             x = F.conv1d(x, kernels, bias=bias, padding="valid")
-            x = (x - x.min()) / (x.max() - x.min())
+            # x = (x - x.min()) / (x.max() - x.min())
+            x = (x - x.mean()) / (x.std())
 
             # print("Intermediate-2 x", x.shape)
 
