@@ -178,12 +178,12 @@ class _MatrixDecompositionBase(nn.Module):
             sample_2 = x[:, :, 0].unsqueeze(2)
             sample_3 = x[:, :, -1].unsqueeze(2)
             sample_4 = x[:, :, -1].unsqueeze(2)
-            x = torch.cat([sample_1, x, sample_3], dim=2)
-            # x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
+            # x = torch.cat([sample_1, x, sample_3], dim=2)
+            x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
             # gaussian_kernel = [0.25, 0.50, 0.75, 0.50, 0.25]
-            # gaussian_kernel = [0.33, 0.66, 1.00, 0.66, 0.33]
+            gaussian_kernel = [0.33, 0.66, 1.00, 0.66, 0.33]
             # gaussian_kernel = [1.0, 1.0, 1.0]
-            gaussian_kernel = [0.66, 1.0, 0.66]
+            # gaussian_kernel = [0.66, 1.0, 0.66]
             kernels = torch.FloatTensor([[gaussian_kernel]]).repeat(N, N, 1).to(self.device)
             bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
             x = F.conv1d(x, kernels, bias=bias, padding="valid")
