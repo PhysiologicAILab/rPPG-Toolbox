@@ -169,22 +169,22 @@ class _MatrixDecompositionBase(nn.Module):
         if self.dim == "3D":
 
             # smoothening the temporal dimension
-            x = x.view(B, N, D * self.S)    #Joining temporal dimension for contiguous smoothening
+            x = x.view(B, D * self.S, N)    #Joining temporal dimension for contiguous smoothening
+            # print("Intermediate-0 x", x.shape)            
+            x = x.permute(0, 2, 1)
             # print("Intermediate-1 x", x.shape)
 
             sample_1 = x[:, :, 0].unsqueeze(2)
-            sample_2 = x[:, :, -1].unsqueeze(2)
-
-            gaussian_kernel = [0.25, 0.50, 0.75, 0.50, 0.25]
-            # gaussian_kernel = [0.33, 0.66, 1.00, 0.66, 0.33]
+            sample_2 = x[:, :, 0].unsqueeze(2)
+            sample_3 = x[:, :, -1].unsqueeze(2)
+            sample_4 = x[:, :, -1].unsqueeze(2)
+            # x = torch.cat([sample_1, x, sample_2], dim=2)
+            x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
+            # gaussian_kernel = [0.25, 0.50, 0.75, 0.50, 0.25]
+            gaussian_kernel = [0.33, 0.66, 1.00, 0.66, 0.33]
             # gaussian_kernel = [1.0, 1.0, 1.0]
-
             kernels = torch.FloatTensor([[gaussian_kernel]]).repeat(N, N, 1).to(self.device)
             bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
-
-            # x = torch.cat([sample_1, x, sample_2], dim=2)
-            x = torch.cat([sample_1, sample_1, x, sample_2, sample_2], dim=2)
-
             x = F.conv1d(x, kernels, bias=bias, padding="valid")
             # x = (x - x.min()) / (x.max() - x.min())
             # x = (x - x.mean()) / (x.std())
