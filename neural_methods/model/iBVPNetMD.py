@@ -20,7 +20,7 @@ model_config = {
     "MD_TYPE": "NMF",
     "MD_R": 1,
     "MD_S": 2,
-    "MD_STEPS": 3,
+    "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -188,6 +188,8 @@ class _MatrixDecompositionBase(nn.Module):
             x = F.conv1d(x, kernels, bias=bias, padding="valid")
             # x = (x - x.min()) / (x.max() - x.min())
             x = (x - x.mean()) / (x.std())
+            x = x - x.min()
+            # x = (x - x.min())/(x.std())
 
             # print("Intermediate-2 x", x.shape)
 
@@ -459,9 +461,6 @@ class FeaturesFactorizationModule(nn.Module):
                     ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1),
                     nn.Conv3d(align_C, inC, 1, bias=False)
                     )
-                # ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=(3, 1, 1), padding=(1, 0, 0), groups=align_C),
-                # nn.Conv3d(align_C, inC, (3, 1, 1), bias=False, padding=(1, 0, 0), groups=align_C)
-                # nn.Conv3d(align_C, inC, 1, bias=False)
             else:
                 self.post_conv_block = nn.Sequential(
                     ConvBNReLU(align_C, align_C, dim=self.dim, kernel_size=1, apply_act=False), 
