@@ -187,9 +187,9 @@ class _MatrixDecompositionBase(nn.Module):
 
             x = F.conv1d(x, kernels, bias=bias, padding="valid")
             # x = (x - x.min()) / (x.max() - x.min())
-            x = (x - x.mean()) / (x.std())
-            x = x - x.min()
-            # x = (x - x.min())/(x.std())
+            # x = (x - x.mean()) / (x.std())
+            # x = x - x.min()
+            x = (x - x.min())/(x.std())
 
             # print("Intermediate-2 x", x.shape)
 
