@@ -184,7 +184,8 @@ class _MatrixDecompositionBase(nn.Module):
                 x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
                 # gaussian_kernel = [0.25, 0.50, 0.75, 0.50, 0.25]
                 # gaussian_kernel = [0.33, 0.66, 1.00, 0.66, 0.33]
-                gaussian_kernel = [0.3, 0.7, 1.0, 0.7, 0.3]
+                # gaussian_kernel = [0.3, 0.7, 1.0, 0.7, 0.3]
+                gaussian_kernel = [0.3, 1.0, 1.0, 1.0, 0.3]
                 # gaussian_kernel = [0.20, 0.80, 1.00, 0.80, 0.20]
                 # gaussian_kernel = [1.0, 1.0, 1.0]
                 # gaussian_kernel = [0.66, 1.0, 0.66]
