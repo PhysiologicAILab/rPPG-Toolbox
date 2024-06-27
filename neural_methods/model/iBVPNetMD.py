@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 16, 16]
+nf = [8, 8, 8, 8]
 
 model_config = {
     "MD_FSAM": True,
@@ -26,7 +26,7 @@ model_config = {
     "RAND_INIT": True,
     "in_channels": 3,
     "data_channels": 4,
-    "align_channels": 8,
+    "align_channels": nf[3]//2,
     "height": 72,
     "weight": 72,
     "batch_size": 2,
