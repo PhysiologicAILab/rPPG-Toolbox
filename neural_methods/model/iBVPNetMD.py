@@ -19,7 +19,7 @@ model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 1,
-    "MD_S": 2,
+    "MD_S": 4,
     "MD_STEPS": 4,
     "INV_T": 1,
     "ETA": 0.9,
@@ -168,7 +168,7 @@ class _MatrixDecompositionBase(nn.Module):
 
         if self.dim == "3D":
 
-            apply_smoothening = False
+            apply_smoothening = True
             if apply_smoothening:
                 # smoothening the temporal dimension
                 x = x.view(B, D * self.S, N)    #Joining temporal dimension for contiguous smoothening
