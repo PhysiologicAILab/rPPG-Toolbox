@@ -532,8 +532,8 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            nn.ELU(inplace=True),
-            # nn.Tanh(),
+            # nn.ELU(inplace=True),
+            nn.Tanh(),
             nn.InstanceNorm3d(out_channel),
         )
 
@@ -568,17 +568,17 @@ class encoder_block(nn.Module):
         self.encoder = nn.Sequential(
             ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[0], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            nn.AvgPool3d(kernel_size=[3, 3, 3], stride=[1, 2, 2], padding=[1, 1, 1]),
+            nn.AvgPool3d(kernel_size=[1, 3, 3], stride=[1, 2, 2], padding=[0, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            nn.AvgPool3d(kernel_size=[3, 3, 3], stride=[1, 2, 2], padding=[1, 1, 1]),
+            nn.AvgPool3d(kernel_size=[1, 3, 3], stride=[1, 2, 2], padding=[0, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            nn.AvgPool3d(kernel_size=[3, 3, 3], stride=[1, 2, 2], padding=[1, 0, 0]),
+            nn.AvgPool3d(kernel_size=[1, 3, 3], stride=[1, 2, 2], padding=[0, 0, 0]),
             nn.Dropout3d(p=dropout_rate)
         )
 
@@ -611,8 +611,8 @@ class BVP_Head(nn.Module):
         self.conv_decoder = nn.Sequential(
             # nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
-            nn.ELU(inplace=True),
-            # nn.Tanh(),
+            # nn.ELU(inplace=True),
+            nn.Tanh(),
             nn.InstanceNorm3d(nf[0]),
             nn.AvgPool3d(kernel_size=[3, 3, 3], stride=[1, 5, 5], padding=[1, 0, 0]),
 
