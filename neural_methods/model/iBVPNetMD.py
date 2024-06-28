@@ -13,7 +13,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import numpy as np
 
 # num_filters
-nf = [8, 16, 16, 16]
+nf = [8, 8, 8, 16]
 
 model_config = {
     "MD_FSAM": True,
@@ -168,7 +168,7 @@ class _MatrixDecompositionBase(nn.Module):
 
         if self.dim == "3D":
 
-            apply_smoothening = True
+            apply_smoothening = False
             if apply_smoothening:
                 # smoothening the temporal dimension
                 x = x.view(B, D * self.S, N)    #Joining temporal dimension for contiguous smoothening
