@@ -565,23 +565,6 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate)
         )
 
-        # self.encoder = nn.Sequential(
-        #     ConvBlock3D(inCh, nf[0], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-        #     ConvBlock3D(nf[0], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-        #     nn.AvgPool3d(kernel_size=[1, 3, 3], stride=[1, 2, 2], padding=[0, 1, 1]),
-        #     nn.Dropout3d(p=dropout_rate),
-
-        #     ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-        #     ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-        #     nn.AvgPool3d(kernel_size=[1, 3, 3], stride=[1, 2, 2], padding=[0, 1, 1]),
-        #     nn.Dropout3d(p=dropout_rate),
-
-        #     ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-        #     ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-        #     nn.AvgPool3d(kernel_size=[1, 3, 3], stride=[1, 2, 2], padding=[0, 0, 0]),
-        #     nn.Dropout3d(p=dropout_rate)
-        # )
-
     def forward(self, x):
         x = self.encoder(x)
         if self.debug:
@@ -604,22 +587,17 @@ class BVP_Head(nn.Module):
             self.fsam = FeaturesFactorizationModule(inC, device, md_config, dim="3D", debug=debug)
             self.fsam_norm = nn.InstanceNorm3d(inC)
             self.bias1 = nn.Parameter(torch.tensor(1.0), requires_grad=True).to(device)
-            # self.bias2 = nn.Parameter(torch.tensor(2.0), requires_grad=False).to(device)
         else:
             inC = nf[3]
 
         self.conv_decoder = nn.Sequential(
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            # nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
-            # nn.ELU(inplace=True),
             nn.Tanh(),
             nn.InstanceNorm3d(nf[0]),
-            # nn.AvgPool3d(kernel_size=[3, 3, 3], stride=[1, 5, 5], padding=[1, 0, 0]),
 
-            # nn.Dropout3d(p=dropout_rate),
+            nn.Dropout3d(p=dropout_rate),
 
             nn.Conv3d(nf[0], 1, (3, 3, 3), stride=(1, 1, 1), padding=(1, 0, 0)),
-            # nn.Conv3d(nf[0], 1, (3, 1, 1), stride=(1, 1, 1), padding=(1, 0, 0)),
         )
 
     def forward(self, voxel_embeddings):
