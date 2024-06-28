@@ -76,18 +76,18 @@ class _MatrixDecompositionBase(nn.Module):
         raise NotImplementedError
 
     @torch.no_grad()
-    def local_inference(self, x, bases):
+    def local_inference(self, x, rbfs, bases):
         # (B * S, D, N)^T @ (B * S, D, R) -> (B * S, N, R)
-        coef = torch.bmm(x.transpose(1, 2), bases)
+        coef = torch.bmm(x.transpose(1, 2), torch.bmm(rbfs, bases))
         coef = F.softmax(self.inv_t * coef, dim=-1)
 
         steps = self.train_steps if self.training else self.eval_steps
         for _ in range(steps):
-            bases, coef = self.local_step(x, bases, coef)
+            bases, coef = self.local_step(x, rbfs, bases, coef)
 
         return bases, coef
 
-    def compute_coef(self, x, bases, coef):
+    def compute_coef(self, x, rbfs, bases, coef):
         raise NotImplementedError
 
     def forward(self, x, return_bases=False):
@@ -101,24 +101,7 @@ class _MatrixDecompositionBase(nn.Module):
             # # dimension of vector of our interest is T (rPPG signal as T dimension), so forming this as vector
             # # From spatial and channel dimension, which are features, only 2-4 shall be enough to generate the approximated attention matrix
             D = T // self.S
-            N = C * H * W 
-
-            # # smoothening the temporal dimension
-            # x = x.view(B * self.S, N, D)
-            # # print("Intermediate-1 x", x.shape)
-
-            # sample_1 = x[:, :, 0].unsqueeze(2)
-            # sample_2 = x[:, :, -1].unsqueeze(2)
-            # x = torch.cat([sample_1, x, sample_2], dim=2)
-            # gaussian_kernel = [1.0, 1.0, 1.0]
-            # kernels = torch.FloatTensor([[gaussian_kernel]]).repeat(N, N, 1).to(self.device)
-            # bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
-            # x = F.conv1d(x, kernels, bias=bias, padding="valid")
-            # x = (x - x.min()) / (x.max() - x.min())
-
-            # x = x.permute(0, 2, 1)
-            # # print("Intermediate-2 x", x.shape)
-
+            N = C * H * W
             x = x.view(B * self.S, D, N)
 
         elif self.dim == "2D":      # (B, C, H, W) -> (B * S, D, N)
@@ -137,6 +120,29 @@ class _MatrixDecompositionBase(nn.Module):
             print("Dimension not supported")
             exit()
 
+        P = D
+        sig = torch.tensor(5.0)
+        sig2 = sig * 2
+        sig3 = sig * 4
+        sig4 = sig * 8
+
+        # dt = torch.tensor((P - 1) / (D - 1))
+        tt = torch.arange(0, D).unsqueeze(1)
+        nn = torch.arange(0, P).unsqueeze(0)
+        print(tt.shape, nn.shape)
+        dd = torch.pow(tt - nn, 2)
+        mdp1 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig, 2)))
+        mdp2 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig2, 2)))
+        mdp3 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig3, 2)))
+        mdp4 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig4, 2)))
+        mdp0 = torch.ones(D, 1)
+
+        rbfs = torch.cat([mdp0, mdp1, mdp2[:, torch.arange(0, P, 2)], mdp3[:, torch.arange(
+            0, P, 4)], mdp4[:, torch.arange(0, P, 8)]], dim=1)
+
+        rbfs = rbfs.repeat(B * self.S, 1, 1)
+        rbf_shape2 = rbfs.shape[2]
+
         if self.debug:
             print("MD_Type", self.md_type)
             print("MD_S", self.S)
@@ -148,57 +154,27 @@ class _MatrixDecompositionBase(nn.Module):
             print("x.view(B * self.S, D, N)", x.shape)
 
         if not self.rand_init and not hasattr(self, 'bases'):
-            bases = self._build_bases(1, self.S, D, self.R)
+            bases = self._build_bases(1, self.S, rbf_shape2, self.R)
             self.register_buffer('bases', bases)
 
         # (S, D, R) -> (B * S, D, R)
         if self.rand_init:
-            bases = self._build_bases(B, self.S, D, self.R)
+            bases = self._build_bases(B, self.S, rbf_shape2, self.R)
         else:
             bases = self.bases.repeat(B, 1, 1).to(self.device)
 
-        bases, coef = self.local_inference(x, bases)
+        bases, coef = self.local_inference(x, rbfs, bases)
 
         # (B * S, N, R)
-        coef = self.compute_coef(x, bases, coef)
+        coef = self.compute_coef(x, rbfs, bases, coef)
+
+        bases_prod = torch.bmm(rbfs, bases)
 
         # (B * S, D, R) @ (B * S, N, R)^T -> (B * S, D, N)
-        x = torch.bmm(bases, coef.transpose(1, 2))
+        x = torch.bmm(bases_prod, coef.transpose(1, 2))
 
 
         if self.dim == "3D":
-
-            apply_smoothening = False
-            if apply_smoothening:
-                # smoothening the temporal dimension
-                x = x.view(B, D * self.S, N)    #Joining temporal dimension for contiguous smoothening
-                # print("Intermediate-0 x", x.shape)            
-                x = x.permute(0, 2, 1)
-                # print("Intermediate-1 x", x.shape)
-
-                sample_1 = x[:, :, 0].unsqueeze(2)
-                # sample_2 = x[:, :, 0].unsqueeze(2)
-                sample_3 = x[:, :, -1].unsqueeze(2)
-                # sample_4 = x[:, :, -1].unsqueeze(2)
-                x = torch.cat([sample_1, x, sample_3], dim=2)
-                # x = torch.cat([sample_1, sample_2, x, sample_3, sample_4], dim=2)
-                # gaussian_kernel = [0.25, 0.50, 0.75, 0.50, 0.25]
-                # gaussian_kernel = [0.33, 0.66, 1.00, 0.66, 0.33]
-                # gaussian_kernel = [0.3, 0.7, 1.0, 0.7, 0.3]
-                # gaussian_kernel = [0.3, 1.0, 1.0, 1.0, 0.3]
-                # gaussian_kernel = [0.20, 0.80, 1.00, 0.80, 0.20]
-                # gaussian_kernel = [1.0, 1.0, 1.0]
-                gaussian_kernel = [0.8, 1.0, 0.8]
-                kernels = torch.FloatTensor([[gaussian_kernel]]).repeat(N, N, 1).to(self.device)
-                bias = torch.FloatTensor(torch.zeros(N)).to(self.device)
-                x = F.conv1d(x, kernels, bias=bias, padding="valid")
-                # x = (x - x.min()) / (x.max() - x.min())
-                # x = (x - x.mean()) / (x.std())
-                # x = x - x.min()
-                x = (x - x.min())/(x.std())
-
-                # print("Intermediate-2 x", x.shape)
-
             # (B * S, D, N) -> (B, C, T, H, W)
             x = x.view(B, C, T, H, W)
         elif self.dim == "2D":
@@ -209,9 +185,10 @@ class _MatrixDecompositionBase(nn.Module):
             x = x.view(B, C, L)
 
         # (B * L, D, R) -> (B, L, N, D)
-        bases = bases.view(B, self.S, D, self.R)
+        bases = bases_prod.view(B, self.S, D, self.R)
 
         if not self.rand_init and not self.training and not return_bases:
+            print("it comes here")
             self.online_update(bases)
 
         # if not self.rand_init or return_bases:
@@ -234,35 +211,45 @@ class NMF(_MatrixDecompositionBase):
         self.inv_t = 1
 
     def _build_bases(self, B, S, D, R):
-        # bases = torch.rand((B * S, D, R)).to(self.device)
-        bases = torch.ones((B * S, D, R)).to(self.device)
+        bases = torch.rand((B * S, D, R)).to(self.device)
+        # bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
 
         return bases
 
     @torch.no_grad()
-    def local_step(self, x, bases, coef):
+    def local_step(self, x, rbfs, bases, coef):
         # (B * S, D, N)^T @ (B * S, D, R) -> (B * S, N, R)
-        numerator = torch.bmm(x.transpose(1, 2), bases)
+
+        bases_prod = torch.bmm(rbfs, bases)
+
+        numerator = torch.bmm(x.transpose(1, 2), bases_prod)
         # (B * S, N, R) @ [(B * S, D, R)^T @ (B * S, D, R)] -> (B * S, N, R)
-        denominator = coef.bmm(bases.transpose(1, 2).bmm(bases))
+        denominator = coef.bmm(bases_prod.transpose(1, 2).bmm(bases_prod))
         # Multiplicative Update
         coef = coef * numerator / (denominator + 1e-6)
 
         # (B * S, D, N) @ (B * S, N, R) -> (B * S, D, R)
         numerator = torch.bmm(x, coef)
         # (B * S, D, R) @ [(B * S, N, R)^T @ (B * S, N, R)] -> (B * S, D, R)
-        denominator = bases.bmm(coef.transpose(1, 2).bmm(coef))
+        denominator = bases_prod.bmm(coef.transpose(1, 2).bmm(coef))
         # Multiplicative Update
-        bases = bases * numerator / (denominator + 1e-6)
+
+        # bases = (bases_prod * numerator / (denominator + 1e-6))
+        bases = torch.bmm(rbfs.transpose(1, 2), (bases_prod * numerator /
+                          (denominator + 1e-6)))
+        # print(bases.shape)
+        # exit()
 
         return bases, coef
 
-    def compute_coef(self, x, bases, coef):
+    def compute_coef(self, x, rbfs, bases, coef):
+        bases_prod = torch.bmm(rbfs, bases)
+
         # (B * S, D, N)^T @ (B * S, D, R) -> (B * S, N, R)
-        numerator = torch.bmm(x.transpose(1, 2), bases)
+        numerator = torch.bmm(x.transpose(1, 2), bases_prod)
         # (B * S, N, R) @ (B * S, D, R)^T @ (B * S, D, R) -> (B * S, N, R)
-        denominator = coef.bmm(bases.transpose(1, 2).bmm(bases))
+        denominator = coef.bmm(bases_prod.transpose(1, 2).bmm(bases_prod))
         # multiplication update
         coef = coef * numerator / (denominator + 1e-6)
 
@@ -532,7 +519,6 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            # nn.ELU(inplace=True),
             nn.Tanh(),
             nn.InstanceNorm3d(out_channel),
         )
