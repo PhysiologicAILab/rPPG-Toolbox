@@ -129,7 +129,7 @@ class _MatrixDecompositionBase(nn.Module):
         # dt = torch.tensor((P - 1) / (D - 1))
         tt = torch.arange(0, D).unsqueeze(1)
         nn = torch.arange(0, P).unsqueeze(0)
-        print(tt.shape, nn.shape)
+        # print(tt.shape, nn.shape)
         dd = torch.pow(tt - nn, 2)
         mdp1 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig, 2)))
         mdp2 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig2, 2)))
