@@ -140,7 +140,7 @@ class _MatrixDecompositionBase(nn.Module):
         rbfs = torch.cat([mdp0, mdp1, mdp2[:, torch.arange(0, P, 2)], mdp3[:, torch.arange(
             0, P, 4)], mdp4[:, torch.arange(0, P, 8)]], dim=1)
 
-        rbfs = rbfs.repeat(B * self.S, 1, 1)
+        rbfs = rbfs.repeat(B * self.S, 1, 1).to(self.device)
         rbf_shape2 = rbfs.shape[2]
 
         if self.debug:
