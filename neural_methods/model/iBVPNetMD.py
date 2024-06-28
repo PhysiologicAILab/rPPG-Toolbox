@@ -18,9 +18,9 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 1,
-    "MD_S": 1,
-    "MD_STEPS": 4,
+    "MD_R": 4,
+    "MD_S": 5,
+    "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -185,7 +185,9 @@ class _MatrixDecompositionBase(nn.Module):
             x = x.view(B, C, L)
 
         # (B * L, D, R) -> (B, L, N, D)
-        bases = bases_prod.view(B, self.S, D, self.R)
+        # bases_prod_updated = torch.bmm(rbfs, bases)
+        bases = torch.bmm(rbfs.transpose(1, 2), bases_prod)
+        bases = bases.view(B, self.S, rbf_shape2, self.R)
 
         if not self.rand_init and not self.training and not return_bases:
             print("it comes here")
