@@ -532,7 +532,8 @@ class ConvBlock3D(nn.Module):
         super(ConvBlock3D, self).__init__()
         self.conv_block_3d = nn.Sequential(
             nn.Conv3d(in_channel, out_channel, kernel_size, stride, padding),
-            nn.ELU(inplace=True),
+            # nn.ELU(inplace=True),
+            nn.Tanh(),
             nn.InstanceNorm3d(out_channel),
         )
 
@@ -592,7 +593,8 @@ class BVP_Head(nn.Module):
 
         self.conv_decoder = nn.Sequential(
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
-            nn.ELU(inplace=True),
+            # nn.ELU(inplace=True),
+            nn.Tanh(),
             nn.InstanceNorm3d(nf[0]),
 
             nn.Dropout3d(p=dropout_rate),
