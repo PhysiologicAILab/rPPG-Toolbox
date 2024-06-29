@@ -16,8 +16,8 @@ import numpy as np
 nf = [8, 16, 16, 16]
 
 model_config = {
-    "MD_FSAM": False,
-    "MD_TYPE": "NMF",
+    "MD_FSAM": True,
+    "MD_TYPE": "Smooth_NMF",
     "MD_R": 1,
     "MD_S": 1,
     "MD_STEPS": 4,
@@ -350,7 +350,7 @@ class _SmoothMatrixDecompositionBase(nn.Module):
             exit()
 
         P = D
-        sig0 = torch.tensor(1.0)
+        sig0 = torch.tensor(5.0)
         sig1 = sig0 * 2
         sig2 = sig0 * 4
         sig3 = sig0 * 6
@@ -373,10 +373,10 @@ class _SmoothMatrixDecompositionBase(nn.Module):
         rbfs = torch.cat([
             rbf0, 
             rbf1[:, torch.arange(0, P, 2)],
-            rbf2[:, torch.arange(0, P, 2)],
-            rbf3[:, torch.arange(0, P, 3)],
-            rbf4[:, torch.arange(0, P, 4)],
-            rbf5[:, torch.arange(0, P, 5)],
+            rbf2[:, torch.arange(0, P, 4)],
+            rbf3[:, torch.arange(0, P, 6)],
+            rbf4[:, torch.arange(0, P, 8)],
+            rbf5[:, torch.arange(0, P, 10)],
             rbfN,
             ], dim=1)
 
