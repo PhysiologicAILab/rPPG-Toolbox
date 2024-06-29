@@ -350,7 +350,7 @@ class _SmoothMatrixDecompositionBase(nn.Module):
             exit()
 
         P = D
-        sig0 = torch.tensor(3.0)
+        sig0 = torch.tensor(1.0)
         sig1 = sig0 * 2
         sig2 = sig0 * 4
         sig3 = sig0 * 6
@@ -499,7 +499,7 @@ class Smooth_NMF(_SmoothMatrixDecompositionBase):
         return coef
 
 
-class VQ(_SmoothMatrixDecompositionBase):
+class VQ(_MatrixDecompositionBase):
     def __init__(self, device, md_config, debug=False, dim="3D"):
         super().__init__(device, md_config, debug=debug, dim=dim)
         self.device = device

@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: UBFC_UBFC_PURE_FactorizePhys_v09_R1_S1_ST4_TanH_SmoothNMF
+  MODEL_FILE_NAME: UBFC_UBFC_PURE_FactorizePhys_v09_R4_S1_ST6_TanH_SmoothNMF
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -105,9 +105,9 @@ MODEL:
     FRAME_NUM: 160
     MD_FSAM: True
     MD_TYPE: "Smooth_NMF"
-    MD_R: 1
+    MD_R: 4
     MD_S: 1
-    MD_STEPS: 4
+    MD_STEPS: 6
 INFERENCE:
   BATCH_SIZE: 4
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
