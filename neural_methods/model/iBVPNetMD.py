@@ -19,7 +19,7 @@ model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
     "MD_R": 8,
-    "MD_S": 1,
+    "MD_S": 5,
     "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
@@ -121,10 +121,10 @@ class _MatrixDecompositionBase(nn.Module):
             exit()
 
         P = D
-        sig = torch.tensor(5.0)
+        sig = torch.tensor(1.5)
         sig2 = sig * 2
-        sig3 = sig * 4
-        sig4 = sig * 8
+        sig3 = sig * 3
+        sig4 = sig * 4
 
         # dt = torch.tensor((P - 1) / (D - 1))
         tt = torch.arange(0, D).unsqueeze(1)
