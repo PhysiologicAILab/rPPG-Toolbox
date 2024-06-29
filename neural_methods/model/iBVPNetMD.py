@@ -18,9 +18,9 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 1,
+    "MD_R": 20,
     "MD_S": 1,
-    "MD_STEPS": 4,
+    "MD_STEPS": 6,
     "INV_T": 1,
     "ETA": 0.9,
     "RAND_INIT": True,
@@ -121,24 +121,35 @@ class _MatrixDecompositionBase(nn.Module):
             exit()
 
         P = D
-        sig = torch.tensor(3.0)
-        sig2 = sig * 2
-        sig3 = sig * 4
-        sig4 = sig * 8
+        sig0 = torch.tensor(1.0)
+        sig1 = sig0 * 2
+        sig2 = sig0 * 4
+        sig3 = sig0 * 6
+        sig4 = sig0 * 8
+        sig5 = sig0 * 10
 
         # dt = torch.tensor((P - 1) / (D - 1))
         tt = torch.arange(0, D).unsqueeze(1)
         nn = torch.arange(0, P).unsqueeze(0)
         # print(tt.shape, nn.shape)
         dd = torch.pow(tt - nn, 2)
-        mdp1 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig, 2)))
-        mdp2 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig2, 2)))
-        mdp3 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig3, 2)))
-        mdp4 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig4, 2)))
-        mdp0 = torch.ones(D, 1)
+        rbf0 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig0, 2)))
+        rbf1 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig1, 2)))
+        rbf2 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig2, 2)))
+        rbf3 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig3, 2)))
+        rbf4 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig4, 2)))
+        rbf5 = torch.exp((-0.5 * dd)/(2 * torch.pow(sig5, 2)))
+        rbfN = torch.ones(P, 1)
 
-        rbfs = torch.cat([mdp0, mdp1, mdp2[:, torch.arange(0, P, 2)], mdp3[:, torch.arange(
-            0, P, 4)], mdp4[:, torch.arange(0, P, 8)]], dim=1)
+        rbfs = torch.cat([
+            rbf0, 
+            rbf1[:, torch.arange(0, P, 2)],
+            rbf2[:, torch.arange(0, P, 2)],
+            rbf3[:, torch.arange(0, P, 3)],
+            rbf4[:, torch.arange(0, P, 4)],
+            rbf5[:, torch.arange(0, P, 5)],
+            rbfN,
+            ], dim=1)
 
         rbfs = rbfs.repeat(B * self.S, 1, 1).to(self.device)
         rbf_shape2 = rbfs.shape[2]
@@ -152,6 +163,7 @@ class _MatrixDecompositionBase(nn.Module):
             print("MD_TRAIN_STEPS", self.train_steps)
             print("MD_EVAL_STEPS", self.eval_steps)
             print("x.view(B * self.S, D, N)", x.shape)
+            print("rbfs.shape", rbfs.shape)
 
         if not self.rand_init and not hasattr(self, 'bases'):
             bases = self._build_bases(1, self.S, rbf_shape2, self.R)
@@ -581,7 +593,7 @@ class BVP_Head(nn.Module):
         self.conv_decoder = nn.Sequential(
             nn.Conv3d(inC, nf[0], (3, 3, 3), stride=(1, 2, 2), padding=(1, 0, 0)),
             nn.Tanh(),
-            nn.InstanceNorm3d(nf[0]),
+            # nn.InstanceNorm3d(nf[0]),
 
             nn.Dropout3d(p=dropout_rate),
 
@@ -609,14 +621,14 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # # Multiplication
-            # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
-            # factorized_embeddings = self.fsam_norm(x)
-
-            # Multiplication with Residual connection
+            # Multiplication
             x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
             factorized_embeddings = self.fsam_norm(x)
-            factorized_embeddings = voxel_embeddings + factorized_embeddings
+
+            # # Multiplication with Residual connection
+            # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
+            # factorized_embeddings = self.fsam_norm(x)
+            # factorized_embeddings = voxel_embeddings + factorized_embeddings
             
             # # Concatenate
             # factorized_embeddings = torch.cat([voxel_embeddings, self.fsam_norm(x)], dim=1)
