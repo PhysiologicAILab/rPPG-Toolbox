@@ -18,8 +18,8 @@ nf = [8, 16, 16, 16]
 model_config = {
     "MD_FSAM": True,
     "MD_TYPE": "NMF",
-    "MD_R": 4,
-    "MD_S": 5,
+    "MD_R": 8,
+    "MD_S": 1,
     "MD_STEPS": 5,
     "INV_T": 1,
     "ETA": 0.9,
@@ -121,7 +121,7 @@ class _MatrixDecompositionBase(nn.Module):
             exit()
 
         P = D
-        sig = torch.tensor(1.0)
+        sig = torch.tensor(5.0)
         sig2 = sig * 2
         sig3 = sig * 4
         sig4 = sig * 8
@@ -213,8 +213,8 @@ class NMF(_MatrixDecompositionBase):
         self.inv_t = 1
 
     def _build_bases(self, B, S, D, R):
-        # bases = torch.rand((B * S, D, R)).to(self.device)
-        bases = torch.ones((B * S, D, R)).to(self.device)
+        bases = torch.rand((B * S, D, R)).to(self.device)
+        # bases = torch.ones((B * S, D, R)).to(self.device)
         bases = F.normalize(bases, dim=1)
 
         return bases
