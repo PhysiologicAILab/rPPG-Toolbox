@@ -121,7 +121,7 @@ class _MatrixDecompositionBase(nn.Module):
             exit()
 
         P = D
-        sig0 = torch.tensor(1.0)
+        sig0 = torch.tensor(3.0)
         sig1 = sig0 * 2
         sig2 = sig0 * 4
         sig3 = sig0 * 6
@@ -621,14 +621,14 @@ class BVP_Head(nn.Module):
             # # Residual connection: 
             # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # Multiplication
-            x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
-            factorized_embeddings = self.fsam_norm(x)
-
-            # # Multiplication with Residual connection
+            # # Multiplication
             # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
             # factorized_embeddings = self.fsam_norm(x)
-            # factorized_embeddings = voxel_embeddings + factorized_embeddings
+
+            # Multiplication with Residual connection
+            x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
+            factorized_embeddings = self.fsam_norm(x)
+            factorized_embeddings = voxel_embeddings + factorized_embeddings
             
             # # Concatenate
             # factorized_embeddings = torch.cat([voxel_embeddings, self.fsam_norm(x)], dim=1)
