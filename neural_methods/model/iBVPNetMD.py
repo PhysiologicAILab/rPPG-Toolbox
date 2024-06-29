@@ -606,12 +606,12 @@ class BVP_Head(nn.Module):
             # # directly use att_mask   ---> difficult to converge without Residual connection. Needs high rank
             # factorized_embeddings = self.fsam_norm(att_mask)
 
-            # # Residual connection: 
-            # factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
+            # Residual connection: 
+            factorized_embeddings = voxel_embeddings + self.fsam_norm(att_mask)
 
-            # Multiplication
-            x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
-            factorized_embeddings = self.fsam_norm(x)
+            # # Multiplication
+            # x = torch.mul(voxel_embeddings - voxel_embeddings.min() + self.bias1, att_mask - att_mask.min() + self.bias1)
+            # factorized_embeddings = self.fsam_norm(x)
 
             # # Multiplication with Residual connection
             # x = self.fsam_norm(att_mask)
