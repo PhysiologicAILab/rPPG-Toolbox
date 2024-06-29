@@ -4,7 +4,7 @@ TRAIN:
   BATCH_SIZE: 4
   EPOCHS: 30
   LR: 1e-3
-  MODEL_FILE_NAME: iBVP_iBVP_FactorizePhys_v09_R1_S1_ST5_TanH_RBF_Sig3_MulRes
+  MODEL_FILE_NAME: iBVP_iBVP_FactorizePhys_v09_R20_S1_ST6_TanH_RBF_MulRes
   PLOT_LOSSES_AND_LR: True
   DATA:
     FS: 30
@@ -109,9 +109,9 @@ MODEL:
     FRAME_NUM: 160
     MD_FSAM: True
     MD_TYPE: "NMF"
-    MD_R: 1
+    MD_R: 20
     MD_S: 1
-    MD_STEPS: 5
+    MD_STEPS: 6
 INFERENCE:
   BATCH_SIZE: 4
   EVALUATION_METHOD: "FFT"        # "FFT" or "peak detection"
