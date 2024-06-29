@@ -121,7 +121,7 @@ class _MatrixDecompositionBase(nn.Module):
             exit()
 
         P = D
-        sig = torch.tensor(2.0)
+        sig = torch.tensor(1.0)
         sig2 = sig * 2
         sig3 = sig * 4
         sig4 = sig * 8
