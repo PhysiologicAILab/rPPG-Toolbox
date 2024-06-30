@@ -373,10 +373,10 @@ class _SmoothMatrixDecompositionBase(nn.Module):
         rbfs = torch.cat([
             rbf0, 
             rbf1[:, torch.arange(0, P, 2)],
-            rbf2[:, torch.arange(0, P, 4)],
-            rbf3[:, torch.arange(0, P, 6)],
-            rbf4[:, torch.arange(0, P, 8)],
-            rbf5[:, torch.arange(0, P, 10)],
+            rbf2[:, torch.arange(0, P, 2)],
+            rbf3[:, torch.arange(0, P, 3)],
+            rbf4[:, torch.arange(0, P, 4)],
+            rbf5[:, torch.arange(0, P, 5)],
             rbfN,
             ], dim=1)
 
