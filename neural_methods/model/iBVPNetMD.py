@@ -350,7 +350,7 @@ class _SmoothMatrixDecompositionBase(nn.Module):
             exit()
 
         P = D
-        sig0 = torch.tensor(5.0)
+        sig0 = torch.tensor(6.0)
         sig1 = sig0 * 2
         sig2 = sig0 * 4
         sig3 = sig0 * 6
@@ -376,7 +376,7 @@ class _SmoothMatrixDecompositionBase(nn.Module):
             rbf2[:, torch.arange(0, P, 4)],
             rbf3[:, torch.arange(0, P, 6)],
             rbf4[:, torch.arange(0, P, 8)],
-            rbf5[:, torch.arange(0, P, 10)],
+            rbf5[:, torch.arange(0, P, 8)],
             rbfN,
             ], dim=1)
 
@@ -786,13 +786,13 @@ class encoder_block(nn.Module):
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[1], nf[1], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
-            ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
+            ConvBlock3D(nf[1], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
             nn.Dropout3d(p=dropout_rate),
 
             ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 1, 1], [1, 1, 1]),
-            ConvBlock3D(nf[2], nf[2], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
-            ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
+            ConvBlock3D(nf[2], nf[3], [3, 3, 3], [1, 2, 2], [1, 1, 1]),
+            ConvBlock3D(nf[3], nf[3], [3, 3, 3], [1, 1, 1], [1, 0, 0]),
             nn.Dropout3d(p=dropout_rate)
         )
 
