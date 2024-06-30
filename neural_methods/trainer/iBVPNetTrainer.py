@@ -92,7 +92,8 @@ class iBVPNetTrainer(BaseTrainer):
             for idx, batch in enumerate(tbar):
                 tbar.set_description("Train epoch %s" % epoch)
                 
-                data, labels = batch[0].to(self.device), batch[1].to(self.device)
+                data = batch[0].to(torch.float32).to(self.device)
+                labels = batch[1].to(torch.float32).to(self.device)
 
                 # labels = (labels - torch.mean(labels)) / torch.std(labels)  # normalize
                 last_frame = torch.unsqueeze(data[:, :, -1, :, :], 2).repeat(1, 1, max(self.num_of_gpu, 1), 1, 1)
